@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MJ ARCADE — Game Portfolio</title>
+<title>MJ ARCADE — 초등학생 게임 기획 포트폴리오</title>
+<meta name="description" content="초등학교 6학년이 코딩 없이 AI와 대화하며 기획·설계한 브라우저 게임 40여 편. 아이디어와 창의성, 기획력으로 한 달 만에 완성한 포트폴리오.">
+<meta property="og:title" content="MJ ARCADE — 초등학생 게임 기획 포트폴리오">
+<meta property="og:description" content="코드 한 줄 없이, 오직 아이디어와 기획력으로 만든 브라우저 게임 40여 편. 클릭 한 번으로 바로 플레이.">
+<meta property="og:type" content="website">
 <style>
 @font-face{
   font-family:'Galmuri11';
@@ -119,7 +123,43 @@ main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:26px 16p
 footer{position:relative;z-index:1;text-align:center;color:var(--dim);font-size:11px;padding:0 16px 50px;line-height:2}
 footer b{color:var(--amber)}
 
+/* ── 포트폴리오 섹션 공통 ───────────────────── */
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 16px}
+.sec-tag{font-family:'Press Start 2P','Galmuri11',monospace;font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:12px}
+.sec-h{font-size:clamp(18px,3vw,24px);font-weight:700;line-height:1.4;margin-bottom:8px}
+.sec-h em{font-style:normal;background:linear-gradient(90deg,var(--amber),var(--magenta));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sec-sub{color:var(--dim);font-size:13px;line-height:1.8;max-width:760px}
+
+/* ── 인트로 패널 ───────────────────── */
+.intro{position:relative;z-index:1;max-width:980px;margin:8px auto 4px;padding:0 16px}
+.intro-card{border:2px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:26px 30px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.intro-card p{color:var(--dim);font-size:14px;line-height:1.95}
+.intro-card p+p{margin-top:14px}
+.intro-card b{color:var(--ink)}
+.intro-card .hl{color:var(--amber)}
+.intro-by{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);letter-spacing:1px}
+.intro-by b{color:var(--cyan)}
+
+/* ── 제작 과정 파이프라인 ───────────────────── */
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:22px}
+.step{border:2px solid var(--line);border-radius:10px;background:var(--panel);padding:16px 16px 14px;position:relative}
+.step .num{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--c,var(--amber));opacity:.8}
+.step h4{font-size:14px;margin:8px 0 6px;color:var(--ink)}
+.step p{font-size:12px;color:var(--dim);line-height:1.7}
+
+/* ── 강점 하이라이트 ───────────────────── */
+.strengths{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:22px}
+.str-card{border:2px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:20px 20px 18px;border-top:4px solid var(--c)}
+.str-card .ic{font-size:22px;margin-bottom:8px}
+.str-card h4{font-size:15px;color:var(--ink);margin-bottom:8px}
+.str-card p{font-size:12.5px;color:var(--dim);line-height:1.8}
+.str-card p b{color:var(--c)}
+
+.sec-gap{height:56px}
+
 @media (max-width:520px){
+  .intro-card{padding:20px 18px}
+  .pipe{grid-template-columns:1fr 1fr;gap:8px}
   .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
   .marquee-frame{padding:20px 18px 16px}
   .scanlines{display:none}
@@ -140,13 +180,40 @@ footer b{color:var(--amber)}
     <div class="bulbs" id="bulbs"></div>
     <h1 class="logo">MJ ARCADE<small>BROWSER GAME PORTFOLIO</small></h1>
   </div>
-  <p class="tagline">전부 <b>단일 HTML 파일</b>로 직접 설계하고 디버깅한 브라우저 게임들.<br>카드를 누르면 <b>테스트장</b>에서 바로 플레이할 수 있어요.</p>
+  <p class="tagline">코드 한 줄 없이, <b>오직 아이디어와 기획력</b>으로 AI와 함께 만든 브라우저 게임들.<br>카드를 누르면 <b>테스트장</b>에서 바로 플레이할 수 있어요.</p>
   <div class="stats">
     <div class="stat"><b id="stat-total">0</b>GAMES</div>
     <div class="stat"><b id="stat-cat">0</b>GENRES</div>
-    <div class="stat"><b>1</b>DEVELOPER</div>
+    <div class="stat"><b>약 1</b>개월에 완성</div>
+    <div class="stat"><b>초6</b>CREATOR</div>
   </div>
 </header>
+
+<!-- ───── 인트로 / 소개 패널 ─────
+     ▸ 아래 [한 줄 소개] 부분을 본인 소개로 자유롭게 바꿔 쓰세요 (학년·관심사 등) -->
+<section class="intro">
+  <div class="intro-card">
+    <p>
+      여기 있는 게임들은 <b>초등학교 6학년 학생이 코딩을 배우지 않고도</b> 만들어 낸 결과물입니다.
+      코드는 한 줄도 직접 쓰지 않았습니다. 대신 <span class="hl">AI(Claude)와 대화하며</span> 처음 아이디어를 떠올리고,
+      게임의 규칙과 재미 요소를 설계하고, 직접 플레이해 보며 디테일을 다듬어 완성했습니다.
+      액션·전략·키우기·수집·리듬·웹토이까지 <span class="hl">6개 장르 40여 편</span>을, 놀랍게도 <b>약 한 달</b> 만에 만들었습니다.
+    </p>
+    <p>
+      시작은 언제나 "이런 게 있으면 재밌겠다"는 한 줄의 상상이었습니다. 와이파이 신호가 몬스터로 진화하는 도감,
+      실제 하늘을 읽어 정령을 소환하는 수집 게임, 음원·교통카드·검체를 모티프로 한 스캐너 3부작처럼
+      <b>어디서도 본 적 없는 컨셉을 스스로 떠올리고 설계</b>했습니다. AI는 그 아이디어를 코드로 옮겨 주는 도구였고,
+      <b>무엇을 만들지, 어떻게 더 재미있게 만들지 판단하고 결정한 것은 전부 본인</b>이었습니다.
+    </p>
+    <p>
+      이 포트폴리오의 핵심은 코딩 실력이 아닙니다. <b>머릿속 아이디어를 끝까지 작동하는 게임으로 완성해 내는
+      창의성과 기획력, 그리고 AI를 자기 도구로 능숙하게 활용해 스스로 배우고 만들어 가는 힘</b>입니다.
+    </p>
+    <div class="intro-by">
+      ▸ <b>한 줄 소개</b> — 상상하고 만들어내는 것을 좋아하는 초등학교 6학년입니다. 코딩은 아직 모르지만, AI와 함께라면 머릿속에만 있던 아이디어, 평소에는 종이에 그림으로 그려보던 아이디어들을 진짜 게임으로 만들 수 있어요.
+    </div>
+  </div>
+</section>
 
 <div class="controls">
   <div class="controls-inner">
@@ -165,6 +232,48 @@ footer b{color:var(--amber)}
     <div class="grid" id="pending-grid"></div>
   </section>
 </main>
+
+<!-- ───── 제작 과정 ─────  -->
+<div class="sec-gap"></div>
+<section class="wrap">
+  <div class="sec-tag">▸ HOW IT'S MADE</div>
+  <h2 class="sec-h">게임 하나가 <em>완성</em>되기까지</h2>
+  <p class="sec-sub">코드를 직접 쓰는 대신, 아래 과정을 AI와 대화하며 이끌어 갑니다. 무엇을 만들고 어떻게 고칠지는 전부 스스로 결정합니다.</p>
+  <div class="pipe">
+    <div class="step" style="--c:var(--toy)"><div class="num">01</div><h4>아이디어 발상</h4><p>"이런 게임이 있으면 재밌겠다!" 머릿속 상상에서 출발합니다. 모든 게임의 시작점입니다.</p></div>
+    <div class="step" style="--c:var(--col)"><div class="num">02</div><h4>게임 요소 설계</h4><p>규칙·목표·재미 포인트·화면 구성을 직접 구상해 AI에게 말로 설명합니다.</p></div>
+    <div class="step" style="--c:var(--cyan)"><div class="num">03</div><h4>AI와 함께 제작</h4><p>AI(Claude)가 아이디어를 코드로 옮깁니다. 원하는 방향을 계속 설명하며 함께 만들어 갑니다.</p></div>
+    <div class="step" style="--c:var(--amber)"><div class="num">04</div><h4>플레이 · 디테일 수정</h4><p>직접 해 보며 어색하거나 아쉬운 부분을 찾아내고, "이렇게 바꿔줘"로 끈질기게 다듬습니다.</p></div>
+    <div class="step" style="--c:var(--cas)"><div class="num">05</div><h4>완성 · 공유</h4><p>완성한 게임을 웹에 올려, 누구나 링크 하나로 바로 플레이할 수 있게 공개합니다.</p></div>
+  </div>
+</section>
+
+<!-- ───── 강점 ─────  -->
+<div class="sec-gap"></div>
+<section class="wrap">
+  <div class="sec-tag">▸ WHAT IT SHOWS</div>
+  <h2 class="sec-h">이 작업들이 <em>보여주는 것</em></h2>
+  <p class="sec-sub">코딩 실력이 아니라, 코딩보다 먼저 갖춰야 할 힘을 보여줍니다.</p>
+  <div class="strengths">
+    <div class="str-card" style="--c:var(--magenta)">
+      <div class="ic">💡</div><h4>창의성 · 기획력</h4>
+      <p>와이파이 진화 도감, 하늘을 읽는 정령 소환, 스캐너 3부작처럼 <b>누구도 시키지 않은 독창적 컨셉을 스스로 떠올리고</b> 게임으로 설계했습니다. 결국 승부는 아이디어로 났습니다.</p>
+    </div>
+    <div class="str-card" style="--c:var(--cyan)">
+      <div class="ic">🤖</div><h4>AI 활용 · 자기주도성</h4>
+      <p>코드를 몰라도 <b>AI를 도구로 능숙하게 다뤄</b> 원하는 것을 정확히 설명하고, 결과를 판단해 다음 지시를 내립니다. AI 시대에 가장 중요한 능력을 또래보다 먼저 익혔습니다.</p>
+    </div>
+    <div class="str-card" style="--c:var(--amber)">
+      <div class="ic">🔧</div><h4>문제 해결 · 끈기</h4>
+      <p>한 번에 완성되는 게임은 없습니다. 직접 플레이하며 아쉬운 점을 찾아 <b>몇 번이고 다시 고쳐</b> 끝까지 작동하는 게임으로 만들어 냈습니다.</p>
+    </div>
+    <div class="str-card" style="--c:var(--cas)">
+      <div class="ic">🎮</div><h4>실행력 · 몰입</h4>
+      <p>상상에 머물지 않고 <b>약 한 달 만에 40여 편을 완성·공개</b>했습니다. 좋아하는 일에 깊이 몰입해 끝까지 결과물로 만들어 내는 힘을 보여줍니다.</p>
+    </div>
+  </div>
+</section>
+<div class="sec-gap"></div>
 
 <footer>
   MJ ARCADE · 모든 게임은 HTML/CSS/JS 단일 파일로 제작 · AI 협업 기반 반복 개발<br>

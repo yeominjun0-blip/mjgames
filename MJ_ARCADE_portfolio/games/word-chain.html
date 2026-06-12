@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>끝말잇기</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Black+Han+Sans&family=Gaegu:wght@700&family=Nanum+Pen+Script&family=Poor+Story&family=Do+Hyeon&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nanum Gothic', sans-serif;
+  min-height: 100vh;
+  transition: background 0.6s ease, color 0.6s ease;
+}
+
+/* ===== THEME CANVAS ===== */
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.app-wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0 60px;
+  min-height: 100vh;
+}
+
+/* ===== THEMES ===== */
+
+/* FREE - 따뜻한 크림 */
+body.theme-free {
+  background: #fdf6ec;
+  color: #2d2d2d;
+  --accent: #ff6b35;
+  --accent2: #f7c59f;
+  --card-bg: rgba(255,249,240,0.92);
+  --card-border: #e8d8c0;
+  --btn-bg: #ff6b35;
+  --btn-shadow: #c94f22;
+  --input-bg: #fff;
+  --text-font: 'Jua', sans-serif;
+  --word-font: 'Black Han Sans', sans-serif;
+  --muted: #999;
+}
+
+/* ANIMAL - 숲속 */
+body.theme-animal {
+  background: #1a2e1a;
+  color: #e8f5e8;
+  --accent: #4caf50;
+  --accent2: #81c784;
+  --card-bg: rgba(20,45,20,0.88);
+  --card-border: #2e5c2e;
+  --btn-bg: #388e3c;
+  --btn-shadow: #1b5e20;
+  --input-bg: rgba(255,255,255,0.08);
+  --text-font: 'Poor Story', cursive;
+  --word-font: 'Gaegu', cursive;
+  --muted: #81c784;
+}
+
+/* FOOD - 따뜻한 주방 */
+body.theme-food {
+  background: #2d1b00;
+  color: #ffe0b2;
+  --accent: #ff8f00;
+  --accent2: #ffb74d;
+  --card-bg: rgba(60,30,0,0.9);
+  --card-border: #7c4700;
+  --btn-bg: #e65100;
+  --btn-shadow: #bf360c;
+  --input-bg: rgba(255,255,255,0.08);
+  --text-font: 'Do Hyeon', sans-serif;
+  --word-font: 'Gaegu', cursive;
+  --muted: #ffb74d;
+}
+
+/* COUNTRY - 밤하늘 여행 */
+body.theme-country {
+  background: #0a0a2e;
+  color: #e8eaf6;
+  --accent: #7986cb;
+  --accent2: #9fa8da;
+  --card-bg: rgba(13,13,60,0.88);
+  --card-border: #303f9f;
+  --btn-bg: #3949ab;
+  --btn-shadow: #1a237e;
+  --input-bg: rgba(255,255,255,0.06);
+  --text-font: 'Do Hyeon', sans-serif;
+  --word-font: 'Black Han Sans', sans-serif;
+  --muted: #9fa8da;
+}
+
+/* NATURE - 맑은 하늘 */
+body.theme-nature {
+  background: #e3f2fd;
+  color: #1a3a4a;
+  --accent: #0288d1;
+  --accent2: #4fc3f7;
+  --card-bg: rgba(255,255,255,0.82);
+  --card-border: #b3e5fc;
+  --btn-bg: #0288d1;
+  --btn-shadow: #01579b;
+  --input-bg: rgba(255,255,255,0.9);
+  --text-font: 'Gaegu', cursive;
+  --word-font: 'Nanum Pen Script', cursive;
+  --muted: #78909c;
+}
+
+/* SPORTS - 경기장 */
+body.theme-sports {
+  background: #1a1a1a;
+  color: #f5f5f5;
+  --accent: #fdd835;
+  --accent2: #fff176;
+  --card-bg: rgba(30,30,30,0.92);
+  --card-border: #444;
+  --btn-bg: #fdd835;
+  --btn-shadow: #f9a825;
+  --input-bg: rgba(255,255,255,0.07);
+  --text-font: 'Black Han Sans', sans-serif;
+  --word-font: 'Black Han Sans', sans-serif;
+  --muted: #aaa;
+}
+
+/* ===== HEADER ===== */
+header {
+  width: 100%;
+  text-align: center;
+  padding: 36px 20px 20px;
+  position: relative;
+}
+header h1 {
+  font-family: var(--text-font);
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  color: var(--accent);
+  letter-spacing: 2px;
+  transition: color 0.5s;
+  text-shadow: 2px 2px 0 var(--card-border);
+}
+header .theme-subtitle {
+  font-family: var(--text-font);
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 6px;
+  transition: color 0.5s;
+}
+
+/* ===== SCREEN ===== */
+.screen { display: none; width: 100%; max-width: 540px; padding: 0 16px; animation: fadeUp .4s ease; }
+.screen.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* ===== CARD ===== */
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 18px;
+  padding: 24px 20px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  transition: background 0.5s, border-color 0.5s;
+}
+.card h2 {
+  font-family: var(--text-font);
+  font-size: 1.15rem;
+  color: var(--accent);
+  margin-bottom: 16px;
+  transition: color 0.5s;
+}
+
+/* ===== PLAYER COUNT ===== */
+.count-btns { display: flex; gap: 10px; }
+.count-btn {
+  flex: 1; padding: 13px;
+  border: 2px solid var(--card-border);
+  border-radius: 12px;
+  background: transparent;
+  font-family: var(--text-font);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--muted);
+}
+.count-btn:hover { border-color: var(--accent); color: var(--accent); }
+.count-btn.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+body.theme-sports .count-btn.selected { color: #111; }
+
+/* ===== NAME INPUTS ===== */
+.input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.input-row .p-emoji { font-size: 1.4rem; width: 32px; text-align: center; }
+input[type="text"] {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--card-border);
+  border-radius: 10px;
+  font-family: 'Nanum Gothic', sans-serif;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: inherit;
+  outline: none;
+  transition: border-color .2s, background 0.5s;
+}
+input[type="text"]::placeholder { color: var(--muted); opacity: 0.7; }
+input[type="text"]:focus { border-color: var(--accent); }
+
+/* ===== THEME PICKER ===== */
+.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.theme-opt {
+  padding: 14px 8px 10px;
+  border: 2px solid var(--card-border);
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: all .25s;
+  position: relative;
+  overflow: hidden;
+}
+.theme-opt:hover { border-color: var(--accent); transform: translateY(-2px); }
+.theme-opt.selected { border-color: var(--accent); }
+.theme-opt.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 5px; right: 8px;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 900;
+}
+.theme-icon { font-size: 1.8rem; }
+.theme-name { font-family: var(--text-font); font-size: 0.85rem; color: var(--accent); margin-top: 5px; }
+.theme-preview {
+  width: 100%; height: 6px;
+  border-radius: 3px;
+  margin-top: 6px;
+}
+
+/* ===== SETTINGS ===== */
+.settings-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row label { font-family: var(--text-font); font-size: 0.95rem; color: var(--muted); }
+.toggle {
+  width: 46px; height: 26px;
+  border-radius: 13px;
+  background: var(--card-border);
+  position: relative;
+  cursor: pointer;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: left .2s;
+}
+.toggle.on::after { left: 23px; }
+select {
+  padding: 7px 12px;
+  border: 1.5px solid var(--card-border);
+  border-radius: 8px;
+  font-family: var(--text-font);
+  font-size: 0.9rem;
+  background: var(--input-bg);
+  color: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: block; width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  font-family: var(--text-font);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+  margin-top: 8px;
+}
+.btn-primary {
+  background: var(--btn-bg);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--btn-shadow);
+  letter-spacing: 1px;
+}
+body.theme-sports .btn-primary { color: #111; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--btn-shadow); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--btn-shadow); }
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+}
+.btn-secondary:hover { background: var(--accent); color: #fff; }
+body.theme-sports .btn-secondary:hover { color: #111; }
+
+/* ===== GAME SCREEN ===== */
+.turn-banner {
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--accent);
+  box-shadow: 0 4px 0 var(--btn-shadow);
+  transition: background 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+.turn-banner::before {
+  content: '';
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+}
+.turn-avatar {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0;
+}
+.turn-info .turn-label { font-size: 0.78rem; opacity: 0.8; font-family: var(--text-font); }
+.turn-info .turn-name { font-family: var(--word-font); font-size: 1.3rem; color: #fff; letter-spacing: 1px; }
+body.theme-sports .turn-info .turn-name { color: #111; }
+.round-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-family: var(--text-font);
+  font-size: 0.85rem;
+  color: #fff;
+  white-space: nowrap;
+}
+body.theme-sports .round-badge { color: #111; }
+
+/* ===== WORD BOX ===== */
+.word-box {
+  border-radius: 18px;
+  padding: 26px 20px;
+  margin-bottom: 14px;
+  text-align: center;
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  transition: all 0.5s;
+  position: relative;
+  overflow: hidden;
+}
+.word-box .wbg-deco {
+  position: absolute;
+  font-size: 5rem;
+  opacity: 0.04;
+  top: -10px; right: -10px;
+  pointer-events: none;
+  font-family: var(--word-font);
+}
+.word-box .lw-label {
+  font-family: var(--text-font);
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.word-box .lw-word {
+  font-family: var(--word-font);
+  font-size: clamp(2.2rem, 8vw, 3.4rem);
+  color: var(--accent);
+  letter-spacing: 3px;
+  line-height: 1.1;
+  transition: all 0.3s;
+  animation: wordPop 0.35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes wordPop { from { transform: scale(0.8); opacity:0; } to { transform: scale(1); opacity:1; } }
+.word-box .next-hint {
+  margin-top: 10px;
+  font-family: var(--text-font);
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.word-box .next-char {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--word-font);
+  font-size: 1.1rem;
+  padding: 2px 12px;
+  border-radius: 20px;
+  margin-left: 6px;
+}
+body.theme-sports .word-box .next-char { color: #111; }
+
+/* ===== TIMER ===== */
+.timer-wrap { margin-bottom: 4px; }
+.timer-track {
+  background: var(--card-border);
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+}
+.timer-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  transition: width 0.9s linear;
+}
+.timer-fill.urgent { background: #e53935; }
+.timer-label {
+  text-align: right;
+  font-family: var(--text-font);
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+
+/* ===== INPUT ===== */
+.input-row-game {
+  display: flex; gap: 8px;
+  margin-bottom: 8px;
+}
+.input-row-game input {
+  flex: 1;
+  font-size: 1.15rem;
+  padding: 13px 16px;
+  font-family: var(--word-font);
+  letter-spacing: 2px;
+}
+.input-row-game button {
+  padding: 13px 18px;
+  background: var(--btn-bg);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--text-font);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 3px 0 var(--btn-shadow);
+  white-space: nowrap;
+}
+body.theme-sports .input-row-game button { color: #111; }
+.input-row-game button:active { transform: translateY(2px); box-shadow: none; }
+.err-msg { color: #e53935; font-size: 0.85rem; min-height: 20px; text-align: center; font-family: var(--text-font); margin-bottom: 8px; }
+
+/* ===== AVATARS ===== */
+.avatars-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+.av-item { text-align: center; }
+.av-circle {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  border: 2.5px solid transparent;
+  transition: all .3s;
+  margin: 0 auto 4px;
+}
+.av-circle.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--card-border);
+  transform: scale(1.1);
+}
+.av-circle.elim { opacity: 0.3; filter: grayscale(1); }
+.av-name { font-size: 0.7rem; color: var(--muted); font-family: var(--text-font); max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== SCORE ROW ===== */
+.score-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.score-chip {
+  flex: 1; min-width: 70px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  text-align: center;
+  transition: all 0.3s;
+  backdrop-filter: blur(8px);
+}
+.score-chip.current { border-color: var(--accent); }
+.sc-name { font-family: var(--text-font); font-size: 0.72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-pts { font-family: var(--word-font); font-size: 1.4rem; color: var(--accent); }
+
+/* ===== HISTORY ===== */
+.history-wrap { }
+.history-hdr { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.history-hdr span { font-family: var(--text-font); font-size: 0.85rem; color: var(--muted); }
+.history-scroll { display: flex; flex-wrap: wrap; gap: 6px; max-height: 96px; overflow-y: auto; }
+.h-chip {
+  border: 1.5px solid var(--card-border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-family: var(--text-font);
+  font-size: 0.82rem;
+  color: var(--muted);
+  transition: all 0.3s;
+  background: transparent;
+}
+.h-chip.new-word {
+  animation: chipPop .35s cubic-bezier(.34,1.56,.64,1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@keyframes chipPop { from { transform: scale(0); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+/* ===== FAIL OVERLAY ===== */
+.fail-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+.fail-overlay.show { display: flex; }
+.fail-box {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 22px;
+  padding: 36px 28px;
+  text-align: center;
+  max-width: 340px; width: 90%;
+  backdrop-filter: blur(12px);
+  animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from { transform: scale(0.6); opacity:0; } to { transform: scale(1); opacity:1; } }
+.fail-box .f-emoji { font-size: 3.8rem; margin-bottom: 10px; }
+.fail-box h3 { font-family: var(--word-font); font-size: 1.6rem; color: var(--accent); margin-bottom: 6px; }
+.fail-box .f-reason { font-family: var(--text-font); font-size: 0.9rem; color: #e53935; margin-bottom: 8px; }
+.fail-box .f-desc { font-family: var(--text-font); font-size: 0.88rem; color: var(--muted); margin-bottom: 20px; }
+
+/* ===== RESULT ===== */
+.result-hero {
+  text-align: center;
+  padding: 32px 20px 22px;
+}
+.result-hero .r-trophy { font-size: 4rem; animation: trophyBounce 1s ease infinite alternate; }
+@keyframes trophyBounce { from { transform: translateY(0) rotate(-5deg); } to { transform: translateY(-8px) rotate(5deg); } }
+.result-hero h2 { font-family: var(--word-font); font-size: 2rem; color: var(--accent); margin: 10px 0 4px; }
+.result-hero p { font-family: var(--text-font); font-size: 0.9rem; color: var(--muted); }
+
+.podium { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 16px 0 20px; }
+.podium-item { text-align: center; flex: 1; max-width: 100px; }
+.podium-bar { border-radius: 8px 8px 0 0; margin: 0 auto 8px; width: 64px; }
+.podium-item.r1 .podium-bar { background: linear-gradient(180deg,#ffe57f,#fdd835); height: 76px; }
+.podium-item.r2 .podium-bar { background: linear-gradient(180deg,#e0e0e0,#bdbdbd); height: 52px; }
+.podium-item.r3 .podium-bar { background: linear-gradient(180deg,#ffcc80,#ff9800); height: 36px; }
+.podium-item.r4 .podium-bar { background: var(--card-border); height: 22px; }
+.podium-medal { font-size: 1.6rem; }
+.podium-name { font-family: var(--text-font); font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+.podium-score { font-family: var(--word-font); font-size: 1rem; color: var(--accent); }
+
+.result-list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.result-list-item:last-child { border-bottom: none; }
+.rl-rank { font-family: var(--word-font); font-size: 1.4rem; color: var(--accent); width: 28px; }
+.rl-em { font-size: 1.5rem; }
+.rl-name { flex: 1; font-family: var(--text-font); font-size: 0.95rem; }
+.rl-score { font-family: var(--word-font); font-size: 1.3rem; color: var(--accent); }
+.rl-tag { font-size: 0.72rem; color: var(--muted); }
+
+.stats-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0;
+  font-family: var(--text-font);
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.stats-row:last-child { border-bottom: none; }
+.stats-row span:last-child { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body class="theme-free">
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="app-wrap">
+  <header>
+    <h1 id="mainTitle">🔤 끝말잇기</h1>
+    <p class="theme-subtitle" id="themeSubtitle">테마를 골라 분위기를 바꿔봐요</p>
+  </header>
+
+  <!-- ========== SETUP ========== -->
+  <div class="screen active" id="setupScreen">
+
+    <div class="card">
+      <h2>👥 인원 설정</h2>
+      <div class="count-btns">
+        <button class="count-btn selected" data-n="2" onclick="selCount(2)">2인</button>
+        <button class="count-btn" data-n="3" onclick="selCount(3)">3인</button>
+        <button class="count-btn" data-n="4" onclick="selCount(4)">4인</button>
+      </div>
+    </div>
+
+    <div class="card" id="nameCard">
+      <h2>✏️ 이름 입력</h2>
+      <div id="nameInputs"></div>
+    </div>
+
+    <div class="card">
+      <h2>🎨 테마 선택</h2>
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ 게임 설정</h2>
+      <div class="settings-row">
+        <label>제한 시간</label>
+        <select id="timeLimit">
+          <option value="0">없음</option>
+          <option value="15">15초</option>
+          <option value="20" selected>20초</option>
+          <option value="30">30초</option>
+          <option value="60">60초</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label>탈락 모드</label>
+        <div class="toggle" id="elimToggle" onclick="toggleElim()"></div>
+      </div>
+      <div class="settings-row">
+        <label>두 글자 허용</label>
+        <div class="toggle on" id="twoToggle" onclick="toggleTwo()"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="startGame()">🎮 게임 시작!</button>
+  </div>
+
+  <!-- ========== GAME ========== -->
+  <div class="screen" id="gameScreen">
+    <div class="avatars-row" id="avatarsRow"></div>
+
+    <div class="turn-banner" id="turnBanner">
+      <div class="turn-avatar" id="turnAv">😀</div>
+      <div class="turn-info">
+        <div class="turn-label" id="turnLabel">지금은</div>
+        <div class="turn-name" id="turnName">플레이어</div>
+      </div>
+      <div class="round-badge" id="roundBadge">1라운드</div>
+    </div>
+
+    <div class="word-box" id="wordBox">
+      <div class="wbg-deco" id="wbgDeco"></div>
+      <div class="lw-label">이전 단어</div>
+      <div class="lw-word" id="lastWord">—</div>
+      <div class="next-hint" id="nextHint">아무 단어나 입력해 시작!</div>
+    </div>
+
+    <div class="timer-wrap" id="timerWrap" style="display:none">
+      <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+      <div class="timer-label" id="timerLabel"></div>
+    </div>
+
+    <div class="input-row-game">
+      <input type="text" id="wordInput" placeholder="단어 입력..." autocomplete="off"
+        onkeydown="if(event.key==='Enter')submitWord()">
+      <button onclick="submitWord()">입력 ↵</button>
+    </div>
+    <div class="err-msg" id="errMsg"></div>
+
+    <div class="score-row" id="scoreRow"></div>
+
+    <div class="card">
+      <div class="history-hdr">
+        <span>📋 사용된 단어</span>
+        <span id="wordCount">0개</span>
+      </div>
+      <div class="history-scroll" id="historyScroll"></div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="confirmQuit()">🚪 게임 종료</button>
+  </div>
+
+  <!-- ========== RESULT ========== -->
+  <div class="screen" id="resultScreen">
+    <div class="card result-hero">
+      <div class="r-trophy">🏆</div>
+      <h2>게임 종료!</h2>
+      <p id="resSub"></p>
+    </div>
+    <div class="card">
+      <div class="podium" id="podiumEl"></div>
+      <div id="resultList"></div>
+    </div>
+    <div class="card">
+      <div class="stats-row"><span>총 단어 수</span><span id="stTotal"></span></div>
+      <div class="stats-row"><span>테마</span><span id="stTheme"></span></div>
+      <div class="stats-row"><span>라운드</span><span id="stRound"></span></div>
+    </div>
+    <button class="btn btn-primary" onclick="goSetup()">🔄 다시 하기</button>
+  </div>
+</div>
+
+<!-- FAIL OVERLAY -->
+<div class="fail-overlay" id="failOverlay">
+  <div class="fail-box">
+    <div class="f-emoji" id="fEmoji">😵</div>
+    <h3 id="fTitle">실패!</h3>
+    <div class="f-reason" id="fReason"></div>
+    <div class="f-desc" id="fDesc"></div>
+    <button class="btn btn-primary" onclick="closeFail()" style="margin-top:0">계속하기</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const THEMES = {
+  free:    { id:'free',    emoji:'🎲', name:'자유',   subtitle:'제한 없이 자유롭게!',   colors:['#ff6b35','#fdf6ec'], font:'Jua', bg:'warm',   check:()=>true },
+  animal:  { id:'animal',  emoji:'🐾', name:'동물',   subtitle:'자연 속 동물들의 세계', colors:['#4caf50','#1a2e1a'], font:'Poor Story', bg:'forest', check:w=>ANIMALS.includes(w) },
+  food:    { id:'food',    emoji:'🍜', name:'음식',   subtitle:'맛있는 음식들의 향연',  colors:['#ff8f00','#2d1b00'], font:'Do Hyeon', bg:'kitchen',check:w=>FOODS.includes(w) },
+  country: { id:'country', emoji:'🌍', name:'나라',   subtitle:'세계 여행을 떠나요',    colors:['#7986cb','#0a0a2e'], font:'Do Hyeon', bg:'space',  check:w=>COUNTRIES.includes(w) },
+  nature:  { id:'nature',  emoji:'🌿', name:'자연',   subtitle:'맑고 푸른 자연으로',    colors:['#0288d1','#e3f2fd'], font:'Gaegu', bg:'sky',    check:w=>NATURE.includes(w) },
+  sports:  { id:'sports',  emoji:'⚽', name:'스포츠', subtitle:'열정의 경기장에서!',    colors:['#fdd835','#1a1a1a'], font:'Black Han Sans', bg:'stadium',check:w=>SPORTS.includes(w) },
+};
+
+const ANIMALS=['고양이','강아지','코끼리','기린','사자','호랑이','원숭이','코뿔소','하마','악어','독수리','참새','비둘기','부엉이','펭귄','물개','고래','상어','돌고래','오징어','문어','거북이','개구리','뱀','도마뱀','공작','앵무새','토끼','다람쥐','너구리','여우','늑대','곰','판다','코알라','캥거루','얼룩말','치타','표범','재규어','수달','해달','오리','닭','오리너구리','박쥐','두더지','햄스터','고슴도치','미어캣','이구아나','카멜레온','타조','홍학','가오리','복어','금붕어','잉어','연어','송어','가재','새우','게','소라','전복','굴','조개','달팽이','지렁이','메뚜기','나비','잠자리','개미','꿀벌','무당벌레','사슴벌레','쥐','두루미','황새','까마귀','까치','제비','학','기러기','백로','왜가리','올빼미','딱따구리','파랑새','야생마','들소','물소','라마','알파카','비버','아르마딜로','가젤','임팔라','누'];
+const FOODS=['김치찌개','된장찌개','순두부찌개','비빔밥','볶음밥','김밥','떡볶이','순대','라면','우동','짜장면','짬뽕','냉면','칼국수','수제비','삼겹살','갈비','불고기','닭갈비','제육볶음','김치볶음밥','오징어볶음','낙지볶음','낙지','전복죽','호박죽','팥죽','미역국','갈비탕','설렁탕','해장국','순댓국','곰탕','사골국','돼지국밥','해물파전','감자전','김치전','녹두전','빈대떡','잡채','삼계탕','족발','보쌈','떡갈비','갈비찜','아귀찜','조기구이','고등어구이','갈치구이','삼치구이','전어','굴밥','솥밥','영양밥','치킨','피자','햄버거','샌드위치','타코','파스타','스파게티','리조또','스테이크','카레','초밥','사시미','라멘','소바','팟타이','볶음면','쌀국수','쌀밥','현미밥','보리밥','잡곡밥','국수','만두','군만두','물만두','찐만두','샐러드','피클','깍두기','나물','도시락','오니기리','타코야키','오코노미야키','케이크','빵','도넛','마카롱','크로와상','베이글','바게트','치즈케이크','아이스크림','팥빙수','호떡','붕어빵','전병','잡채'];
+const COUNTRIES=['한국','일본','중국','미국','영국','프랑스','독일','이탈리아','스페인','포르투갈','러시아','캐나다','호주','뉴질랜드','인도','태국','베트남','필리핀','인도네시아','말레이시아','싱가포르','홍콩','대만','몽골','카자흐스탄','터키','이란','이라크','사우디아라비아','이스라엘','이집트','케냐','나이지리아','에티오피아','모로코','알제리','아르헨티나','브라질','칠레','페루','콜롬비아','멕시코','쿠바','자메이카','스웨덴','노르웨이','덴마크','핀란드','폴란드','체코','오스트리아','스위스','네덜란드','벨기에','그리스','우크라이나','서울','도쿄','베이징','상하이','뉴욕','런던','파리','베를린','로마','마드리드','모스크바','시드니','두바이','방콕','홍콩','이스탄불','남아프리카공화국'];
+const NATURE=['산','강','바다','호수','하늘','구름','바람','비','눈','태양','달','별','모래','돌','흙','나무','꽃','풀','숲','정글','사막','빙하','화산','폭포','계곡','절벽','해안','섬','반도','평야','고원','분지','습지','갯벌','산호초','오로라','무지개','번개','천둥','안개','이슬','서리','한파','폭설','태풍','토네이도','해일','지진','낙엽','꽃잎','씨앗','뿌리','가지','열매','이끼','버섯','이파리','가시','향기','봄','여름','가을','겨울','소나기','봄비','첫눈','새벽','황혼','일출','일몰','밀물','썰물','조류','한강','낙동강','금강','섬진강','한라산','지리산','설악산','백두산','히말라야','알프스','로키산맥','아마존','나일강','미시시피','남극','북극'];
+const SPORTS=['축구','야구','농구','배구','테니스','배드민턴','탁구','수영','달리기','마라톤','사이클','사격','양궁','펜싱','유도','태권도','씨름','레슬링','복싱','무에타이','격투기','스키','스노보드','아이스하키','피겨스케이팅','쇼트트랙','봅슬레이','골프','럭비','핸드볼','수구','다이빙','서핑','모터사이클','자동차경주','승마','체조','트램폴린','기계체조','리듬체조','볼링','당구','다트','클라이밍','철인3종','조정','카누','요트','스쿼시','라켓볼','크리켓','하키','미식축구','소프트볼','넷볼','비치발리볼','비치축구','파쿠르','스케이트보드','비엠엑스','스트리트댄스','에어로빅','필라테스','요가','크로스핏','철봉','평행봉','역도','투포환','원반던지기','해머던지기','높이뛰기','멀리뛰기','허들'];
+
+const EMOJIS = ['😀','🥳','😎','🤩'];
+const COLORS = ['#ff6b35','#4ecdc4','#a855f7','#f59e0b'];
+
+// ============================================================
+// CANVAS BG
+// ============================================================
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let currentBg = 'warm';
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function initParticles(bg) {
+  particles = [];
+  const configs = {
+    warm: { count:14, emojis:['✨','⭐','💫','🌟'], color:'rgba(255,200,150,0.18)' },
+    forest:{ count:18, emojis:['🌿','🍃','🌱','🍀','🌲','🌳'], color:'rgba(100,200,100,0.15)' },
+    kitchen:{ count:14, emojis:['🍜','🔥','🌶️','🫕','🍳','🥢'], color:'rgba(255,150,50,0.15)' },
+    space: { count:30, emojis:['⭐','✨','💫','🌟','⚡'], color:'rgba(180,180,255,0.2)' },
+    sky:   { count:12, emojis:['☁️','🌤️','⛅','🌈','💧'], color:'rgba(100,200,255,0.15)' },
+    stadium:{ count:16, emojis:['⚡','🔥','💥','🎯','⚽','🏀'], color:'rgba(255,220,50,0.15)' },
+  };
+  const c = configs[bg] || configs.warm;
+  for (let i = 0; i < c.count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      emoji: c.emojis[Math.floor(Math.random()*c.emojis.length)],
+      size: 14 + Math.random() * 18,
+      vx: (Math.random()-0.5)*0.4,
+      vy: -0.2 - Math.random()*0.4,
+      opacity: 0.12 + Math.random()*0.18,
+      rotation: Math.random()*360,
+      rotSpeed: (Math.random()-0.5)*0.5,
+    });
+  }
+}
+
+function drawBg() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.opacity;
+    ctx.font = `${p.size}px serif`;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rotation * Math.PI/180);
+    ctx.fillText(p.emoji, -p.size/2, p.size/2);
+    ctx.restore();
+
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rotation += p.rotSpeed;
+    if (p.y < -40) { p.y = canvas.height + 20; p.x = Math.random()*canvas.width; }
+    if (p.x < -40) p.x = canvas.width+20;
+    if (p.x > canvas.width+40) p.x = -20;
+  });
+  requestAnimationFrame(drawBg);
+}
+initParticles('warm');
+drawBg();
+
+// ============================================================
+// SETUP
+// ============================================================
+let G = {}; // game state
+let elimOn=false, twoOn=true;
+
+// Build theme grid
+const tg = document.getElementById('themeGrid');
+Object.values(THEMES).forEach(t => {
+  const el = document.createElement('div');
+  el.className = 'theme-opt' + (t.id==='free'?' selected':'');
+  el.dataset.id = t.id;
+  // color preview
+  const previewGrad = `linear-gradient(90deg,${t.colors[0]},${t.colors[1]})`;
+  el.innerHTML = `<div class="theme-icon">${t.emoji}</div>
+    <div class="theme-name">${t.name}</div>
+    <div class="theme-preview" style="background:${previewGrad}"></div>`;
+  el.onclick = () => {
+    document.querySelectorAll('.theme-opt').forEach(e=>e.classList.remove('selected'));
+    el.classList.add('selected');
+    applyTheme(t.id);
+  };
+  tg.appendChild(el);
+});
+
+function applyTheme(id) {
+  const t = THEMES[id];
+  document.body.className = 'theme-'+id;
+  document.getElementById('mainTitle').textContent = t.emoji+' 끝말잇기';
+  document.getElementById('themeSubtitle').textContent = t.subtitle;
+  currentBg = t.bg;
+  initParticles(t.bg);
+  G.theme = id;
+}
+
+function selCount(n) {
+  document.querySelectorAll('.count-btn').forEach(b=>b.classList.toggle('selected',+b.dataset.n===n));
+  buildNameInputs(n);
+}
+function buildNameInputs(n) {
+  const c = document.getElementById('nameInputs');
+  c.innerHTML='';
+  const defaults=['플레이어1','플레이어2','플레이어3','플레이어4'];
+  for(let i=0;i<n;i++){
+    c.innerHTML+=`<div class="input-row">
+      <span class="p-emoji">${EMOJIS[i]}</span>
+      <input type="text" id="pname${i}" placeholder="${defaults[i]}" maxlength="8" value="${defaults[i]}">
+    </div>`;
+  }
+}
+buildNameInputs(2);
+
+function toggleElim(){elimOn=!elimOn;document.getElementById('elimToggle').classList.toggle('on',elimOn);}
+function toggleTwo(){twoOn=!twoOn;document.getElementById('twoToggle').classList.toggle('on',twoOn);}
+
+function startGame(){
+  const n=+document.querySelector('.count-btn.selected').dataset.n;
+  const names=[];
+  for(let i=0;i<n;i++) names.push((document.getElementById('pname'+i)?.value.trim())||`플레이어${i+1}`);
+  const themeId=document.querySelector('.theme-opt.selected')?.dataset.id||'free';
+  applyTheme(themeId);
+  G={
+    players:names, theme:themeId,
+    timeLimit:+document.getElementById('timeLimit').value,
+    eliminate:elimOn, twoChar:twoOn,
+    idx:0, words:[], scores:names.map(()=>0),
+    elim:names.map(()=>false),
+    round:1, timer:null, timeLeft:0,
+  };
+  showScreen('gameScreen');
+  renderGame();
+}
+
+// ============================================================
+// GAME
+// ============================================================
+function renderGame(){
+  const t=THEMES[G.theme];
+  const p=G.players[G.idx];
+
+  // avatars
+  const ar=document.getElementById('avatarsRow');
+  ar.innerHTML='';
+  G.players.forEach((name,i)=>{
+    ar.innerHTML+=`<div class="av-item">
+      <div class="av-circle ${i===G.idx&&!G.elim[i]?'active':''} ${G.elim[i]?'elim':''}"
+        style="background:${COLORS[i]}22">${G.elim[i]?'💀':EMOJIS[i]}</div>
+      <div class="av-name">${name}</div>
+    </div>`;
+  });
+
+  // turn banner
+  const banner=document.getElementById('turnBanner');
+  banner.style.background=COLORS[G.idx];
+  banner.style.boxShadow=`0 4px 0 ${COLORS[G.idx]}88`;
+  document.getElementById('turnAv').textContent=EMOJIS[G.idx];
+  document.getElementById('turnName').textContent=p+'의 차례';
+  document.getElementById('roundBadge').textContent=G.round+'라운드';
+
+  // word box deco
+  document.getElementById('wbgDeco').textContent=t.emoji;
+
+  // last word
+  const lw=G.words.length?G.words[G.words.length-1]:null;
+  const lwEl=document.getElementById('lastWord');
+  if(lw){
+    lwEl.textContent=lw.word;
+    const nc=lw.word[lw.word.length-1];
+    document.getElementById('nextHint').innerHTML=
+      `<span style="color:var(--muted)">다음은</span>
+       <span class="next-char">${nc}</span>
+       <span style="color:var(--muted)">(으)로 시작!</span>`;
+  } else {
+    lwEl.textContent='—';
+    document.getElementById('nextHint').textContent='아무 단어나 입력해 시작!';
+  }
+
+  // scores
+  const sr=document.getElementById('scoreRow');
+  sr.innerHTML='';
+  G.players.forEach((name,i)=>{
+    sr.innerHTML+=`<div class="score-chip${i===G.idx?' current':''}">
+      <div class="sc-name">${EMOJIS[i]} ${name}</div>
+      <div class="sc-pts">${G.scores[i]}</div>
+    </div>`;
+  });
+
+  renderHistory();
+  startTimer();
+
+  document.getElementById('errMsg').textContent='';
+  document.getElementById('wordInput').value='';
+  setTimeout(()=>document.getElementById('wordInput').focus(),80);
+}
+
+function renderHistory(){
+  const hs=document.getElementById('historyScroll');
+  hs.innerHTML='';
+  G.words.forEach((w,i)=>{
+    const chip=document.createElement('div');
+    chip.className='h-chip'+(i===G.words.length-1?' new-word':'');
+    chip.style.borderColor=COLORS[w.pi]+'88';
+    chip.title=G.players[w.pi];
+    chip.textContent=w.word;
+    hs.appendChild(chip);
+  });
+  document.getElementById('wordCount').textContent=G.words.length+'개';
+  hs.scrollTop=hs.scrollHeight;
+}
+
+function startTimer(){
+  clearInterval(G.timer);
+  const tw=document.getElementById('timerWrap');
+  if(!G.timeLimit){tw.style.display='none';return;}
+  tw.style.display='block';
+  G.timeLeft=G.timeLimit;
+  updTimer();
+  G.timer=setInterval(()=>{
+    G.timeLeft--;
+    updTimer();
+    if(G.timeLeft<=0){clearInterval(G.timer);handleFail('⏰ 시간 초과!',`${G.timeLimit}초 안에 입력 못했어요`);}
+  },1000);
+}
+function updTimer(){
+  const pct=(G.timeLeft/G.timeLimit)*100;
+  const fill=document.getElementById('timerFill');
+  fill.style.width=pct+'%';
+  fill.classList.toggle('urgent',G.timeLeft<=5);
+  document.getElementById('timerLabel').textContent=G.timeLeft>0?`⏱ ${G.timeLeft}초`:'';
+}
+
+function validate(word){
+  if(!G.twoChar&&word.length<3) return '두 글자 단어는 안 돼요!';
+  if(word.length<2) return '최소 2글자 이상이어야 해요!';
+  if(G.words.length){
+    const last=G.words[G.words.length-1].word;
+    const need=last[last.length-1];
+    if(word[0]!==need) return `"${need}"(으)로 시작해야 해요!`;
+  }
+  if(G.words.some(w=>w.word===word)) return '이미 사용한 단어예요!';
+  const t=THEMES[G.theme];
+  if(!t.check(word)) return `"${THEMES[G.theme].name}" 테마에 맞는 단어가 아니에요!`;
+  return null;
+}
+
+function submitWord(){
+  const input=document.getElementById('wordInput');
+  const word=input.value.trim();
+  if(!word) return;
+  const err=validate(word);
+  if(err){
+    document.getElementById('errMsg').textContent=err;
+    input.select();
+    return;
+  }
+  clearInterval(G.timer);
+  G.words.push({word,pi:G.idx});
+  G.scores[G.idx]++;
+  nextTurn();
+}
+
+function nextTurn(){
+  const alive=G.players.filter((_,i)=>!G.elim[i]);
+  if(G.eliminate&&alive.length<=1){endGame();return;}
+  let next=(G.idx+1)%G.players.length;
+  while(G.elim[next]) next=(next+1)%G.players.length;
+  if(next<=G.idx) G.round++;
+  G.idx=next;
+  renderGame();
+}
+
+function handleFail(title,reason){
+  document.getElementById('fTitle').textContent=title;
+  document.getElementById('fReason').textContent=reason;
+  const name=G.players[G.idx];
+  document.getElementById('fDesc').textContent=
+    G.eliminate?`${name}님이 탈락했어요!`:`${name}님은 한 턴 쉽니다.`;
+  document.getElementById('fEmoji').textContent='😵';
+  document.getElementById('failOverlay').classList.add('show');
+  if(G.eliminate) G.elim[G.idx]=true;
+}
+
+function closeFail(){
+  document.getElementById('failOverlay').classList.remove('show');
+  const alive=G.players.filter((_,i)=>!G.elim[i]);
+  if(G.eliminate&&alive.length<=1){endGame();return;}
+  nextTurn();
+}
+
+function confirmQuit(){if(confirm('정말 종료할까요?'))endGame();}
+
+function endGame(){
+  clearInterval(G.timer);
+  const t=THEMES[G.theme];
+  document.getElementById('resSub').textContent=`${G.words.length}개의 단어가 사용됐어요`;
+  document.getElementById('stTotal').textContent=G.words.length+'개';
+  document.getElementById('stTheme').textContent=t.emoji+' '+t.name;
+  document.getElementById('stRound').textContent=G.round+'라운드';
+
+  const ranked=[...G.players.map((name,i)=>({name,i,score:G.scores[i],elim:G.elim[i]}))].sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉','🎗️'];
+  const rClasses=['r1','r2','r3','r4'];
+
+  // podium (order: 2nd, 1st, 3rd)
+  const pod=document.getElementById('podiumEl');
+  pod.innerHTML='';
+  const podOrder=ranked.length>=3?[ranked[1],ranked[0],ranked[2]]:ranked.length===2?[ranked[1],ranked[0]]:[ranked[0]];
+  const podRCls=ranked.length>=3?['r2','r1','r3']:['r2','r1'];
+  podOrder.forEach((p,pi)=>{
+    const rc=podRCls[pi]||'r4';
+    const ri=ranked.indexOf(p);
+    pod.innerHTML+=`<div class="podium-item ${rc}">
+      <div class="podium-medal">${medals[ri]||'🎗️'}</div>
+      <div class="podium-bar"></div>
+      <div class="podium-name">${EMOJIS[p.i]} ${p.name}</div>
+      <div class="podium-score">${p.score}점</div>
+    </div>`;
+  });
+
+  const rl=document.getElementById('resultList');
+  rl.innerHTML='';
+  ranked.forEach((p,ri)=>{
+    rl.innerHTML+=`<div class="result-list-item">
+      <div class="rl-rank">${medals[ri]||ri+1}</div>
+      <div class="rl-em">${EMOJIS[p.i]}</div>
+      <div class="rl-name">${p.name}<br><span class="rl-tag">${p.elim?'💀 탈락':'✅ 생존'}</span></div>
+      <div class="rl-score">${p.score}점</div>
+    </div>`;
+  });
+
+  showScreen('resultScreen');
+}
+
+function goSetup(){showScreen('setupScreen');}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

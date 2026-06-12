@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ECLIPSE v2 — 균열의 기사</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#05030c; }
+  body { font-family:'Chakra Petch', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color:#dff; }
+  #game { position:fixed; inset:0; }
+  canvas { display:block; }
+
+  /* ---------- VFX overlay ---------- */
+  #vignette {
+    position:fixed; inset:0; pointer-events:none; z-index:5;
+    box-shadow: inset 0 0 220px 40px rgba(0,0,0,0.85);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(8,2,20,0.55) 100%);
+    mix-blend-mode:multiply;
+  }
+  #scanlines {
+    position:fixed; inset:0; pointer-events:none; z-index:6; opacity:0.10;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 1px, transparent 2px, transparent 3px);
+  }
+  #flash {
+    position:fixed; inset:0; pointer-events:none; z-index:8; background:#fff; opacity:0;
+    transition:opacity 0.08s ease-out;
+  }
+  #glitch {
+    position:fixed; inset:0; pointer-events:none; z-index:30; opacity:0; display:none;
+    background:linear-gradient(90deg,#ff00d4,#00f0ff,#39ff14,#ffd400,#ff003c);
+    mix-blend-mode:hue;
+  }
+
+  /* ---------- HUD ---------- */
+  #hud { position:fixed; inset:0; pointer-events:none; z-index:10; display:none; }
+  .panel {
+    position:absolute; background:rgba(8,6,22,0.55);
+    border:1px solid rgba(0,240,255,0.35); padding:9px 13px;
+    backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+    box-shadow:0 0 18px rgba(0,240,255,0.18), inset 0 0 12px rgba(0,240,255,0.08);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  #stats { top:14px; left:14px; min-width:210px; }
+  .label { font-size:11px; letter-spacing:2px; color:#6fdfff; text-transform:uppercase; opacity:0.8; }
+  .barOuter { height:11px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); margin-top:3px; position:relative; overflow:hidden; }
+  .barFill { height:100%; width:100%; transition:width 0.18s ease-out; }
+  #hpFill { background:linear-gradient(90deg,#ff2a4d,#ff7a3c); box-shadow:0 0 12px #ff2a4d; }
+  #xpFill { background:linear-gradient(90deg,#00f0ff,#39ff14); box-shadow:0 0 12px #00f0ff; }
+  #lvText { font-size:20px; font-weight:700; color:#fff; text-shadow:0 0 10px #00f0ff; margin-top:2px; }
+  #lvText span { font-size:12px; color:#6fdfff; font-weight:400; letter-spacing:1px; }
+
+  #topmid { top:14px; left:50%; transform:translateX(-50%); text-align:center; }
+  #waveText { font-size:22px; font-weight:700; letter-spacing:3px; color:#fff; text-shadow:0 0 14px #ff00d4; }
+  #scoreText { font-size:13px; color:#9fefff; letter-spacing:2px; margin-top:2px; }
+
+  #bossBarWrap { position:absolute; bottom:120px; left:50%; transform:translateX(-50%); width:min(620px,82%); display:none; text-align:center; }
+  #bossName { font-size:14px; letter-spacing:4px; color:#ff5af0; text-shadow:0 0 12px #ff00d4; margin-bottom:4px; }
+  #bossOuter { height:14px; background:rgba(40,0,40,0.55); border:1px solid rgba(255,0,212,0.5); position:relative; overflow:hidden;
+    box-shadow:0 0 22px rgba(255,0,212,0.35); }
+  #bossFill { height:100%; width:100%; background:linear-gradient(90deg,#a020f0,#ff00d4); box-shadow:0 0 14px #ff00d4; transition:width 0.15s; }
+
+  /* floating combat text */
+  .dmg { position:fixed; z-index:11; pointer-events:none; font-weight:700; font-size:20px;
+    text-shadow:0 0 8px currentColor, 0 2px 3px #000; animation:floatUp 0.85s ease-out forwards; }
+  @keyframes floatUp { 0%{ transform:translate(-50%,0) scale(0.6); opacity:0;} 15%{opacity:1; transform:translate(-50%,-8px) scale(1.15);} 100%{ transform:translate(-50%,-58px) scale(0.9); opacity:0;} }
+
+  #toast { position:fixed; top:74px; left:50%; transform:translateX(-50%) translateY(-20px);
+    z-index:14; padding:10px 22px; background:rgba(10,4,24,0.85); border:1px solid #00f0ff;
+    color:#bff; letter-spacing:2px; font-size:14px; opacity:0; transition:all 0.4s; pointer-events:none;
+    box-shadow:0 0 24px rgba(0,240,255,0.4); }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- Mobile controls ---------- */
+  #touch { position:fixed; inset:0; z-index:12; display:none; pointer-events:none; }
+  #stick { position:absolute; left:24px; bottom:30px; width:130px; height:130px; border-radius:50%;
+    background:rgba(0,240,255,0.06); border:2px solid rgba(0,240,255,0.28); pointer-events:auto; touch-action:none; }
+  #knob { position:absolute; left:35px; top:35px; width:60px; height:60px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #6ff, #0bb); box-shadow:0 0 18px #0ff; }
+  .actBtn { position:absolute; border-radius:50%; pointer-events:auto; touch-action:none; display:flex; align-items:center; justify-content:center;
+    font-weight:700; letter-spacing:1px; color:#fff; user-select:none; }
+  #atkBtn { right:26px; bottom:34px; width:104px; height:104px; font-size:15px;
+    background:radial-gradient(circle at 35% 30%, rgba(255,60,140,0.6), rgba(150,0,80,0.5));
+    border:2px solid #ff3c8c; box-shadow:0 0 22px rgba(255,60,140,0.5); }
+  #dashBtn { right:140px; bottom:96px; width:74px; height:74px; font-size:13px;
+    background:radial-gradient(circle at 35% 30%, rgba(0,240,255,0.45), rgba(0,120,150,0.45));
+    border:2px solid #00f0ff; box-shadow:0 0 18px rgba(0,240,255,0.45); }
+  .actBtn:active { transform:scale(0.92); filter:brightness(1.4); }
+
+  /* ---------- Screens ---------- */
+  .screen { position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px;
+    background:radial-gradient(ellipse at center, rgba(20,8,42,0.6), rgba(4,2,12,0.96)); }
+  .bgGrid { position:absolute; inset:0; z-index:-1; opacity:0.18;
+    background-image:linear-gradient(rgba(0,240,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,0,212,0.4) 1px, transparent 1px);
+    background-size:46px 46px; transform:perspective(420px) rotateX(58deg) translateY(40px); transform-origin:center bottom;
+    animation:gridmove 6s linear infinite; }
+  @keyframes gridmove { from{ background-position:0 0;} to{ background-position:0 46px;} }
+
+  .title { font-size:clamp(48px,13vw,120px); font-weight:700; letter-spacing:10px; line-height:0.95;
+    color:#fff; text-shadow:0 0 20px #00f0ff, 0 0 50px #00f0ff, 4px 4px 0 #ff00d4, -3px -3px 0 #39ff14;
+    animation:flick 4s infinite; }
+  @keyframes flick { 0%,92%,100%{opacity:1;} 93%{opacity:0.35;} 94%{opacity:1;} 96%{opacity:0.5;} 97%{opacity:1;} }
+  .subtitle { margin-top:6px; font-size:clamp(15px,4vw,26px); letter-spacing:14px; color:#ff5af0; text-shadow:0 0 16px #ff00d4; }
+  .tag { margin-top:18px; font-size:12px; letter-spacing:3px; color:#7fdfff; opacity:0.7; }
+  .btn { margin-top:34px; padding:15px 52px; font-family:inherit; font-size:17px; font-weight:700; letter-spacing:4px;
+    color:#001; background:linear-gradient(90deg,#00f0ff,#39ff14); border:none; cursor:pointer;
+    box-shadow:0 0 28px rgba(0,240,255,0.6); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    transition:transform 0.12s, filter 0.12s; pointer-events:auto; }
+  .btn:hover { transform:scale(1.05); filter:brightness(1.15); }
+  .btn:active { transform:scale(0.97); }
+  .ctrls { margin-top:30px; font-size:12px; letter-spacing:1.5px; color:#8fcfe0; line-height:1.9; opacity:0.85; }
+  .ctrls b { color:#fff; }
+  #over .title { color:#fff; text-shadow:0 0 20px #ff2a4d, 0 0 50px #ff2a4d, 3px 3px 0 #a020f0; animation:none; font-size:clamp(40px,11vw,92px); }
+  #finalScore { margin-top:14px; font-size:22px; color:#9fefff; letter-spacing:3px; }
+  #finalScore b { color:#fff; font-size:30px; text-shadow:0 0 14px #00f0ff; }
+
+  #talk { position:fixed; left:50%; bottom:20%; transform:translate(-50%,12px); z-index:13; pointer-events:none;
+    max-width:84%; padding:10px 20px; background:rgba(6,4,20,0.82); border:1px solid #ff00d4;
+    color:#ffe6ff; font-size:15px; letter-spacing:0.5px; line-height:1.4; text-align:center;
+    box-shadow:0 0 22px rgba(255,0,212,0.4); opacity:0; transition:opacity 0.35s, transform 0.35s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+  #talk.show { opacity:1; transform:translate(-50%,0); }
+  #talk b { color:#fff; }
+  #talk span { filter:drop-shadow(0 0 6px #ff00d4); margin-right:4px; }
+
+  .ver { position:absolute; right:16px; bottom:14px; font-size:13px; letter-spacing:3px;
+    color:#00f0ff; opacity:0.65; text-shadow:0 0 10px rgba(0,240,255,0.6); pointer-events:none; }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="vignette"></div>
+<div id="scanlines"></div>
+<div id="flash"></div>
+<div id="glitch"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="panel" id="stats">
+    <div id="lvText">LV.1 <span>균열의 기사</span></div>
+    <div class="label" style="margin-top:7px;">HP</div>
+    <div class="barOuter"><div class="barFill" id="hpFill"></div></div>
+    <div class="label" style="margin-top:7px;">EXP</div>
+    <div class="barOuter"><div class="barFill" id="xpFill" style="width:0%"></div></div>
+  </div>
+  <div class="panel" id="topmid">
+    <div id="waveText">WAVE 1</div>
+    <div id="scoreText">SCORE 0</div>
+  </div>
+  <div id="bossBarWrap">
+    <div id="bossName">??? 보스</div>
+    <div id="bossOuter"><div id="bossFill"></div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="talk"></div>
+
+<!-- Mobile -->
+<div id="touch">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="actBtn" id="dashBtn">DASH</div>
+  <div class="actBtn" id="atkBtn">⚔</div>
+</div>
+
+<!-- Title -->
+<div class="screen" id="start">
+  <div class="bgGrid"></div>
+  <div class="title">ECLIPSE</div>
+  <div class="subtitle">균열의 기사</div>
+  <div class="tag">— 한결을 위하여 —</div>
+  <div class="ver">v2</div>
+  <button class="btn" id="startBtn">START</button>
+  <div class="ctrls">
+    <b>PC</b> · 이동 WASD/방향키 · 공격 마우스클릭/Space · 대시 Shift<br>
+    <b>모바일</b> · 왼쪽 스틱 이동 · 오른쪽 ⚔ 공격 · DASH 회피
+  </div>
+</div>
+
+<!-- Game over -->
+<div class="screen hidden" id="over">
+  <div class="bgGrid"></div>
+  <div class="title">균열에 삼켜짐</div>
+  <div id="finalScore">SCORE <b id="ovScore">0</b></div>
+  <button class="btn" id="retryBtn">RETRY</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   ECLIPSE — 균열의 기사
+   single-file 3D action RPG  (Samsung Internet safe: var / function decls,
+   no arrow fns, no template literals, no optional chaining, no roundRect)
+   ===================================================================== */
+
+var ARENA = 58;          // half-size of play field
+var MAX_ENEMIES = 14;
+
+// ---- runtime state ----
+var state = 'title';     // title | play | over
+var hangyeol = false;    // easter-egg dimension active?
+var clock, scene, camera, renderer;
+var W = window.innerWidth, H = window.innerHeight;
+
+var keys = {};
+var moveVec = new THREE.Vector2(0,0);   // input direction (-1..1)
+var shake = 0;
+var lastTime = 0;
+var spawnSafety = 0;
+
+// gameplay vars
+var player, sword, swordGlow, playerShadow, playerAura;
+var hp=100, maxHp=100, dmg=24, level=1, xp=0, xpNeed=8, score=0, wave=0;
+var attackCd=0, dashCd=0, dashTime=0, invuln=0, facing=new THREE.Vector3(0,0,1);
+var enemies=[], orbs=[], slashes=[], particles=[], floaters=[], hangyeolText=[];
+var boss=null, enemiesToSpawn=0, waveActive=false, betweenTimer=0;
+var duck, duckHit=false;
+var grid, discoLights=[];
+
+// ---- "weirdness director": oddball enemies, random events, fourth-wall chatter ----
+var oddballs=[], popups3d=[], cheerSprites=[];
+var timeScale=1, eventName='', eventT=0, eventSub=0, eventTimer=12, lastEvent='';
+var oddTimer=10, msgTimer=8, idleTimer=0;
+var qBlock=null, qHit=false;
+var elTalk=null, talkTimer=null;
+
+// dom refs
+var elHud=document.getElementById('hud');
+var elHpFill=document.getElementById('hpFill');
+var elXpFill=document.getElementById('xpFill');
+var elLv=document.getElementById('lvText');
+var elWave=document.getElementById('waveText');
+var elScore=document.getElementById('scoreText');
+var elFlash=document.getElementById('flash');
+var elGlitch=document.getElementById('glitch');
+var elToast=document.getElementById('toast');
+var elBossWrap=document.getElementById('bossBarWrap');
+var elBossName=document.getElementById('bossName');
+var elBossFill=document.getElementById('bossFill');
+var elTouch=document.getElementById('touch');
+
+/* =====================================================================
+   AUDIO  (procedural)
+   ===================================================================== */
+var AC=null, master=null, musicTimer=null, musicStep=0;
+function initAudio(){
+  if(AC) return;
+  try {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    AC = new Ctx();
+    master = AC.createGain();
+    master.gain.value = 0.35;
+    master.connect(AC.destination);
+  } catch(e){ AC=null; }
+}
+function tone(freq, dur, type, vol, slideTo){
+  if(!AC) return;
+  var o=AC.createOscillator(), g=AC.createGain();
+  o.type = type || 'sawtooth';
+  o.frequency.setValueAtTime(freq, AC.currentTime);
+  if(slideTo){ o.frequency.exponentialRampToValueAtTime(Math.max(1,slideTo), AC.currentTime+dur); }
+  g.gain.setValueAtTime(0.0001, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(vol||0.2, AC.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
+  o.connect(g); g.connect(master);
+  o.start(); o.stop(AC.currentTime+dur+0.02);
+}
+function noise(dur, vol){
+  if(!AC) return;
+  var n = AC.sampleRate * dur, buf = AC.createBuffer(1, n, AC.sampleRate), d=buf.getChannelData(0);
+  var i; for(i=0;i<n;i++){ d[i]=(Math.random()*2-1); }
+  var src=AC.createBufferSource(); src.buffer=buf;
+  var g=AC.createGain(); g.gain.setValueAtTime(vol||0.2, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
+  var f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=900;
+  src.connect(f); f.connect(g); g.connect(master); src.start(); src.stop(AC.currentTime+dur);
+}
+function sfxSlash(){ noise(0.12,0.18); tone(420,0.12,'sawtooth',0.12,140); }
+function sfxHit(){ tone(180,0.09,'square',0.16,60); noise(0.05,0.12); }
+function sfxHurt(){ tone(120,0.25,'sawtooth',0.22,40); }
+function sfxOrb(){ tone(880,0.08,'sine',0.12,1320); }
+function sfxLevel(){ tone(523,0.12,'triangle',0.18); setTimeout(function(){tone(659,0.12,'triangle',0.18);},90); setTimeout(function(){tone(880,0.2,'triangle',0.2);},190); }
+function sfxBoss(){ tone(70,0.7,'sawtooth',0.3,46); noise(0.5,0.2); }
+function sfxTransform(){
+  if(!AC) return;
+  tone(120,0.9,'sawtooth',0.3,1400);
+  setTimeout(function(){ noise(0.4,0.3); },120);
+  var s=[523,659,784,1046,1318];
+  var i; for(i=0;i<s.length;i++){ (function(f,k){ setTimeout(function(){tone(f,0.18,'square',0.18);},300+k*90); })(s[i],i); }
+}
+function startMusic(){
+  stopMusic();
+  musicStep=0;
+  musicTimer=setInterval(function(){
+    if(!AC || state!=='play') return;
+    if(hangyeol){
+      // upbeat disco arpeggio
+      var dance=[523,659,784,659,880,784,659,523];
+      tone(dance[musicStep%dance.length], 0.16,'square',0.10);
+      if(musicStep%2===0) tone(131,0.18,'triangle',0.16);
+    } else {
+      // dark pulsing bass + sparse pad
+      if(musicStep%4===0) tone(55,0.5,'sawtooth',0.10);
+      if(musicStep%8===0) tone(110,0.6,'triangle',0.05);
+    }
+    musicStep++;
+  }, 180);
+}
+function stopMusic(){ if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } }
+
+/* =====================================================================
+   THREE SETUP
+   ===================================================================== */
+function initThree(){
+  clock = new THREE.Clock();
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x06030f);
+  scene.fog = new THREE.Fog(0x06030f, 40, 120);
+
+  camera = new THREE.PerspectiveCamera(58, W/H, 0.1, 400);
+  camera.position.set(0, 26, 26);
+  camera.lookAt(0,0,0);
+
+  renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+  renderer.setSize(W,H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  document.getElementById('game').appendChild(renderer.domElement);
+
+  // lights
+  var amb = new THREE.AmbientLight(0x223355, 0.9); scene.add(amb);
+  var dir = new THREE.DirectionalLight(0x88bbff, 0.7); dir.position.set(20,40,10); scene.add(dir);
+  var p1 = new THREE.PointLight(0x00f0ff, 1.2, 120); p1.position.set(-30,18,-20); scene.add(p1);
+  var p2 = new THREE.PointLight(0xff00d4, 1.2, 120); p2.position.set(30,18,20); scene.add(p2);
+
+  buildWorld();
+  buildPlayer();
+  buildDuck();
+  buildQBlock();
+}
+
+function buildWorld(){
+  // ground
+  var groundMat = new THREE.MeshPhongMaterial({ color:0x0a0820, emissive:0x05030f, shininess:60 });
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2.6, ARENA*2.6), groundMat);
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.02;
+  scene.add(ground);
+
+  // neon grid
+  grid = new THREE.GridHelper(ARENA*2.4, 48, 0x00f0ff, 0x152040);
+  grid.material.transparent = true; grid.material.opacity = 0.55;
+  grid.position.y = 0;
+  scene.add(grid);
+
+  // outer boundary ring
+  var ringMat = new THREE.MeshBasicMaterial({ color:0xff00d4, transparent:true, opacity:0.5 });
+  var ring = new THREE.Mesh(new THREE.TorusGeometry(ARENA+1, 0.4, 8, 90), ringMat);
+  ring.rotation.x = Math.PI/2; ring.position.y = 0.4;
+  scene.add(ring);
+
+  // decorative neon pillars around the rim
+  var i, n=8;
+  for(i=0;i<n;i++){
+    var a = (i/n)*Math.PI*2;
+    var px = Math.cos(a)*(ARENA-3), pz = Math.sin(a)*(ARENA-3);
+    var col = (i%2===0) ? 0x00f0ff : 0xff00d4;
+    var pmat = new THREE.MeshPhongMaterial({ color:0x101025, emissive:col, emissiveIntensity:0.7, shininess:80 });
+    var pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.2, 16, 6), pmat);
+    pillar.position.set(px, 8, pz);
+    scene.add(pillar);
+    var cap = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6,0),
+      new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.85 }));
+    cap.position.set(px,16.5,pz); scene.add(cap);
+    var pl = new THREE.PointLight(col, 0.6, 40); pl.position.set(px,12,pz); scene.add(pl);
+  }
+
+  // ambient floating motes
+  var moteGeo = new THREE.BufferGeometry();
+  var cnt=260, pos=new Float32Array(cnt*3);
+  for(i=0;i<cnt;i++){
+    pos[i*3]=(Math.random()-0.5)*ARENA*2.2;
+    pos[i*3+1]=Math.random()*40+1;
+    pos[i*3+2]=(Math.random()-0.5)*ARENA*2.2;
+  }
+  moteGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  var moteMat = new THREE.PointsMaterial({ color:0x6fefff, size:0.5, transparent:true, opacity:0.6,
+    blending:THREE.AdditiveBlending, depthWrite:false });
+  var motes = new THREE.Points(moteGeo, moteMat);
+  motes.userData.spin = true;
+  scene.add(motes);
+  scene._motes = motes;
+
+  // disco lights (hidden until easter egg)
+  var d, dn=5, dcols=[0xff003c,0x00f0ff,0x39ff14,0xffd400,0xff00d4];
+  for(d=0; d<dn; d++){
+    var dl = new THREE.PointLight(dcols[d], 0, 70);
+    dl.position.set(Math.cos(d/dn*6.28)*20, 22, Math.sin(d/dn*6.28)*20);
+    scene.add(dl); discoLights.push(dl);
+  }
+}
+
+function neonMat(base, glow, intensity){
+  return new THREE.MeshPhongMaterial({ color:base, emissive:glow, emissiveIntensity:intensity||0.6, shininess:90 });
+}
+
+function buildPlayer(){
+  player = new THREE.Group();
+
+  // body / torso
+  var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.75,1.5,8), neonMat(0x161a30,0x00aaff,0.5));
+  torso.position.y=1.5; player.add(torso);
+  // chest core
+  var core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.32,0), new THREE.MeshBasicMaterial({color:0x6ffaff}));
+  core.position.set(0,1.7,0.55); player.add(core); player.userData.core=core;
+  // head
+  var head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1), neonMat(0x10131f,0x00f0ff,0.4));
+  head.position.y=2.65; player.add(head);
+  // visor
+  var visor = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.16,0.3), new THREE.MeshBasicMaterial({color:0x00f0ff}));
+  visor.position.set(0,2.68,0.42); player.add(visor);
+  // shoulders
+  var sl, sx=[-0.72,0.72], k;
+  for(k=0;k<2;k++){
+    sl=new THREE.Mesh(new THREE.IcosahedronGeometry(0.34,0), neonMat(0x161a30,0xff00d4,0.45));
+    sl.position.set(sx[k],2.0,0); player.add(sl);
+    var leg=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,1.3,6), neonMat(0x12131c,0x0077aa,0.3));
+    leg.position.set(sx[k]*0.45,0.65,0); player.add(leg);
+  }
+
+  // sword (right hand)
+  var swG = new THREE.Group();
+  var blade = new THREE.Mesh(new THREE.BoxGeometry(0.18,2.6,0.06), new THREE.MeshBasicMaterial({color:0xff4af0}));
+  blade.position.y=1.5; swG.add(blade);
+  swordGlow = new THREE.Mesh(new THREE.BoxGeometry(0.42,2.8,0.18),
+    new THREE.MeshBasicMaterial({color:0xff00d4, transparent:true, opacity:0.35, blending:THREE.AdditiveBlending, depthWrite:false}));
+  swordGlow.position.y=1.5; swG.add(swordGlow);
+  var hilt = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.16,0.16), neonMat(0x222,0xff00d4,0.5));
+  swG.add(hilt);
+  swG.position.set(0.95,1.4,0.2);
+  swG.rotation.z=-0.25;
+  player.add(swG); sword=swG;
+
+  // glow aura ring under feet
+  playerShadow = new THREE.Mesh(new THREE.CircleGeometry(1.1,24),
+    new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.4}));
+  playerShadow.rotation.x=-Math.PI/2; playerShadow.position.y=0.02; player.add(playerShadow);
+  playerAura = new THREE.Mesh(new THREE.RingGeometry(1.2,1.5,32),
+    new THREE.MeshBasicMaterial({color:0x00f0ff, transparent:true, opacity:0.5, blending:THREE.AdditiveBlending, side:THREE.DoubleSide, depthWrite:false}));
+  playerAura.rotation.x=-Math.PI/2; playerAura.position.y=0.05; player.add(playerAura);
+
+  scene.add(player);
+}
+
+function buildDuck(){
+  // the absurd secret object 🦆 — tucked behind a far pillar
+  duck = new THREE.Group();
+  var bodyD = new THREE.Mesh(new THREE.SphereGeometry(0.55,12,10), new THREE.MeshPhongMaterial({color:0xffd400, emissive:0xffd400, emissiveIntensity:0.35}));
+  bodyD.scale.set(1,0.85,1.2); bodyD.position.y=0.5; duck.add(bodyD);
+  var headD = new THREE.Mesh(new THREE.SphereGeometry(0.32,12,10), new THREE.MeshPhongMaterial({color:0xffe000, emissive:0xffd400, emissiveIntensity:0.35}));
+  headD.position.set(0,1.0,0.32); duck.add(headD);
+  var beak = new THREE.Mesh(new THREE.ConeGeometry(0.13,0.3,8), new THREE.MeshBasicMaterial({color:0xff8a00}));
+  beak.rotation.x=Math.PI/2; beak.position.set(0,0.96,0.66); duck.add(beak);
+  var eyeM=new THREE.MeshBasicMaterial({color:0x111111}); var ed;
+  for(ed=0;ed<2;ed++){ var ey=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),eyeM); ey.position.set(ed===0?-0.12:0.12,1.08,0.55); duck.add(ey); }
+  // faint sparkle so the observant can spot it
+  var spark=new THREE.Mesh(new THREE.RingGeometry(0.7,0.85,20),
+    new THREE.MeshBasicMaterial({color:0xfff070, transparent:true, opacity:0.4, side:THREE.DoubleSide, blending:THREE.AdditiveBlending, depthWrite:false}));
+  spark.rotation.x=-Math.PI/2; spark.position.y=0.06; duck.add(spark); duck.userData.spark=spark;
+
+  // place near pillar index 2 area, slightly out toward the rim
+  var a=(2/8)*Math.PI*2;
+  duck.position.set(Math.cos(a)*(ARENA-7), 0, Math.sin(a)*(ARENA-7));
+  scene.add(duck);
+}
+
+function buildQBlock(){
+  // a Mario-ish mystery block tucked on the far side from the duck
+  qBlock=new THREE.Group();
+  var box=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.1,1.1),
+    new THREE.MeshPhongMaterial({color:0xffaa00, emissive:0xffaa00, emissiveIntensity:0.55, shininess:90}));
+  box.position.y=1.6; qBlock.add(box); qBlock.userData.box=box;
+  var qm=makeTextSprite('?','#ffffff',1.8); qm.position.set(0,2.9,0); qBlock.add(qm);
+  var a=(6/8)*Math.PI*2;
+  qBlock.position.set(Math.cos(a)*(ARENA-9),0,Math.sin(a)*(ARENA-9));
+  scene.add(qBlock);
+}
+
+/* =====================================================================
+   ENEMIES
+   ===================================================================== */
+function makeBar(){
+  var g=new THREE.Group();
+  var bg=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.18), new THREE.MeshBasicMaterial({color:0x220000, transparent:true, opacity:0.8, depthTest:false}));
+  var fg=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.18), new THREE.MeshBasicMaterial({color:0xff3344, depthTest:false}));
+  fg.position.z=0.01; g.add(bg); g.add(fg);
+  g.userData.fg=fg; g.renderOrder=999;
+  return g;
+}
+function spawnEnemy(isBrute){
+  var e=new THREE.Group();
+  var col = isBrute ? 0xff6a00 : 0xff2a3c;
+  var size = isBrute ? 1.5 : 1.0;
+  var ehp = isBrute ? 95 : 40;
+
+  var body=new THREE.Mesh(new THREE.IcosahedronGeometry(0.85*size,0), neonMat(0x1a0608, col, 0.8));
+  body.position.y=1.0*size; e.add(body);
+  var spike, sp;
+  for(sp=0; sp<4; sp++){
+    spike=new THREE.Mesh(new THREE.ConeGeometry(0.22*size,0.7*size,5), new THREE.MeshBasicMaterial({color:col}));
+    var ang=sp/4*Math.PI*2;
+    spike.position.set(Math.cos(ang)*0.8*size,1.0*size,Math.sin(ang)*0.8*size);
+    spike.rotation.z=Math.cos(ang)*-1.2; spike.rotation.x=Math.sin(ang)*1.2;
+    e.add(spike);
+  }
+  var eye=new THREE.Mesh(new THREE.SphereGeometry(0.18*size,8,8), new THREE.MeshBasicMaterial({color:0xffee00}));
+  eye.position.set(0,1.1*size,0.7*size); e.add(eye);
+  // shadow
+  var sh=new THREE.Mesh(new THREE.CircleGeometry(0.9*size,16), new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:0.35}));
+  sh.rotation.x=-Math.PI/2; sh.position.y=0.02; e.add(sh);
+
+  var bar=makeBar(); bar.position.y=2.4*size; e.add(bar);
+
+  // spawn at rim, away from player
+  var ang2=Math.random()*Math.PI*2, r=ARENA-4;
+  e.position.set(Math.cos(ang2)*r, 0, Math.sin(ang2)*r);
+  e.userData={ hp:ehp, maxHp:ehp, speed:isBrute?4.2:7.0, dmg:isBrute?16:8, atkCd:0, body:body, bar:bar, brute:isBrute, size:size, hitFlash:0, knock:new THREE.Vector3(), danceT:Math.random()*6 };
+  scene.add(e); enemies.push(e);
+}
+function spawnBoss(){
+  var b=new THREE.Group();
+  var body=new THREE.Mesh(new THREE.IcosahedronGeometry(2.6,1), neonMat(0x140020,0xa020f0,0.9));
+  body.position.y=2.8; b.add(body);
+  var crown,cr;
+  for(cr=0;cr<6;cr++){
+    crown=new THREE.Mesh(new THREE.ConeGeometry(0.5,2.0,5), new THREE.MeshBasicMaterial({color:0xff00d4}));
+    var ca=cr/6*Math.PI*2; crown.position.set(Math.cos(ca)*2.4,4.6,Math.sin(ca)*2.4);
+    crown.rotation.z=Math.cos(ca)*-0.7; crown.rotation.x=Math.sin(ca)*0.7; b.add(crown);
+  }
+  var eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.5,10,10), new THREE.MeshBasicMaterial({color:0xff0033}));
+  eyeL.position.set(-0.9,3.2,1.9); b.add(eyeL);
+  var eyeR=eyeL.clone(); eyeR.position.x=0.9; b.add(eyeR);
+  var sh=new THREE.Mesh(new THREE.CircleGeometry(3,24), new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:0.45}));
+  sh.rotation.x=-Math.PI/2; sh.position.y=0.02; b.add(sh);
+  // telegraph ring for slam
+  var tele=new THREE.Mesh(new THREE.RingGeometry(0.1,0.1,40), new THREE.MeshBasicMaterial({color:0xff0044, transparent:true, opacity:0, side:THREE.DoubleSide}));
+  tele.rotation.x=-Math.PI/2; tele.position.y=0.06; b.add(tele);
+
+  var ang=Math.random()*Math.PI*2;
+  b.position.set(Math.cos(ang)*(ARENA-8),0,Math.sin(ang)*(ARENA-8));
+  var bhp=900+wave*40;
+  b.userData={ hp:bhp, maxHp:bhp, speed:3.4, dmg:26, atkCd:2, slamT:0, body:body, tele:tele, isBoss:true, hitFlash:0, knock:new THREE.Vector3() };
+  scene.add(b); enemies.push(b); boss=b;
+
+  elBossName.textContent='ABYSS WARDEN · 균열의 군주';
+  elBossWrap.style.display='block';
+  sfxBoss(); shakeIt(0.8); showToast('⚠ 보스 출현 ⚠');
+}
+
+/* =====================================================================
+   EFFECTS
+   ===================================================================== */
+function burst(pos, color, count, power){
+  var i;
+  for(i=0;i<count;i++){
+    var m=new THREE.Mesh(new THREE.TetrahedronGeometry(0.18+Math.random()*0.18),
+      new THREE.MeshBasicMaterial({color:color, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false}));
+    m.position.copy(pos); m.position.y+=1;
+    var sp=power||6;
+    m.userData={ vel:new THREE.Vector3((Math.random()-0.5)*sp,(Math.random()*0.8+0.3)*sp,(Math.random()-0.5)*sp), life:0.6, max:0.6 };
+    scene.add(m); particles.push(m);
+  }
+}
+function confetti(){
+  var i, cols=[0xff003c,0x00f0ff,0x39ff14,0xffd400,0xff00d4,0xffffff];
+  for(i=0;i<28;i++){
+    var m=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.05),
+      new THREE.MeshBasicMaterial({color:cols[(Math.random()*cols.length)|0]}));
+    m.position.set(player.position.x+(Math.random()-0.5)*40, 28+Math.random()*6, player.position.z+(Math.random()-0.5)*40);
+    m.userData={ vel:new THREE.Vector3((Math.random()-0.5)*4,-(4+Math.random()*5),(Math.random()-0.5)*4),
+      spin:new THREE.Vector3(Math.random()*8,Math.random()*8,Math.random()*8), life:3.5, max:3.5, confetti:true };
+    scene.add(m); particles.push(m);
+  }
+}
+function spawnSlash(){
+  var arc=new THREE.Mesh(new THREE.TorusGeometry(2.4,0.18,6,18, Math.PI*1.1),
+    new THREE.MeshBasicMaterial({color: hangyeol?0xffd400:0xff4af0, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false}));
+  arc.position.copy(player.position); arc.position.y=1.3;
+  var ang=Math.atan2(facing.x, facing.z);
+  arc.rotation.set(-Math.PI/2, 0, -ang + Math.PI*0.45);
+  arc.userData={ life:0.18, max:0.18 };
+  scene.add(arc); slashes.push(arc);
+}
+function shakeIt(v){ if(v>shake) shake=v; }
+function flashScreen(a){ elFlash.style.opacity=a; setTimeout(function(){ elFlash.style.opacity=0; },70); }
+function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+function spawnDamage(worldPos, text, color){
+  var v=worldPos.clone(); v.y+=2.2; v.project(camera);
+  if(v.z>1) return;
+  var x=(v.x*0.5+0.5)*W, y=(-v.y*0.5+0.5)*H;
+  var d=document.createElement('div');
+  d.className='dmg'; d.textContent=text; d.style.color=color||'#fff';
+  d.style.left=x+'px'; d.style.top=y+'px';
+  document.body.appendChild(d);
+  setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 880);
+}
+function showToast(msg){
+  elToast.textContent=msg; elToast.classList.add('show');
+  setTimeout(function(){ elToast.classList.remove('show'); }, 2200);
+}
+
+/* text sprite (for 한결 billboards / crown) */
+function makeTextSprite(text, color, size){
+  var c=document.createElement('canvas'); c.width=512; c.height=160;
+  var ctx=c.getContext('2d');
+  ctx.font='bold 110px "Chakra Petch", sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor=color; ctx.shadowBlur=30; ctx.fillStyle=color;
+  ctx.fillText(text,256,84);
+  ctx.fillStyle='#ffffff'; ctx.shadowBlur=12; ctx.fillText(text,256,80);
+  var tex=new THREE.CanvasTexture(c);
+  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthWrite:false}));
+  sp.scale.set(size||7, (size||7)*0.31, 1);
+  return sp;
+}
+
+/* =====================================================================
+   COMBAT / PROGRESSION
+   ===================================================================== */
+function doAttack(){
+  if(state!=='play' || attackCd>0) return;
+  attackCd = 0.34;
+  spawnSlash(); sfxSlash();
+  // sword swing anim flag
+  sword.userData.swing = 0.25;
+
+  // check duck (secret!)
+  if(duck && !duckHit){
+    var dd=player.position.distanceTo(duck.position);
+    if(dd < 4.5 && facing.dot(new THREE.Vector3(duck.position.x-player.position.x,0,duck.position.z-player.position.z).normalize())>0.1){
+      triggerHangyeol();
+      return;
+    }
+  }
+
+  // check ? block (secret loot)
+  if(qBlock && !qHit){
+    var dq=player.position.distanceTo(qBlock.position);
+    if(dq<4.6 && facing.dot(new THREE.Vector3(qBlock.position.x-player.position.x,0,qBlock.position.z-player.position.z).normalize())>0.0){
+      qHit=true;
+      var kq; for(kq=0;kq<14;kq++) spawnOrb(qBlock.position);
+      score+=200; burst(qBlock.position,0xffd400,26,11); shakeIt(0.4); sfxLevel();
+      popup3d('?!','#ffd400'); say('어? 블록 깨니까 막 쏟아지네 ㅋㅋ 개이득');
+      if(qBlock.userData.box) qBlock.userData.box.material.color.setHex(0x442200);
+    }
+  }
+
+  var range = 4.2, i, hitAny=false;
+  for(i=0;i<enemies.length;i++){
+    var e=enemies[i];
+    var to=new THREE.Vector3().subVectors(e.position, player.position);
+    var dist=to.length();
+    var maxR = range + (e.userData.isBoss?2:e.userData.size);
+    if(dist<=maxR){
+      to.y=0; to.normalize();
+      if(facing.dot(to) > 0.25 || dist<2.2){
+        var d = dmg*(0.85+Math.random()*0.3);
+        if(hangyeol) d*=99;            // god mode in hangyeol dimension
+        d=Math.round(d);
+        e.userData.hp -= d;
+        e.userData.hitFlash=0.12;
+        e.userData.knock.add(to.clone().multiplyScalar(e.userData.isBoss?1.2:4));
+        spawnDamage(e.position, String(d), '#ffd34a');
+        burst(e.position, e.userData.isBoss?0xa020f0:0xff5a2a, 6, 7);
+        sfxHit(); hitAny=true;
+        if(e.userData.hp<=0){ killEnemy(i); i--; }
+      }
+    }
+  }
+  // oddball hits (the harmless weirdos)
+  for(i=0;i<oddballs.length;i++){
+    var ob=oddballs[i];
+    var to2=new THREE.Vector3().subVectors(ob.position, player.position);
+    var dd2=to2.length();
+    if(dd2<=4.6){
+      to2.y=0; to2.normalize();
+      if(facing.dot(to2)>0.2 || dd2<2.4){
+        var dmgO=dmg*(0.9+Math.random()*0.3); if(hangyeol) dmgO*=99; dmgO=Math.round(dmgO);
+        ob.userData.hp-=dmgO; ob.userData.hitFlash=0.12; ob.userData.knock.add(to2.clone().multiplyScalar(5));
+        spawnDamage(ob.position, String(dmgO), '#9ff0ff'); sfxHit(); hitAny=true;
+        if(ob.userData.hp<=0){ killOddball(i); i--; }
+      }
+    }
+  }
+
+  if(hitAny){ shakeIt(0.18); vibrate(12); }
+}
+
+function killEnemy(i){
+  var e=enemies[i];
+  var wasBoss=e.userData.isBoss;
+  burst(e.position, wasBoss?0xff00d4:0xff7a3c, wasBoss?40:14, wasBoss?12:8);
+  scene.remove(e); enemies.splice(i,1);
+  score += wasBoss?500:(e.userData.brute?40:15);
+  // xp orbs
+  var orbN = wasBoss?12:(e.userData.brute?3:1);
+  var k; for(k=0;k<orbN;k++){ spawnOrb(e.position); }
+  if(wasBoss){ boss=null; elBossWrap.style.display='none'; shakeIt(0.7); showToast('★ 보스 처치! ★'); sfxLevel(); }
+  updateHud();
+}
+
+function spawnOrb(pos){
+  var o=new THREE.Mesh(new THREE.IcosahedronGeometry(0.28,0),
+    new THREE.MeshBasicMaterial({color: hangyeol?0xffd400:0x39ff14, blending:THREE.AdditiveBlending}));
+  o.position.copy(pos); o.position.y=0.8;
+  o.position.x+=(Math.random()-0.5)*2; o.position.z+=(Math.random()-0.5)*2;
+  o.userData={ vel:new THREE.Vector3((Math.random()-0.5)*4,4,(Math.random()-0.5)*4), idle:0.4, val: hangyeol?5:3 };
+  scene.add(o); orbs.push(o);
+}
+function gainXp(v){
+  xp+=v;
+  while(xp>=xpNeed){
+    xp-=xpNeed; level++; xpNeed=Math.round(xpNeed*1.45+4);
+    maxHp+=18; hp=maxHp; dmg+=6;
+    sfxLevel(); burst(player.position,0x00f0ff,24,10); shakeIt(0.3);
+    showToast('LEVEL UP!  LV.'+level+'  (HP·공격력 ↑)');
+  }
+  updateHud();
+}
+
+function hurtPlayer(d){
+  if(invuln>0 || hangyeol) return;
+  hp-=d; if(hp<0) hp=0;
+  invuln=0.4; flashScreen(0.5); shakeIt(0.45); sfxHurt(); vibrate(40);
+  updateHud();
+  if(hp<=0) gameOver();
+}
+
+/* =====================================================================
+   WAVES
+   ===================================================================== */
+function startWave(){
+  wave++;
+  waveActive=true;
+  var grunts = 3 + wave*2;
+  var brutes = Math.floor(wave/2);
+  enemiesToSpawn = grunts + brutes;
+  // queue spawn via flags; we just spawn over time in update
+  var i;
+  spawnQueue=[];
+  for(i=0;i<grunts;i++) spawnQueue.push(false);
+  for(i=0;i<brutes;i++) spawnQueue.push(true);
+  // shuffle
+  for(i=spawnQueue.length-1;i>0;i--){ var j=(Math.random()*(i+1))|0; var t=spawnQueue[i]; spawnQueue[i]=spawnQueue[j]; spawnQueue[j]=t; }
+  spawnDelay=0;
+  // boss every 4 waves
+  bossThisWave = (wave % 4 === 0);
+  updateHud();
+  showToast('WAVE '+wave+' 시작');
+  if(wave===2) say('한결 너 좀 치는데? 근데... 누가 보고 있어 👀');
+  else if(wave===3) say('이쯤이면 뭔가 이상한 거 눈치챘지 ㅋㅋ');
+  else if(wave===5) say('아직 비밀 못 찾았어? 구석 잘 둘러봐 🦆');
+}
+var spawnQueue=[], spawnDelay=0, bossThisWave=false, bossSpawned=false;
+
+/* =====================================================================
+   EASTER EGG  →  한결 차원
+   ===================================================================== */
+function triggerHangyeol(){
+  if(hangyeol) return;
+  hangyeol=true; duckHit=true;
+  sfxTransform(); vibrate([60,40,60,40,120]);
+
+  // glitch overlay
+  elGlitch.style.display='block';
+  var t=0, gi=setInterval(function(){
+    t++;
+    elGlitch.style.opacity = (Math.random()*0.9).toFixed(2);
+    document.getElementById('game').style.filter='hue-rotate('+(t*40)+'deg) saturate('+(1+Math.random()*2)+') contrast('+(1+Math.random())+')';
+    document.body.style.transform='translate('+((Math.random()-0.5)*14)+'px,'+((Math.random()-0.5)*14)+'px)';
+    if(t>18){
+      clearInterval(gi);
+      elGlitch.style.opacity=0; elGlitch.style.display='none';
+      document.getElementById('game').style.filter='saturate(1.35)';
+      document.body.style.transform='none';
+      enterHangyeolDimension();
+    }
+  }, 55);
+}
+
+function enterHangyeolDimension(){
+  // the dimension takes over — shut down the normal weirdness director
+  resetWeird();
+  // clear current threats; turn survivors into dancing jellies
+  var i;
+  for(i=0;i<enemies.length;i++){
+    var e=enemies[i];
+    e.userData.danceMode=true; e.userData.dmg=0;
+    if(e.userData.body){
+      e.userData.body.geometry.dispose();
+      e.userData.body.geometry=new THREE.SphereGeometry((e.userData.isBoss?2.4:0.8)*(e.userData.size||1),12,10);
+    }
+    if(e.userData.bar) e.userData.bar.visible=false;
+  }
+  if(boss){ elBossWrap.style.display='none'; }
+
+  // disco lights on
+  for(i=0;i<discoLights.length;i++){ discoLights[i].intensity=2.0; }
+  // let the grid go full rainbow (drop baked vertex colors)
+  grid.material.vertexColors=false; grid.material.needsUpdate=true;
+
+  // fog warmer, grid will rainbow in loop
+  scene.fog.color.setHex(0x150022);
+  scene.background.setHex(0x150022);
+
+  // player golden glow + crown
+  if(player.userData.core) player.userData.core.material.color.setHex(0xffd400);
+  playerAura.material.color.setHex(0xffd400);
+  var crown=makeTextSprite('👑 한결 👑', '#ffd400', 8);
+  crown.position.set(0,4.4,0); player.add(crown); player.userData.crown=crown;
+
+  // floating 한결 billboards around the arena
+  var hcols=['#ff00d4','#00f0ff','#39ff14','#ffd400','#ff5a2a'];
+  for(i=0;i<10;i++){
+    var sp=makeTextSprite('한결', hcols[i%hcols.length], 6+Math.random()*4);
+    var a=Math.random()*Math.PI*2, r=12+Math.random()*38;
+    sp.position.set(Math.cos(a)*r, 3+Math.random()*16, Math.sin(a)*r);
+    sp.userData={ bobT:Math.random()*6, baseY:sp.position.y };
+    scene.add(sp); hangyeolText.push(sp);
+  }
+
+  // comic-sans-ify HUD + celebratory copy
+  var cs="'Comic Sans MS','Apple SD Gothic Neo',cursive";
+  document.body.style.fontFamily=cs;
+  elWave.textContent='👑 한결 차원 👑';
+  elWave.style.color='#ffd400';
+  elScore.textContent='한결 = 신';
+  elLv.innerHTML='LV.∞ <span>전설의 한결</span>';
+  elLv.style.color='#ffd400';
+
+  confetti(); confetti();
+  showToast('🦆 비밀 차원 발견!! 한결을 영접하라 👑');
+  shakeIt(0.6);
+}
+
+/* =====================================================================
+   KONAMI CODE
+   ===================================================================== */
+var konami=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+var konIdx=0;
+function konamiCheck(key){
+  var k = key.length===1 ? key.toLowerCase() : key;
+  if(k===konami[konIdx]){ konIdx++; if(konIdx>=konami.length){ konIdx=0; if(state==='play') triggerHangyeol(); } }
+  else { konIdx = (k===konami[0])?1:0; }
+}
+
+/* =====================================================================
+   WEIRDNESS DIRECTOR  (the "이게 뭐야 ㅋㅋ" engine)
+   ===================================================================== */
+
+// ---- fourth-wall subtitle ----
+var lines=[
+  '뒤 조심... 은 농담이고 ㅋㅋ',
+  '이 게임 좀 이상하지? 응 맞아 ㅋㅋ',
+  '한결 너 생각보다 잘하는데?',
+  '어디 숨겨둔 거 같은데... 오리는 찾았어? 🦆',
+  '지금 화면 잘 보고 있는 거지?',
+  '이거 만든 사람 한결 팬클럽 1호임',
+  '가끔 이상한 애들 나와도 놀라지 마라 ㅋㅋ',
+  '콤보 좋아 콤보 한결',
+  '솔직히 이 게임 한결이 보라고 만든 거임',
+  '저쪽 구석에 뭔가 빛나지 않냐...?'
+];
+function say(text){
+  if(!elTalk) elTalk=document.getElementById('talk');
+  if(!elTalk) return;
+  elTalk.innerHTML='<span>👁</span> '+text;
+  elTalk.classList.add('show');
+  if(talkTimer) clearTimeout(talkTimer);
+  talkTimer=setTimeout(function(){ elTalk.classList.remove('show'); }, 3000);
+}
+function sayRandom(){ say(lines[(Math.random()*lines.length)|0]); }
+
+// ---- floating 3D popup (?! / GET! etc above player) ----
+function popup3d(text, color){
+  var sp=makeTextSprite(text, color||'#ffffff', 4);
+  sp.position.copy(player.position); sp.position.y=3.4;
+  sp.userData={ life:1.1, max:1.1, vy:2.4 };
+  scene.add(sp); popups3d.push(sp);
+}
+function updatePopups(dt){
+  var i;
+  for(i=0;i<popups3d.length;i++){
+    var p=popups3d[i]; p.userData.life-=dt; p.position.y+=p.userData.vy*dt;
+    p.material.opacity=Math.max(0, p.userData.life/p.userData.max);
+    if(p.userData.life<=0){ scene.remove(p); popups3d.splice(i,1); i--; }
+  }
+}
+
+// ---- oddball "enemies" (harmless weirdos that wander into view) ----
+function spawnOddball(){
+  if(hangyeol) return;
+  var t=(Math.random()*3)|0;
+  var g=new THREE.Group();
+  var ang=Math.random()*Math.PI*2, r=ARENA-12;
+  g.position.set(Math.cos(ang)*r, 0, Math.sin(ang)*r);
+  var ud={ type:t, hp:25, maxHp:25, wanderT:0, dir:new THREE.Vector3(Math.random()-0.5,0,Math.random()-0.5).normalize(),
+           life:22, knock:new THREE.Vector3(), hitFlash:0 };
+  if(t===0){
+    var sp=makeTextSprite('한결','#ff66ff',3.4); sp.position.y=1.7; g.add(sp); ud.label=sp; ud.hp=30; ud.maxHp=30;
+    if(Math.random()<0.6) say('어? 저기 "한결"이 막 걸어다니는데?? ㅋㅋ');
+  } else if(t===1){
+    var bod=new THREE.Mesh(new THREE.SphereGeometry(0.6,10,10), neonMat(0x081018,0x33ddff,0.6)); bod.position.y=0.8; g.add(bod); ud.body=bod;
+    var q=makeTextSprite('?','#9ff0ff',2.4); q.position.y=2.0; g.add(q); ud.label=q; ud.hp=20; ud.maxHp=20; ud.coward=true;
+    if(Math.random()<0.5) say('쟤 왜 도망가 ㅋㅋ 잡아봐 한결아');
+  } else {
+    var bod2=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.9,0.9), neonMat(0x101010,0xff00d4,0.7)); bod2.position.y=0.9; g.add(bod2); ud.body=bod2; ud.dancer=true;
+    var note=makeTextSprite('♪','#ff8aff',2.2); note.position.y=2.2; g.add(note); ud.label=note;
+  }
+  var sh=new THREE.Mesh(new THREE.CircleGeometry(0.7,14), new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:0.3}));
+  sh.rotation.x=-Math.PI/2; sh.position.y=0.02; g.add(sh);
+  g.userData=ud; scene.add(g); oddballs.push(g);
+}
+function updateOddballs(dt){
+  var i;
+  for(i=0;i<oddballs.length;i++){
+    var o=oddballs[i], ud=o.userData;
+    o.position.add(ud.knock.clone().multiplyScalar(dt*6)); ud.knock.multiplyScalar(0.8);
+    ud.life-=dt; ud.wanderT-=dt;
+    if(ud.coward){
+      var away=new THREE.Vector3().subVectors(o.position, player.position); away.y=0;
+      var d=away.length();
+      if(d<16){ o.position.add(away.normalize().multiplyScalar(10*dt)); }
+      else { if(ud.wanderT<=0){ ud.dir.set(Math.random()-0.5,0,Math.random()-0.5).normalize(); ud.wanderT=1.5; } o.position.add(ud.dir.clone().multiplyScalar(4*dt)); }
+      o.position.y=Math.abs(Math.sin(performance.now()*0.02))*0.4;
+    } else if(ud.dancer){
+      o.position.y=Math.abs(Math.sin(performance.now()*0.012))*1.1;
+      o.rotation.y+=dt*5;
+      if(ud.body) ud.body.material.emissive.setHSL((performance.now()*0.0006+i*0.2)%1,1,0.5);
+    } else {
+      if(ud.wanderT<=0){ ud.dir.set(Math.random()-0.5,0,Math.random()-0.5).normalize(); ud.wanderT=2.0; }
+      o.position.add(ud.dir.clone().multiplyScalar(5*dt));
+      o.position.y=Math.sin(performance.now()*0.004+i)*0.2;
+    }
+    var rr=Math.sqrt(o.position.x*o.position.x+o.position.z*o.position.z);
+    if(rr>ARENA-2){ var s=(ARENA-2)/rr; o.position.x*=s; o.position.z*=s; if(ud.dir){ ud.dir.x*=-1; ud.dir.z*=-1; } }
+    if(ud.hitFlash>0 && ud.body){ ud.hitFlash-=dt; ud.body.material.emissiveIntensity=2.2; } else if(ud.body){ ud.body.material.emissiveIntensity=0.6; }
+    if(ud.life<=0){ scene.remove(o); oddballs.splice(i,1); i--; }
+  }
+}
+function killOddball(i){
+  var o=oddballs[i], t=o.userData.type;
+  burst(o.position,0xff66ff,18,9); confetti();
+  scene.remove(o); oddballs.splice(i,1);
+  if(t===0){ score+=120; say('한결을... 처치했다고?? 그게 돼?? ㅋㅋㅋ'); popup3d('?!','#ffd400'); }
+  else if(t===1){ var k; for(k=0;k<8;k++) spawnOrb(o.position); score+=80; say('도망가던 거 기어이 잡았네 ㅋㅋ 자 보상'); popup3d('GET!','#39ff14'); }
+  else { score+=90; say('댄서 터뜨림 ㅋㅋ 파티 강제종료'); popup3d('♪!','#ff66ff'); }
+  updateHud();
+}
+
+// ---- random map events ----
+function spawnRainDuck(){
+  var m=new THREE.Mesh(new THREE.SphereGeometry(0.45,10,8),
+    new THREE.MeshPhongMaterial({color:0xffd400, emissive:0xffd400, emissiveIntensity:0.4}));
+  m.scale.set(1,0.8,1.2);
+  m.position.set(player.position.x+(Math.random()-0.5)*44, 30+Math.random()*8, player.position.z+(Math.random()-0.5)*44);
+  m.userData={ vel:new THREE.Vector3((Math.random()-0.5)*3,0,(Math.random()-0.5)*3),
+    spin:new THREE.Vector3(Math.random()*6,Math.random()*6,Math.random()*6), life:2.6, max:2.6, rainDuck:true };
+  scene.add(m); particles.push(m);
+}
+function spawnCheer(){
+  var i, cols=['#ff66ff','#66f0ff','#9dff66','#ffd24a'];
+  for(i=0;i<9;i++){
+    var sp=makeTextSprite('한결!', cols[i%cols.length], 3.4);
+    var a=(i/9)*Math.PI*2, r=ARENA-6;
+    sp.position.set(Math.cos(a)*r, 2.4, Math.sin(a)*r);
+    sp.userData={ bobT:Math.random()*6, baseY:2.4 };
+    scene.add(sp); cheerSprites.push(sp);
+  }
+}
+function clearCheer(){ var i; for(i=0;i<cheerSprites.length;i++) scene.remove(cheerSprites[i]); cheerSprites=[]; }
+function setEnemyScale(f){ var i; for(i=0;i<enemies.length;i++) enemies[i].scale.setScalar(f); }
+
+function startRandomEvent(){
+  var pool=['duckrain','slowmo','giant','mini','disco','cheer','rainbow'];
+  var name; do { name=pool[(Math.random()*pool.length)|0]; } while(name===lastEvent);
+  lastEvent=name; eventName=name; eventSub=0;
+  if(name==='duckrain'){ eventT=4; showToast('🦆 오리비 주의보 🦆'); say('하늘에서 오리가 왜 떨어져 ㅋㅋㅋ'); }
+  else if(name==='slowmo'){ eventT=3.5; timeScale=0.35; showToast('⏳ 슬로우 모션'); say('어 왜 갑자기 느려져...'); }
+  else if(name==='giant'){ eventT=5; setEnemyScale(1.8); showToast('🔺 적 거대화'); say('쟤네 왜 갑자기 커졌어 ㅋㅋ'); }
+  else if(name==='mini'){ eventT=5; setEnemyScale(0.5); showToast('🔻 적 미니화'); say('아 작아진 거 개귀엽 ㅋㅋ'); }
+  else if(name==='disco'){ eventT=4; var i; for(i=0;i<discoLights.length;i++) discoLights[i].intensity=1.6; showToast('🪩 디스코 타임?!'); say('이거... 뭔가 더 있는 거 같은데? 👀'); }
+  else if(name==='cheer'){ eventT=5; spawnCheer(); showToast('📣 한결 응원단 등장'); say('쟤네 다 누구냐고 ㅋㅋㅋ'); }
+  else { eventT=4; showToast('🌈 바닥이...?'); say('바닥 왜 무지개 됐어 ㅋㅋ'); }
+}
+function eventTick(dt){
+  if(eventName==='duckrain'){ eventSub-=dt; if(eventSub<=0){ spawnRainDuck(); eventSub=0.25; } }
+  else if(eventName==='disco'){
+    var h=(performance.now()*0.0006)%1, i;
+    for(i=0;i<discoLights.length;i++){ var a=performance.now()*0.0015+i; discoLights[i].position.set(Math.cos(a)*22,22,Math.sin(a)*22); discoLights[i].color.setHSL((h+i*0.2)%1,1,0.5); }
+    scene.background.setHSL(h,0.4,0.05); scene.fog.color.copy(scene.background);
+  }
+  else if(eventName==='rainbow'){ grid.material.color.setHSL((performance.now()*0.0006)%1,1,0.6); }
+  else if(eventName==='cheer'){ var j; for(j=0;j<cheerSprites.length;j++){ var s=cheerSprites[j]; s.userData.bobT+=dt; s.position.y=s.userData.baseY+Math.abs(Math.sin(s.userData.bobT*3))*0.9; } }
+}
+function endEvent(){
+  if(eventName==='slowmo'){ timeScale=1; }
+  else if(eventName==='giant'||eventName==='mini'){ setEnemyScale(1); }
+  else if(eventName==='disco'){ var i; for(i=0;i<discoLights.length;i++) discoLights[i].intensity=0; scene.background.setHex(0x06030f); scene.fog.color.setHex(0x06030f); }
+  else if(eventName==='rainbow'){ grid.material.color.setHex(0xffffff); }
+  else if(eventName==='cheer'){ clearCheer(); }
+  eventName='';
+}
+
+// resets all "weird" state (used on new game / on entering Hangyeol dimension)
+function resetWeird(){
+  var i;
+  for(i=0;i<oddballs.length;i++) scene.remove(oddballs[i]); oddballs=[];
+  for(i=0;i<popups3d.length;i++) scene.remove(popups3d[i]); popups3d=[];
+  clearCheer();
+  timeScale=1; eventName=''; eventT=0; lastEvent='';
+  for(i=0;i<discoLights.length;i++) discoLights[i].intensity = hangyeol?2.0:0;
+  if(!hangyeol){ scene.background.setHex(0x06030f); scene.fog.color.setHex(0x06030f); grid.material.color.setHex(0xffffff); }
+  setEnemyScale(1);
+}
+
+// per-frame scheduler
+function updateDirector(dt){
+  if(hangyeol) return;
+  if(eventName){
+    eventT-=dt; eventTick(dt);
+    if(eventT<=0) endEvent();
+  } else {
+    eventTimer-=dt;
+    if(eventTimer<=0){ startRandomEvent(); eventTimer=18+Math.random()*14; }
+  }
+  oddTimer-=dt;
+  if(oddTimer<=0 && oddballs.length<2){ spawnOddball(); oddTimer=14+Math.random()*9; }
+  msgTimer-=dt;
+  if(msgTimer<=0){ sayRandom(); msgTimer=15+Math.random()*12; }
+  var moving = (Math.abs(moveVec.x)+Math.abs(moveVec.y)>0.1) || keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'];
+  if(moving){ idleTimer=0; }
+  else { idleTimer+=dt; if(idleTimer>6){ idleTimer=-5; say('한결아 왜 가만히 서 있어? ㅋㅋ'); player.userData.spinGag=Math.PI*2; } }
+}
+
+/* =====================================================================
+   UPDATE LOOP
+   ===================================================================== */
+function updatePlayer(dt){
+  // input vector
+  var ix=0, iz=0;
+  if(keys['w']||keys['arrowup']) iz-=1;
+  if(keys['s']||keys['arrowdown']) iz+=1;
+  if(keys['a']||keys['arrowleft']) ix-=1;
+  if(keys['d']||keys['arrowright']) ix+=1;
+  ix+=moveVec.x; iz+=moveVec.y;
+  var len=Math.sqrt(ix*ix+iz*iz);
+  if(len>1){ ix/=len; iz/=len; }
+
+  var speed = 13;
+  if(dashTime>0){ speed=34; dashTime-=dt; invuln=Math.max(invuln,0.05); }
+  if(len>0.05){
+    player.position.x += ix*speed*dt;
+    player.position.z += iz*speed*dt;
+    facing.set(ix,0,iz).normalize();
+    var targetRot=Math.atan2(ix,iz);
+    // smooth rotate
+    var cur=player.rotation.y;
+    var diff=targetRot-cur; while(diff>Math.PI)diff-=Math.PI*2; while(diff<-Math.PI)diff+=Math.PI*2;
+    player.rotation.y += diff*Math.min(1, dt*14);
+    if(dashTime>0){ // afterimages
+      burst(player.position, hangyeol?0xffd400:0x00f0ff, 2, 2);
+    }
+  }
+  // clamp to arena
+  var pr=Math.sqrt(player.position.x*player.position.x+player.position.z*player.position.z);
+  if(pr>ARENA){ var sc=ARENA/pr; player.position.x*=sc; player.position.z*=sc; }
+
+  // cooldowns
+  if(attackCd>0) attackCd-=dt;
+  if(dashCd>0) dashCd-=dt;
+  if(invuln>0) invuln-=dt;
+
+  // sword swing animation
+  if(sword.userData.swing>0){
+    sword.userData.swing-=dt;
+    sword.rotation.z = -0.25 - Math.sin((1-sword.userData.swing/0.25)*Math.PI)*2.2;
+  } else { sword.rotation.z = -0.25 + Math.sin(performance.now()*0.003)*0.05; }
+
+  // aura pulse
+  playerAura.material.opacity = 0.35 + Math.sin(performance.now()*0.006)*0.2;
+  playerAura.scale.setScalar(1 + Math.sin(performance.now()*0.004)*0.06);
+  if(invuln>0) player.visible = (Math.floor(performance.now()/60)%2===0); else player.visible=true;
+
+  if(player.userData.crown){ player.userData.crown.position.y = 4.4 + Math.sin(performance.now()*0.005)*0.25; }
+  if(player.userData.spinGag>0){ player.rotation.y += dt*12; player.userData.spinGag -= dt*12; }
+}
+
+function updateEnemies(dt){
+  var i;
+  for(i=0;i<enemies.length;i++){
+    var e=enemies[i], ud=e.userData;
+
+    // knockback decay
+    e.position.add(ud.knock.clone().multiplyScalar(dt*6));
+    ud.knock.multiplyScalar(0.82);
+
+    if(ud.danceMode){
+      // hangyeol jelly dance
+      ud.danceT+=dt;
+      e.position.y = Math.abs(Math.sin(ud.danceT*6))*1.2;
+      e.rotation.y += dt*4;
+      if(ud.body) ud.body.material.emissive.setHSL((performance.now()*0.0005+i*0.1)%1,1,0.5);
+      continue;
+    }
+
+    var to=new THREE.Vector3().subVectors(player.position, e.position); to.y=0;
+    var dist=to.length(); to.normalize();
+
+    if(ud.isBoss){
+      // boss: approach + slam telegraph
+      ud.atkCd-=dt;
+      if(dist>6 && ud.slamT<=0){ e.position.add(to.clone().multiplyScalar(ud.speed*dt)); }
+      e.lookAt(player.position.x, e.position.y, player.position.z);
+      // hp bar
+      if(boss===e){ elBossFill.style.width=(ud.hp/ud.maxHp*100)+'%'; }
+      // slam
+      if(ud.atkCd<=0 && ud.slamT<=0 && dist<14){ ud.slamT=1.0; ud.atkCd=3.2; }
+      if(ud.slamT>0){
+        ud.slamT-=dt;
+        var prog=1-ud.slamT;
+        ud.tele.material.opacity=0.6*prog;
+        ud.tele.geometry.dispose();
+        ud.tele.geometry=new THREE.RingGeometry(0.1, 10*prog, 40);
+        if(ud.slamT<=0){
+          // detonate
+          ud.tele.material.opacity=0;
+          if(player.position.distanceTo(e.position)<10){ hurtPlayer(ud.dmg); }
+          burst(e.position,0xa020f0,30,12); shakeIt(0.5);
+        }
+      }
+      ud.body.scale.setScalar(1 + Math.sin(performance.now()*0.004)*0.04);
+    } else {
+      if(dist>1.5){ e.position.add(to.clone().multiplyScalar(ud.speed*dt)); }
+      e.lookAt(player.position.x, e.position.y, player.position.z);
+      ud.atkCd-=dt;
+      if(dist<2.0 && ud.atkCd<=0){ ud.atkCd=1.0; hurtPlayer(ud.dmg); ud.knock.add(to.clone().multiplyScalar(-2)); }
+      // bob
+      e.position.y = Math.sin(performance.now()*0.005+i)*0.15;
+    }
+
+    // hit flash
+    if(ud.hitFlash>0){ ud.hitFlash-=dt; ud.body.material.emissiveIntensity = 2.2; }
+    else { ud.body.material.emissiveIntensity = ud.isBoss?0.9:0.8; }
+
+    // hp bar update + billboard
+    if(ud.bar && ud.bar.visible){
+      ud.bar.userData.fg.scale.x = Math.max(0.001, ud.hp/ud.maxHp);
+      ud.bar.userData.fg.position.x = -(1-ud.hp/ud.maxHp)*0.8;
+      ud.bar.quaternion.copy(camera.quaternion);
+    }
+
+    // enemy fell off / safety clamp
+    var er=Math.sqrt(e.position.x*e.position.x+e.position.z*e.position.z);
+    if(er>ARENA+6){ var s2=(ARENA+5)/er; e.position.x*=s2; e.position.z*=s2; }
+  }
+}
+
+function updateOrbs(dt){
+  var i;
+  for(i=0;i<orbs.length;i++){
+    var o=orbs[i];
+    if(o.userData.idle>0){
+      o.userData.idle-=dt;
+      o.userData.vel.y-=22*dt;
+      o.position.add(o.userData.vel.clone().multiplyScalar(dt));
+      if(o.position.y<0.6){ o.position.y=0.6; o.userData.vel.y*=-0.4; o.userData.vel.x*=0.6; o.userData.vel.z*=0.6; }
+    } else {
+      var to=new THREE.Vector3().subVectors(player.position, o.position); to.y=0;
+      var d=to.length();
+      if(d<10){
+        o.position.add(to.normalize().multiplyScalar(Math.max(14,(10-d)*4)*dt));
+        o.position.y += (1-o.position.y)*dt*6;
+      }
+      if(d<1.3){ gainXp(o.userData.val); sfxOrb(); burst(o.position,0x39ff14,4,3); scene.remove(o); orbs.splice(i,1); i--; continue; }
+    }
+    o.rotation.x+=dt*4; o.rotation.y+=dt*5;
+    o.scale.setScalar(1+Math.sin(performance.now()*0.01+i)*0.2);
+  }
+}
+
+function updateParticles(dt){
+  var i;
+  for(i=0;i<particles.length;i++){
+    var p=particles[i], ud=p.userData;
+    ud.life-=dt;
+    if(ud.confetti){
+      ud.vel.y-=9*dt;
+      p.rotation.x+=ud.spin.x*dt; p.rotation.y+=ud.spin.y*dt; p.rotation.z+=ud.spin.z*dt;
+      p.position.add(ud.vel.clone().multiplyScalar(dt));
+      p.material.transparent=true; p.material.opacity = ud.life<0.8 ? Math.max(0,ud.life/0.8) : 1;
+    } else if(ud.rainDuck){
+      ud.vel.y-=20*dt;
+      p.rotation.x+=ud.spin.x*dt; p.rotation.y+=ud.spin.y*dt; p.rotation.z+=ud.spin.z*dt;
+      p.position.add(ud.vel.clone().multiplyScalar(dt));
+      if(p.position.y<0.45){ p.position.y=0.45; ud.vel.y*=-0.5; ud.vel.x*=0.7; ud.vel.z*=0.7; }
+      p.material.transparent=true; p.material.opacity = ud.life<0.6 ? Math.max(0,ud.life/0.6) : 1;
+    } else {
+      ud.vel.y-=18*dt;
+      p.position.add(ud.vel.clone().multiplyScalar(dt));
+      if(p.position.y<0.1){ p.position.y=0.1; ud.vel.y*=-0.3; ud.vel.x*=0.6; ud.vel.z*=0.6; }
+      p.material.transparent=true; p.material.opacity=Math.max(0, ud.life/ud.max);
+      p.scale.setScalar(Math.max(0.05, ud.life/ud.max));
+    }
+    if(ud.life<=0){ scene.remove(p); particles.splice(i,1); i--; }
+  }
+}
+
+function updateSlashes(dt){
+  var i;
+  for(i=0;i<slashes.length;i++){
+    var s=slashes[i]; s.userData.life-=dt;
+    var t=1-s.userData.life/s.userData.max;
+    s.scale.setScalar(0.6+t*0.9);
+    s.material.opacity=Math.max(0,1-t);
+    s.position.copy(player.position); s.position.y=1.3;
+    if(s.userData.life<=0){ scene.remove(s); slashes.splice(i,1); i--; }
+  }
+}
+
+function updateWaves(dt){
+  if(!waveActive){
+    betweenTimer-=dt;
+    if(betweenTimer<=0){ startWave(); bossSpawned=false; }
+    return;
+  }
+  // spawn from queue over time
+  if(spawnQueue.length>0){
+    spawnDelay-=dt;
+    if(spawnDelay<=0 && enemies.length<MAX_ENEMIES){
+      var b=spawnQueue.shift();
+      spawnEnemy(b);
+      spawnDelay=0.55;
+    }
+  }
+  if(bossThisWave && !bossSpawned && spawnQueue.length===0){
+    bossSpawned=true; spawnBoss();
+  }
+  // wave clear
+  if(spawnQueue.length===0 && enemies.length===0 && !(bossThisWave && !bossSpawned)){
+    waveActive=false; betweenTimer=2.2;
+    score+=50*wave; showToast('WAVE '+wave+' 클리어! +'+(50*wave));
+    updateHud();
+  }
+}
+
+function updateCamera(dt){
+  var desired=new THREE.Vector3(player.position.x, 24, player.position.z+22);
+  camera.position.lerp(desired, Math.min(1, dt*4));
+  var look=new THREE.Vector3(player.position.x, 2, player.position.z-2);
+  // shake
+  if(shake>0){
+    camera.position.x+=(Math.random()-0.5)*shake*3;
+    camera.position.y+=(Math.random()-0.5)*shake*3;
+    shake-=dt*2.2; if(shake<0)shake=0;
+  }
+  camera.lookAt(look);
+}
+
+function updateWorld(dt){
+  // motes rotate
+  if(scene._motes){ scene._motes.rotation.y += dt*0.05; }
+
+  if(hangyeol){
+    // rainbow grid + disco lights spinning
+    var h=(performance.now()*0.0003)%1;
+    grid.material.color.setHSL(h,1,0.6);
+    var i;
+    for(i=0;i<discoLights.length;i++){
+      var a=performance.now()*0.001 + i/discoLights.length*6.28;
+      discoLights[i].position.set(Math.cos(a)*24, 22, Math.sin(a)*24);
+      discoLights[i].color.setHSL((h+i*0.2)%1,1,0.5);
+    }
+    scene.background.setHSL((h+0.5)%1,0.6,0.06);
+    scene.fog.color.copy(scene.background);
+    // 한결 billboards bob + spin
+    for(i=0;i<hangyeolText.length;i++){
+      var sp=hangyeolText[i]; sp.userData.bobT+=dt;
+      sp.position.y=sp.userData.baseY+Math.sin(sp.userData.bobT*2)*1.2;
+      sp.material.rotation += dt*0.5;
+    }
+    if(Math.random()<0.05) confetti();
+  }
+
+  // duck idle spin + sparkle
+  if(duck && !duckHit){
+    duck.rotation.y += dt*0.6;
+    duck.position.y = Math.sin(performance.now()*0.002)*0.15;
+    if(duck.userData.spark){ duck.userData.spark.rotation.z+=dt; duck.userData.spark.material.opacity=0.25+Math.sin(performance.now()*0.004)*0.2; }
+  }
+  // ? block idle
+  if(qBlock && !qHit){
+    qBlock.userData.box.rotation.y += dt*0.8;
+    qBlock.position.y = Math.sin(performance.now()*0.003+1)*0.2;
+  }
+}
+
+function loop(){
+  requestAnimationFrame(loop);
+  var dt=Math.min(0.05, clock.getDelta());
+  var gdt=dt*timeScale;
+
+  if(state==='play'){
+    updatePlayer(gdt);
+    updateEnemies(gdt);
+    updateOrbs(gdt);
+    updateOddballs(gdt);
+    updateWaves(dt);
+    updateDirector(dt);
+  }
+  updateParticles(gdt);
+  updatePopups(dt);
+  updateSlashes(dt);
+  updateWorld(dt);
+  updateCamera(dt);
+
+  renderer.render(scene, camera);
+}
+
+/* =====================================================================
+   HUD / STATE
+   ===================================================================== */
+function updateHud(){
+  elHpFill.style.width=(hp/maxHp*100)+'%';
+  elXpFill.style.width=(xp/xpNeed*100)+'%';
+  if(!hangyeol){
+    elLv.innerHTML='LV.'+level+' <span>균열의 기사</span>';
+    elWave.textContent='WAVE '+wave;
+    elScore.textContent='SCORE '+score;
+  } else {
+    elScore.textContent='한결 = 신   ·   '+score;
+  }
+}
+
+function startGame(){
+  initAudio();
+  if(AC && AC.state==='suspended') AC.resume();
+  document.getElementById('start').classList.add('hidden');
+  document.getElementById('over').classList.add('hidden');
+  elHud.style.display='block';
+  if(isTouch) elTouch.style.display='block';
+
+  // reset
+  hp=100; maxHp=100; dmg=24; level=1; xp=0; xpNeed=8; score=0; wave=0;
+  state='play'; betweenTimer=0.6; waveActive=false; spawnQueue=[]; bossSpawned=false;
+  updateHud();
+  startMusic();
+  // weirdness director init
+  resetWeird();
+  eventTimer=12; oddTimer=10; msgTimer=8; idleTimer=0;
+  setTimeout(function(){ if(state==='play') say('어... 한결이네? 이런 것도 할 줄 알았어? ㅋㅋ'); }, 2600);
+}
+
+function gameOver(){
+  state='over'; stopMusic();
+  document.getElementById('ovScore').textContent=score;
+  document.getElementById('over').classList.remove('hidden');
+  elHud.style.display='none'; elTouch.style.display='none'; elBossWrap.style.display='none';
+  // clear field
+  var i;
+  for(i=enemies.length-1;i>=0;i--){ scene.remove(enemies[i]); } enemies=[];
+  for(i=orbs.length-1;i>=0;i--){ scene.remove(orbs[i]); } orbs=[];
+  boss=null;
+  resetWeird();
+}
+
+/* =====================================================================
+   INPUT
+   ===================================================================== */
+var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+
+window.addEventListener('keydown', function(ev){
+  var k=ev.key.length===1?ev.key.toLowerCase():ev.key.toLowerCase();
+  keys[k]=true;
+  konamiCheck(ev.key);
+  if(state==='play'){
+    if(ev.key===' '){ ev.preventDefault(); doAttack(); }
+    if((k==='shift') && dashCd<=0){ dashCd=0.9; dashTime=0.16; }
+  }
+});
+window.addEventListener('keyup', function(ev){
+  var k=ev.key.length===1?ev.key.toLowerCase():ev.key.toLowerCase();
+  keys[k]=false;
+});
+window.addEventListener('mousedown', function(ev){
+  if(state==='play' && ev.button===0) doAttack();
+});
+
+// touch joystick
+var stick=document.getElementById('stick'), knob=document.getElementById('knob');
+var stickId=null, sBase={x:0,y:0};
+function stickStart(e){
+  var t=e.changedTouches?e.changedTouches[0]:e; stickId=e.changedTouches?t.identifier:'m';
+  var r=stick.getBoundingClientRect(); sBase.x=r.left+r.width/2; sBase.y=r.top+r.height/2;
+  stickMove(e);
+}
+function stickMove(e){
+  var list=e.changedTouches||[e]; var i;
+  for(i=0;i<list.length;i++){
+    var t=list[i];
+    if((e.changedTouches && t.identifier===stickId) || !e.changedTouches){
+      var dx=t.clientX-sBase.x, dy=t.clientY-sBase.y;
+      var d=Math.sqrt(dx*dx+dy*dy), max=48;
+      if(d>max){ dx=dx/d*max; dy=dy/d*max; }
+      knob.style.left=(35+dx)+'px'; knob.style.top=(35+dy)+'px';
+      moveVec.x=dx/max; moveVec.y=dy/max;
+    }
+  }
+}
+function stickEnd(e){ stickId=null; knob.style.left='35px'; knob.style.top='35px'; moveVec.set(0,0); }
+stick.addEventListener('touchstart', function(e){ e.preventDefault(); stickStart(e); }, {passive:false});
+stick.addEventListener('touchmove', function(e){ e.preventDefault(); stickMove(e); }, {passive:false});
+stick.addEventListener('touchend', function(e){ e.preventDefault(); stickEnd(e); }, {passive:false});
+
+document.getElementById('atkBtn').addEventListener('touchstart', function(e){ e.preventDefault(); doAttack(); }, {passive:false});
+document.getElementById('dashBtn').addEventListener('touchstart', function(e){ e.preventDefault(); if(dashCd<=0){ dashCd=0.9; dashTime=0.16; } }, {passive:false});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+// title secret: tap the title 5x -> it flashes "한결"
+(function(){
+  var t=document.querySelector('#start .title'); if(!t) return;
+  t.style.cursor='pointer'; t.style.pointerEvents='auto';
+  var taps=0, tmr=null;
+  t.addEventListener('click', function(){
+    taps++; if(tmr) clearTimeout(tmr); tmr=setTimeout(function(){ taps=0; }, 1200);
+    if(taps>=5){
+      taps=0; var orig=t.textContent; t.textContent='한결'; t.style.color='#ffd400';
+      initAudio(); if(AC){ if(AC.state==='suspended') AC.resume(); sfxLevel(); }
+      setTimeout(function(){ t.textContent=orig; t.style.color='#fff'; }, 1300);
+    }
+  });
+})();
+document.getElementById('retryBtn').addEventListener('click', function(){
+  // soft reset of hangyeol world if it happened
+  if(hangyeol){ location.reload(); return; }
+  startGame();
+});
+
+window.addEventListener('resize', function(){
+  W=window.innerWidth; H=window.innerHeight;
+  camera.aspect=W/H; camera.updateProjectionMatrix();
+  renderer.setSize(W,H);
+});
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+initThree();
+clock.start();
+loop();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PENCIL VAULT</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0e0d0b;
+    --surface: #1a1814;
+    --surface2: #242118;
+    --border: #3a3528;
+    --gold: #c8a84b;
+    --gold2: #e8c96a;
+    --cream: #f0e8d0;
+    --dim: #7a7060;
+    --grade1: #f0e8d0;
+    --grade2: #d4c878;
+    --grade3: #b8a850;
+    --grade4: #9a8840;
+    --grade5: #7a6830;
+    --grade6: #5a4820;
+    --grade7: #3a2810;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    background: var(--surface);
+  }
+  .header h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+  }
+  .header span {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+  .count-badge {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .count-badge b { color: var(--gold); }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tab {
+    padding: 12px 24px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: 'Space Mono', monospace;
+  }
+  .tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* SCAN PAGE */
+  .scan-page {
+    padding: 24px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .camera-zone {
+    position: relative;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .camera-zone video,
+  .camera-zone img.preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .camera-zone video.active,
+  .camera-zone img.preview.active {
+    display: block;
+  }
+  .camera-placeholder {
+    text-align: center;
+    color: var(--dim);
+  }
+  .camera-placeholder .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+  .camera-placeholder p {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  /* corner brackets */
+  .corner { position: absolute; width: 20px; height: 20px; border-color: var(--gold); border-style: solid; opacity: 0.6; }
+  .corner.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+  .corner.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+  .corner.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
+  .scan-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--cream);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .btn:hover { border-color: var(--gold); color: var(--gold); }
+  .btn.primary {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+  .btn.primary:hover { background: var(--gold2); border-color: var(--gold2); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* RESULT CARD */
+  .result-card {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+    animation: slideUp 0.4s ease;
+  }
+  .result-card.show { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grade-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid currentColor;
+    flex-shrink: 0;
+  }
+  .grade-badge .g-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+  }
+  .grade-badge .g-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .grade-1 { color: var(--grade1); background: rgba(240,232,208,0.08); }
+  .grade-2 { color: var(--grade2); background: rgba(212,200,120,0.08); }
+  .grade-3 { color: var(--grade3); background: rgba(184,168,80,0.08); }
+  .grade-4 { color: var(--grade4); background: rgba(154,136,64,0.08); }
+  .grade-5 { color: var(--grade5); background: rgba(122,104,48,0.08); }
+  .grade-6 { color: var(--grade6); background: rgba(90,72,32,0.12); }
+  .grade-7 { color: #8a6848; background: rgba(58,40,16,0.15); border-color: #5a3818; }
+
+  .result-meta h2 {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .result-meta p {
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  .result-stats {
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stat-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-size: 13px;
+    color: var(--cream);
+  }
+
+  .stat-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .result-desc {
+    padding: 0 20px 16px;
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+
+  .save-btn {
+    margin: 0 20px 20px;
+    width: calc(100% - 40px);
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,13,11,0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+  }
+
+  /* VAULT PAGE */
+  .vault-page { padding: 20px 16px; }
+
+  .vault-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--dim);
+  }
+  .vault-empty .icon { font-size: 40px; opacity: 0.3; margin-bottom: 12px; }
+  .vault-empty p { font-size: 12px; letter-spacing: 0.08em; }
+
+  .vault-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .vault-item {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .vault-item:hover { border-color: var(--gold); }
+
+  .vault-thumb {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--surface2);
+    position: relative;
+  }
+  .vault-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .vault-thumb-grade {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(14,13,11,0.85);
+  }
+
+  .vault-info {
+    padding: 10px;
+  }
+  .vault-info .v-grade {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    margin-bottom: 3px;
+  }
+  .vault-info .v-name {
+    font-size: 12px;
+    color: var(--cream);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vault-info .v-date {
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: 2px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* DETAIL MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,13,11,0.92);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 12px 12px 0 0;
+    animation: slideModal 0.3s ease;
+  }
+  @keyframes slideModal {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-handle {
+    width: 36px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 14px auto 0;
+  }
+
+  .modal-img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    margin-top: 16px;
+  }
+
+  .modal-body { padding: 20px; }
+
+  .modal-title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .modal-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .modal-desc {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.8;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .modal-close {
+    margin-top: 20px;
+    width: 100%;
+  }
+
+  /* file input hidden */
+  #fileInput { display: none; }
+
+  canvas { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PENCIL VAULT</h1>
+  <span>등급 감정 시스템</span>
+  <div class="count-badge">보관 <b id="vaultCount">0</b>자루</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('scan')">▸ SCAN</div>
+  <div class="tab" onclick="switchTab('vault')">▸ VAULT</div>
+</div>
+
+<!-- SCAN PAGE -->
+<div class="page active" id="scanPage">
+  <div class="scan-page">
+    <div class="camera-zone" id="cameraZone" onclick="handleZoneClick()">
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+      <video id="videoEl" autoplay playsinline></video>
+      <img class="preview" id="previewImg" alt="preview">
+      <div class="camera-placeholder" id="placeholder">
+        <div class="icon">✏️</div>
+        <p>탭해서 카메라 / 사진 선택</p>
+      </div>
+    </div>
+
+    <div class="scan-actions">
+      <button class="btn" onclick="openFile()">📁 파일</button>
+      <button class="btn" onclick="startCamera()">📷 카메라</button>
+      <button class="btn primary" id="analyzeBtn" onclick="analyze()" disabled>감정하기</button>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" onchange="onFileSelected(event)">
+    <canvas id="canvas"></canvas>
+
+    <!-- RESULT -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="grade-badge" id="gradeBadge">
+          <span class="g-label">GRADE</span>
+          <span class="g-num" id="gradeNum">—</span>
+        </div>
+        <div class="result-meta">
+          <h2 id="resultTitle">—</h2>
+          <p id="resultSummary">—</p>
+        </div>
+      </div>
+      <div class="result-stats" id="resultStats"></div>
+      <div class="result-desc" id="resultDesc"></div>
+      <button class="btn primary save-btn" onclick="saveToVault()">보관실에 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- VAULT PAGE -->
+<div class="page" id="vaultPage">
+  <div class="vault-page">
+    <div class="vault-empty" id="vaultEmpty">
+      <div class="icon">🗄️</div>
+      <p>아직 보관된 연필이 없습니다</p>
+    </div>
+    <div class="vault-grid" id="vaultGrid"></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">ANALYZING...</div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <img class="modal-img" id="modalImg" alt="">
+    <div class="modal-body">
+      <div class="modal-title-row">
+        <div class="grade-badge" id="modalGradeBadge">
+          <span class="g-label">GRADE</span>
+          <span class="g-num" id="modalGradeNum">—</span>
+        </div>
+        <div class="result-meta">
+          <h2 id="modalTitle">—</h2>
+          <p id="modalSummary">—</p>
+        </div>
+      </div>
+      <div class="modal-stats" id="modalStats"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <button class="btn modal-close" onclick="closeModalDirect()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// STATE
+let currentImageData = null;
+let currentResult = null;
+let vault = JSON.parse(localStorage.getItem('pencilVault') || '[]');
+let stream = null;
+let cameraActive = false;
+
+// TABS
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'scan')));
+  document.getElementById('scanPage').classList.toggle('active', tab === 'scan');
+  document.getElementById('vaultPage').classList.toggle('active', tab === 'vault');
+  if (tab === 'vault') renderVault();
+  if (tab === 'scan' && cameraActive) startCamera();
+}
+
+// CAMERA
+function handleZoneClick() {
+  if (!cameraActive && !currentImageData) startCamera();
+}
+
+async function startCamera() {
+  try {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); }
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = document.getElementById('videoEl');
+    video.srcObject = stream;
+    video.classList.add('active');
+    document.getElementById('previewImg').classList.remove('active');
+    document.getElementById('placeholder').style.display = 'none';
+    cameraActive = true;
+
+    // capture on click when camera active
+    document.getElementById('cameraZone').onclick = captureFromCamera;
+    document.getElementById('analyzeBtn').disabled = false;
+  } catch(e) {
+    openFile();
+  }
+}
+
+function captureFromCamera() {
+  const video = document.getElementById('videoEl');
+  const canvas = document.getElementById('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  currentImageData = canvas.toDataURL('image/jpeg', 0.85);
+  showPreview(currentImageData);
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  cameraActive = false;
+  document.getElementById('cameraZone').onclick = handleZoneClick;
+}
+
+function openFile() {
+  document.getElementById('fileInput').click();
+}
+
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    currentImageData = ev.target.result;
+    showPreview(currentImageData);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(src) {
+  const img = document.getElementById('previewImg');
+  img.src = src;
+  img.classList.add('active');
+  document.getElementById('videoEl').classList.remove('active');
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('resultCard').classList.remove('show');
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  cameraActive = false;
+  document.getElementById('cameraZone').onclick = handleZoneClick;
+}
+
+// ANALYZE
+async function analyze() {
+  if (!currentImageData) return;
+  document.getElementById('loadingOverlay').classList.add('show');
+
+  try {
+    const base64 = currentImageData.split(',')[1];
+    const mediaType = currentImageData.split(';')[0].split(':')[1];
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `이 이미지에서 연필을 분석해서 반드시 JSON만 반환해. 다른 텍스트 없이 JSON만. 마크다운 불필요.
+
+등급 기준:
+- 1등급: 새것처럼 길고 깨끗하고 심이 뾰족하고 흉터 없음
+- 2등급: 거의 새것, 아주 작은 결함
+- 3등급: 약간 사용됨, 작은 흉터나 무딘 심
+- 4등급: 보통 사용됨
+- 5등급: 많이 사용됨, 꽤 짧거나 더럽거나 흉터 있음
+- 6등급: 심하게 사용됨, 많이 짧거나 오염됨
+- 7등급: 몽당연필 수준, 매우 짧거나 더럽거나 심하게 손상됨
+
+연필이 없으면 grade: 0으로 반환.
+
+반환 형식:
+{
+  "grade": 숫자(0-7),
+  "title": "연필 종류/이름 추정 (예: HB 나무 연필, 2B 색연필 등)",
+  "summary": "한 줄 요약",
+  "length": "길이 추정 (예: 약 18cm, 매우 짧음 등)",
+  "sharpness": "심 상태 (뾰족함/보통/무딤/부러짐)",
+  "cleanliness": "청결도 (1-10, 10이 가장 깨끗)",
+  "damage": "흉터/손상 (없음/약간/보통/심함)",
+  "type": "연필 종류 (목재/샤프/색연필/기타)",
+  "description": "2-3문장 상세 감정 소견"
+}`
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(c => c.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    currentResult = result;
+    showResult(result);
+
+  } catch(e) {
+    alert('분석 실패: ' + e.message);
+  } finally {
+    document.getElementById('loadingOverlay').classList.remove('show');
+  }
+}
+
+function showResult(r) {
+  if (r.grade === 0) {
+    alert('연필을 찾을 수 없습니다. 다시 촬영해주세요.');
+    return;
+  }
+
+  const card = document.getElementById('resultCard');
+  card.classList.add('show');
+
+  const badge = document.getElementById('gradeBadge');
+  badge.className = `grade-badge grade-${r.grade}`;
+  document.getElementById('gradeNum').textContent = r.grade;
+  document.getElementById('resultTitle').textContent = r.title || '연필';
+  document.getElementById('resultSummary').textContent = r.summary || '';
+
+  const gradeColors = ['','#f0e8d0','#d4c878','#b8a850','#9a8840','#7a6830','#5a4820','#8a6848'];
+
+  const stats = document.getElementById('resultStats');
+  stats.innerHTML = `
+    ${statRow('LENGTH', r.length || '—', null)}
+    ${statRow('SHARPNESS', r.sharpness || '—', null)}
+    ${statRow('CLEANLINESS', r.cleanliness + '/10', r.cleanliness / 10)}
+    ${statRow('DAMAGE', r.damage || '—', null)}
+    ${statRow('TYPE', r.type || '—', null)}
+    ${statRow('GRADE', r.grade + '등급', (8 - r.grade) / 7)}
+  `;
+
+  document.getElementById('resultDesc').textContent = r.description || '';
+}
+
+function statRow(label, value, barRatio) {
+  return `<div class="stat-row">
+    <div class="stat-label">${label}</div>
+    <div class="stat-value">${value}</div>
+    ${barRatio !== null ? `<div class="stat-bar"><div class="stat-bar-fill" style="width:${Math.round(barRatio*100)}%"></div></div>` : ''}
+  </div>`;
+}
+
+// SAVE
+function saveToVault() {
+  if (!currentResult || !currentImageData) return;
+  const entry = {
+    id: Date.now(),
+    grade: currentResult.grade,
+    title: currentResult.title,
+    summary: currentResult.summary,
+    length: currentResult.length,
+    sharpness: currentResult.sharpness,
+    cleanliness: currentResult.cleanliness,
+    damage: currentResult.damage,
+    type: currentResult.type,
+    description: currentResult.description,
+    image: currentImageData,
+    date: new Date().toLocaleDateString('ko-KR')
+  };
+  vault.unshift(entry);
+  localStorage.setItem('pencilVault', JSON.stringify(vault));
+  updateCount();
+  alert('보관실에 저장되었습니다!');
+  currentImageData = null;
+  currentResult = null;
+  document.getElementById('previewImg').classList.remove('active');
+  document.getElementById('placeholder').style.display = '';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('resultCard').classList.remove('show');
+}
+
+function updateCount() {
+  document.getElementById('vaultCount').textContent = vault.length;
+}
+
+// VAULT
+function renderVault() {
+  const grid = document.getElementById('vaultGrid');
+  const empty = document.getElementById('vaultEmpty');
+  if (vault.length === 0) {
+    empty.style.display = 'block';
+    grid.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  const gradeColors = ['','#f0e8d0','#d4c878','#b8a850','#9a8840','#7a6830','#5a4820','#8a6848'];
+  grid.innerHTML = vault.map((item, i) => `
+    <div class="vault-item" onclick="openDetail(${i})">
+      <div class="vault-thumb">
+        <img src="${item.image}" alt="">
+        <div class="vault-thumb-grade" style="color:${gradeColors[item.grade]}">${item.grade}등급</div>
+      </div>
+      <div class="vault-info">
+        <div class="v-grade">GRADE ${item.grade}</div>
+        <div class="v-name">${item.title}</div>
+        <div class="v-date">${item.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// MODAL
+function openDetail(idx) {
+  const item = vault[idx];
+  document.getElementById('modalImg').src = item.image;
+  const badge = document.getElementById('modalGradeBadge');
+  badge.className = `grade-badge grade-${item.grade}`;
+  document.getElementById('modalGradeNum').textContent = item.grade;
+  document.getElementById('modalTitle').textContent = item.title;
+  document.getElementById('modalSummary').textContent = item.summary;
+
+  const stats = document.getElementById('modalStats');
+  stats.innerHTML = `
+    ${statRow('LENGTH', item.length || '—', null)}
+    ${statRow('SHARPNESS', item.sharpness || '—', null)}
+    ${statRow('CLEANLINESS', (item.cleanliness||0) + '/10', (item.cleanliness||0) / 10)}
+    ${statRow('DAMAGE', item.damage || '—', null)}
+    ${statRow('TYPE', item.type || '—', null)}
+    ${statRow('GRADE', item.grade + '등급', (8 - item.grade) / 7)}
+  `;
+
+  document.getElementById('modalDesc').textContent = item.description;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+updateCount();
+</script>
+</body>
+</html>

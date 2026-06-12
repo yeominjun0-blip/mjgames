@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOONGHAP.SYS v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0a; --panel:#0f0f0f; --border:#1e1e1e;
+    --green:#00ff41; --green-dim:#00aa2b; --green-dark:#003a0e;
+    --amber:#ffb300; --red:#ff3c3c; --cyan:#00e5ff;
+    --purple:#b060ff; --orange:#ff6b00;
+    --gold:#ffd700; --tarot:#8b00ff;
+    --text:#c8ffd4; --dim:#3a5c3f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--green);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:9999;}
+  body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.7) 100%);pointer-events:none;z-index:9998;}
+  @keyframes ambientPulse{0%,100%{opacity:.5}50%{opacity:.9}}
+  .page-wrap{max-width:1280px;margin:0 auto;padding:16px 14px 60px;position:relative;}
+  .page-wrap::before{content:'';position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(0,255,65,.03) 0%,transparent 70%);pointer-events:none;z-index:0;animation:ambientPulse 5s ease-in-out infinite;}
+
+  /* HEADER */
+  .boot-header{border:1px solid var(--green-dim);padding:12px 18px;margin-bottom:14px;position:relative;background:var(--panel);display:flex;justify-content:space-between;align-items:center;box-shadow:0 0 40px rgba(0,255,65,.07),inset 0 1px 0 rgba(0,255,65,.04);}
+  .boot-header::before{content:'\u25b3\u25b3\u25b2\u25b2\u25b1\u25b1';position:absolute;top:-1px;left:20px;background:var(--bg);padding:0 6px;font-size:.65rem;color:var(--green-dim);}
+  .sys-title{font-family:'VT323',monospace;font-size:2.2rem;color:var(--green);text-shadow:0 0 10px rgba(0,255,65,.9),0 0 30px rgba(0,255,65,.5),0 0 70px rgba(0,255,65,.2);letter-spacing:3px;line-height:1;}
+  .sys-sub{font-size:.65rem;color:var(--green-dim);margin-top:3px;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,.3);}
+  .sys-meta{text-align:right;font-size:.63rem;color:var(--dim);line-height:1.8;}
+  .blink{animation:blink 1s step-end infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  /* MAIN TABS */
+  .main-tab-row{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);overflow-x:auto;background:rgba(0,0,0,.3);}
+  .main-tab{flex:1;min-width:120px;padding:9px 6px;font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:1px;border:none;background:transparent;color:var(--dim);cursor:pointer;transition:all .2s;border-right:1px solid var(--border);text-align:center;white-space:nowrap;}
+  .main-tab:last-child{border-right:none;}
+  .main-tab.act-tarot{color:var(--gold);background:rgba(255,215,0,.06);border-bottom:2px solid var(--gold);text-shadow:0 0 10px rgba(255,215,0,.6);box-shadow:inset 0 -4px 14px rgba(255,215,0,.07);}
+  .main-tab.act-green{color:var(--green);background:rgba(0,255,65,.06);border-bottom:2px solid var(--green);text-shadow:0 0 10px rgba(0,255,65,.6);box-shadow:inset 0 -4px 14px rgba(0,255,65,.07);}
+  .main-tab.act-amber{color:var(--amber);background:rgba(255,179,0,.06);border-bottom:2px solid var(--amber);text-shadow:0 0 10px rgba(255,179,0,.6);box-shadow:inset 0 -4px 14px rgba(255,179,0,.07);}
+  .main-tab.act-orange{color:var(--orange);background:rgba(255,107,0,.06);border-bottom:2px solid var(--orange);text-shadow:0 0 10px rgba(255,107,0,.6);box-shadow:inset 0 -4px 14px rgba(255,107,0,.07);}
+  .main-tab:hover:not([class*="act-"]){color:rgba(200,255,212,.5);background:rgba(255,255,255,.02);}
+
+  .tab-page{display:none;}.tab-page.active{display:block;}
+  .columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+  @media(max-width:700px){.columns{grid-template-columns:1fr;}}
+
+  /* BLOCK */
+  .block{border:1px solid var(--border);margin-bottom:14px;background:var(--panel);position:relative;transition:box-shadow .25s;}
+  .block::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.012) 0%,transparent 40%);pointer-events:none;}
+  .block:hover{box-shadow:0 4px 24px rgba(0,0,0,.5);}
+  .block.ac-purple{border-color:rgba(176,96,255,.3);}
+  .block.ac-purple:hover{box-shadow:0 4px 20px rgba(176,96,255,.1);}
+  .block.ac-amber{border-color:rgba(255,179,0,.25);}
+  .block.ac-amber:hover{box-shadow:0 4px 20px rgba(255,179,0,.1);}
+  .block.ac-orange{border-color:rgba(255,107,0,.25);}
+  .block.ac-orange:hover{box-shadow:0 4px 20px rgba(255,107,0,.1);}
+  .block.ac-tarot{border-color:rgba(255,215,0,.3);}
+  .block.ac-tarot:hover{box-shadow:0 4px 20px rgba(255,215,0,.1);}
+  .block-title{font-size:.63rem;color:var(--green-dim);letter-spacing:2px;padding:6px 12px;border-bottom:1px solid var(--border);background:rgba(0,255,65,.03);display:flex;justify-content:space-between;align-items:center;}
+  .block-title.t-purple{color:var(--purple);background:rgba(176,96,255,.05);border-color:rgba(176,96,255,.2);}
+  .block-title.t-amber{color:var(--amber);background:rgba(255,179,0,.05);border-color:rgba(255,179,0,.15);}
+  .block-title.t-orange{color:var(--orange);background:rgba(255,107,0,.05);border-color:rgba(255,107,0,.15);}
+  .block-title.t-tarot{color:var(--gold);background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.2);}
+  .block-title .tag{color:var(--dim);font-size:.58rem;}
+  .block-body{padding:12px;}
+
+  /* INPUTS */
+  .cmd-line{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .prompt{color:var(--green-dim);font-size:.8rem;white-space:nowrap;flex-shrink:0;}
+  .cmd-input{flex:1;background:transparent;border:none;border-bottom:1px solid var(--green-dim);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:.92rem;padding:4px 0;outline:none;caret-color:var(--green);letter-spacing:1px;transition:border-color .2s,box-shadow .2s;}
+  .cmd-input:focus{border-color:var(--green);box-shadow:0 2px 10px rgba(0,255,65,.15);}
+  .cmd-input::placeholder{color:var(--dim);}
+
+  /* BUTTONS */
+  @keyframes btnShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  .exec-btn{width:100%;margin-top:10px;padding:9px;background:var(--green-dark);border:1px solid var(--green-dim);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:3px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden;}
+  .exec-btn:hover{background:rgba(0,170,43,.35);border-color:var(--green);box-shadow:0 0 20px rgba(0,255,65,.2),inset 0 0 20px rgba(0,255,65,.04);}
+  .exec-btn.btn-purple{background:rgba(176,96,255,.08);border-color:rgba(176,96,255,.4);color:var(--purple);}
+  .exec-btn.btn-purple:hover{background:rgba(176,96,255,.2);box-shadow:0 0 20px rgba(176,96,255,.2);border-color:var(--purple);}
+  .exec-btn.btn-amber{background:rgba(255,179,0,.08);border-color:rgba(255,179,0,.4);color:var(--amber);}
+  .exec-btn.btn-amber:hover{background:rgba(255,179,0,.2);box-shadow:0 0 20px rgba(255,179,0,.2);border-color:var(--amber);}
+  .exec-btn.btn-orange{background:rgba(255,107,0,.08);border-color:rgba(255,107,0,.4);color:var(--orange);}
+  .exec-btn.btn-orange:hover{background:rgba(255,107,0,.2);box-shadow:0 0 20px rgba(255,107,0,.2);border-color:var(--orange);}
+  .exec-btn.btn-red{background:rgba(255,60,60,.08);border-color:rgba(255,60,60,.4);color:var(--red);font-size:.72rem;padding:6px;}
+  .exec-btn.btn-red:hover{background:rgba(255,60,60,.2);box-shadow:0 0 16px rgba(255,60,60,.15);}
+  .exec-btn.btn-gold{background:rgba(255,215,0,.08);border-color:rgba(255,215,0,.4);color:var(--gold);}
+  .exec-btn.btn-gold:hover{background:rgba(255,215,0,.2);box-shadow:0 0 20px rgba(255,215,0,.2);}
+
+  .term-line{font-size:.76rem;color:var(--text);line-height:2;letter-spacing:.5px;}
+  .term-line .val{color:var(--green);}
+  .term-line .val-a{color:var(--cyan);}
+  .term-line .val-b{color:var(--amber);}
+  .term-line .comment{color:var(--dim);}
+  .term-divider{border:none;border-top:1px dashed var(--border);margin:8px 0;}
+
+  /* TRIANGLE */
+  .char-row{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap;}
+  .char-pill{font-size:.68rem;padding:1px 6px;border:1px solid;}
+  .char-pill.a{border-color:rgba(0,229,255,.4);color:var(--cyan);background:rgba(0,229,255,.06);}
+  .char-pill.b{border-color:rgba(255,179,0,.4);color:var(--amber);background:rgba(255,179,0,.06);}
+  .num-row{display:flex;gap:3px;margin:2px 0;flex-wrap:wrap;}
+  .num-cell{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:.82rem;border:1px solid var(--border);color:var(--green-dim);background:rgba(0,255,65,.02);opacity:0;transform:translateY(4px);transition:opacity .22s,transform .22s;}
+  .num-cell.vis{opacity:1;transform:translateY(0);}
+  .num-cell.final{border-color:var(--green);color:var(--green);background:rgba(0,255,65,.1);box-shadow:0 0 14px rgba(0,255,65,.3),inset 0 0 8px rgba(0,255,65,.05);font-size:.9rem;font-weight:bold;width:32px;height:32px;}
+  .row-arrow{font-size:.58rem;color:var(--dim);padding:0 2px;}
+
+  /* RESULT */
+  .result-block{border:1px solid var(--green-dim);background:var(--panel);box-shadow:0 0 50px rgba(0,255,65,.09),0 0 100px rgba(0,255,65,.03);}
+  .result-top{display:grid;grid-template-columns:120px 1fr;border-bottom:1px solid var(--border);}
+  .result-pct-box{padding:16px 10px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,255,65,.04);}
+  .result-pct-num{font-family:'VT323',monospace;font-size:3rem;color:var(--green);text-shadow:0 0 20px rgba(0,255,65,.9),0 0 50px rgba(0,255,65,.4),0 0 90px rgba(0,255,65,.15);line-height:1;}
+  .result-pct-unit{font-size:.55rem;color:var(--dim);letter-spacing:1.5px;margin-top:4px;text-align:center;}
+  .result-info{padding:12px 14px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .result-grade{font-family:'VT323',monospace;font-size:1.5rem;color:var(--green);letter-spacing:2px;text-shadow:0 0 10px rgba(0,255,65,.5);}
+  .result-hearts{color:var(--red);font-size:.8rem;letter-spacing:4px;text-shadow:0 0 12px rgba(255,60,60,.7);}
+  .result-bar-wrap{margin-top:5px;height:3px;background:var(--border);}
+  .result-bar{height:100%;background:linear-gradient(90deg,var(--green-dim),var(--green));width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(0,255,65,.6);}
+  .result-body{padding:10px 14px;font-size:.72rem;color:var(--text);line-height:1.9;border-bottom:1px solid var(--border);}
+  .result-body .prefix{color:var(--green-dim);}
+  .result-footer{padding:7px 14px;display:flex;justify-content:space-between;align-items:center;font-size:.6rem;color:var(--dim);}
+  .ok-badge{border:1px solid var(--green-dim);color:var(--green-dim);padding:2px 8px;font-size:.58rem;letter-spacing:2px;opacity:0;transition:opacity .5s .8s;box-shadow:0 0 8px rgba(0,255,65,.12);}
+  .ok-badge.show{opacity:1;}
+
+  /* SCANNER */
+  .tab-row{display:flex;gap:6px;margin-bottom:10px;}
+  .tab-btn{font-family:'Share Tech Mono',monospace;font-size:.63rem;letter-spacing:1px;padding:4px 10px;border:1px solid var(--border);background:none;color:var(--dim);cursor:pointer;transition:all .15s;}
+  .tab-btn.active{border-color:var(--purple);color:var(--purple);background:rgba(176,96,255,.08);box-shadow:0 0 8px rgba(176,96,255,.15);}
+  .finder-note{font-size:.63rem;color:var(--dim);margin-bottom:10px;line-height:1.6;}
+  .scan-bar-wrap{height:2px;background:var(--border);margin:8px 0;overflow:hidden;display:none;}
+  .scan-bar-wrap.show{display:block;}
+  .scan-bar{height:100%;width:0;transition:width .1s linear;}
+  .scan-bar.best{background:var(--purple);box-shadow:0 0 6px rgba(176,96,255,.5);}
+  .scan-status{font-size:.63rem;margin-bottom:4px;display:none;}
+  .scan-status.show{display:block;}
+  .rank-list{margin-top:6px;}
+  .rank-item{display:grid;grid-template-columns:22px 1fr auto auto;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:.72rem;opacity:0;transform:translateX(-5px);transition:opacity .2s,transform .2s;}
+  .rank-item.vis{opacity:1;transform:translateX(0);}
+  .rank-item:last-child{border-bottom:none;}
+  .rank-num{color:var(--dim);font-size:.6rem;text-align:right;}
+  .rank-name{color:var(--purple);letter-spacing:1px;}
+  .rank-pct{color:var(--green);font-size:.78rem;white-space:nowrap;}
+  .rank-bar-mini{width:44px;height:3px;background:var(--border);overflow:hidden;}
+  .rank-bar-fill{height:100%;background:var(--purple);}
+  .rank-item.rank-1 .rank-name{color:var(--green);text-shadow:0 0 8px rgba(0,255,65,.4);}
+  .rank-item.rank-1 .rank-pct{color:var(--green);text-shadow:0 0 10px rgba(0,255,65,.6);}
+  .rank-item.rank-1 .rank-num{color:var(--amber);}
+  .rank-item.worst .rank-name{color:rgba(255,60,60,.8);}
+  .rank-item.worst .rank-pct{color:var(--red);}
+  .rank-item.worst .rank-bar-fill{background:var(--red);}
+  .rank-item.worst-1 .rank-name{color:var(--red);text-shadow:0 0 8px rgba(255,60,60,.4);}
+  .rank-item.worst-1 .rank-num{color:var(--red);}
+
+  /* FORTUNE */
+  .fortune-center{text-align:center;padding:28px 16px;}
+  .fortune-date-badge{display:inline-block;border:1px solid var(--amber);color:var(--amber);padding:4px 16px;font-size:.7rem;letter-spacing:3px;margin-bottom:20px;box-shadow:0 0 12px rgba(255,179,0,.12);}
+  .fortune-start-btn{display:block;margin:0 auto;padding:14px 40px;background:rgba(255,179,0,.08);border:1px solid var(--amber);color:var(--amber);font-family:'VT323',monospace;font-size:1.8rem;letter-spacing:4px;cursor:pointer;transition:all .2s;}
+  .fortune-start-btn:hover{background:rgba(255,179,0,.15);box-shadow:0 0 30px rgba(255,179,0,.25),inset 0 0 20px rgba(255,179,0,.04);}
+  .fortune-note{font-size:.62rem;color:var(--dim);margin-top:12px;letter-spacing:1px;}
+  .boot-terminal{background:var(--panel);border:1px solid rgba(255,179,0,.3);padding:16px;font-size:.75rem;line-height:2;min-height:200px;display:none;box-shadow:0 0 20px rgba(255,179,0,.05);}
+  .boot-terminal.show{display:block;}
+  .boot-line{color:var(--amber);opacity:0;}
+  .boot-line.vis{opacity:1;}
+  .boot-line.green{color:var(--green);}
+  .boot-line.dim{color:var(--dim);}
+  .boot-line.cyan{color:var(--cyan);}
+  .fortune-result{display:none;margin-top:14px;}
+  .fortune-result.show{display:block;}
+  .fortune-card{border:1px solid rgba(255,179,0,.3);background:rgba(255,179,0,.02);box-shadow:0 0 40px rgba(255,179,0,.07),inset 0 0 40px rgba(255,179,0,.01);}
+  .fortune-card-top{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(255,179,0,.15);}
+  .fortune-stat{padding:14px 10px;text-align:center;border-right:1px solid rgba(255,179,0,.15);}
+  .fortune-stat:last-child{border-right:none;}
+  .fortune-stat-num{font-family:'VT323',monospace;font-size:2.4rem;color:var(--amber);text-shadow:0 0 20px rgba(255,179,0,.8),0 0 50px rgba(255,179,0,.3);line-height:1;}
+  .fortune-stat-label{font-size:.58rem;color:var(--dim);letter-spacing:2px;margin-top:4px;}
+  .fortune-stars{font-size:.85rem;color:var(--amber);letter-spacing:2px;}
+  .fortune-advice{padding:16px 14px;font-size:.8rem;color:var(--text);line-height:2;border-bottom:1px solid rgba(255,179,0,.1);}
+  .fortune-advice .adv-label{color:var(--amber);display:block;font-size:.63rem;letter-spacing:2px;margin-bottom:4px;}
+  .fortune-lucky{padding:10px 14px;font-size:.68rem;color:var(--dim);display:flex;gap:20px;flex-wrap:wrap;}
+  .fortune-lucky span{color:var(--amber);}
+  .save-log{margin-top:6px;}
+  .save-log-item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border);font-size:.72rem;}
+  .save-log-item:last-child{border-bottom:none;}
+  .save-log-names{color:var(--text);}
+  .save-log-names .na{color:var(--cyan);}
+  .save-log-names .nb{color:var(--amber);}
+  .save-log-pct{font-family:'VT323',monospace;font-size:1.1rem;color:var(--green);}
+  .save-log-pct.low{color:var(--red);}
+  .save-log-time{font-size:.58rem;color:var(--dim);}
+  .save-log-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:.65rem;padding:0 4px;transition:color .15s;}
+  .save-log-del:hover{color:var(--red);}
+
+  /* SAVE FILES */
+  .file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:14px;}
+  .file-card{border:1px solid var(--border);background:var(--panel);padding:12px;cursor:pointer;transition:all .2s;position:relative;}
+  .file-card:hover{border-color:var(--orange);box-shadow:0 0 18px rgba(255,107,0,.15),inset 0 0 18px rgba(255,107,0,.02);}
+  .file-card.active-file{border-color:var(--orange);background:rgba(255,107,0,.04);box-shadow:0 0 18px rgba(255,107,0,.15);}
+  .file-card-name{font-size:.85rem;color:var(--orange);margin-bottom:4px;letter-spacing:1px;text-shadow:0 0 8px rgba(255,107,0,.3);}
+  .file-card-meta{font-size:.6rem;color:var(--dim);line-height:1.7;}
+  .file-card-del{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--dim);font-size:.7rem;cursor:pointer;padding:0;transition:color .15s;}
+  .file-card-del:hover{color:var(--red);}
+  .file-new-btn{border:1px dashed var(--border);background:none;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.72rem;padding:20px 12px;cursor:pointer;transition:all .2s;width:100%;text-align:center;letter-spacing:1px;}
+  .file-new-btn:hover{border-color:var(--orange);color:var(--orange);box-shadow:0 0 12px rgba(255,107,0,.08);}
+  .file-workspace{display:none;}
+  .file-workspace.show{display:block;}
+  .workspace-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+  .workspace-title{font-family:'VT323',monospace;font-size:1.5rem;color:var(--orange);letter-spacing:2px;text-shadow:0 0 12px rgba(255,107,0,.4);}
+  .workspace-meta{font-size:.6rem;color:var(--dim);}
+  .report-section{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+  .report-btn{width:100%;padding:10px;background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.4);color:var(--orange);font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+  .report-btn:hover{background:rgba(255,107,0,.2);box-shadow:0 0 18px rgba(255,107,0,.18);border-color:var(--orange);}
+  .report-out{display:none;margin-top:12px;border:1px solid rgba(255,107,0,.3);padding:14px;background:rgba(255,107,0,.02);font-size:.72rem;line-height:2;}
+  .report-out.show{display:block;}
+
+  /* TAROT */
+  .tarot-intro{text-align:center;padding:28px 16px;}
+  @keyframes tarotPulse{0%,100%{text-shadow:0 0 20px rgba(255,215,0,.8),0 0 50px rgba(255,215,0,.4),0 0 100px rgba(255,215,0,.15)}50%{text-shadow:0 0 30px rgba(255,215,0,1),0 0 70px rgba(255,215,0,.6),0 0 130px rgba(255,215,0,.3)}}
+  .tarot-title-big{font-family:'VT323',monospace;font-size:3rem;color:var(--gold);letter-spacing:4px;margin-bottom:8px;animation:tarotPulse 3s ease-in-out infinite;}
+  .tarot-sub-text{font-size:.65rem;color:rgba(255,215,0,.5);letter-spacing:2px;margin-bottom:20px;}
+  .tarot-name-input{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,215,0,.4);color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:1.1rem;padding:8px 0;outline:none;caret-color:var(--gold);letter-spacing:2px;text-align:center;margin-bottom:16px;transition:border-color .2s,box-shadow .2s;}
+  .tarot-name-input:focus{border-color:var(--gold);box-shadow:0 2px 14px rgba(255,215,0,.2);}
+  .tarot-name-input::placeholder{color:rgba(255,215,0,.2);}
+  .tarot-start-btn{display:inline-block;padding:12px 36px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.5);color:var(--gold);font-family:'VT323',monospace;font-size:1.8rem;letter-spacing:4px;cursor:pointer;transition:all .2s;}
+  .tarot-start-btn:hover{background:rgba(255,215,0,.15);box-shadow:0 0 30px rgba(255,215,0,.25),inset 0 0 20px rgba(255,215,0,.04);}
+  .tarot-note{font-size:.6rem;color:var(--dim);margin-top:10px;letter-spacing:1px;}
+  .tarot-boot{background:var(--panel);border:1px solid rgba(255,215,0,.3);padding:16px;font-size:.75rem;line-height:2;display:none;box-shadow:0 0 20px rgba(255,215,0,.05);}
+  .tarot-boot.show{display:block;}
+  .tarot-boot-line{color:var(--gold);opacity:0;}
+  .tarot-boot-line.vis{opacity:1;}
+  .tarot-boot-line.d{color:var(--dim);}
+  .tarot-boot-line.g{color:var(--green);}
+  .tarot-boot-line.p{color:var(--purple);}
+  .card-pick-area{display:none;text-align:center;padding:20px 10px;}
+  .card-pick-area.show{display:block;}
+  .card-pick-label{font-size:.65rem;color:rgba(255,215,0,.6);letter-spacing:2px;margin-bottom:16px;}
+  .card-pick-label strong{color:var(--gold);}
+  .card-deck{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .card-face-down{width:60px;height:90px;border:1px solid rgba(255,215,0,.3);background:linear-gradient(135deg,#1a0a30,#0d0520);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:all .25s;position:relative;overflow:hidden;border-radius:3px;}
+  .card-face-down::before{content:'';position:absolute;inset:3px;border:1px solid rgba(255,215,0,.12);border-radius:1px;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,215,0,.03) 3px,rgba(255,215,0,.03) 6px);}
+  .card-face-down::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,215,0,.05) 0%,transparent 60%);pointer-events:none;}
+  .card-face-down:hover:not(.picked){transform:translateY(-10px);box-shadow:0 12px 30px rgba(255,215,0,.22),0 0 20px rgba(255,215,0,.1);border-color:rgba(255,215,0,.65);}
+  .card-face-down.picked{opacity:.22;cursor:default;transform:none;filter:grayscale(.6);}
+  .card-face-down .card-symbol{color:rgba(255,215,0,.4);font-size:1rem;}
+  .tarot-spread{display:none;margin-top:8px;}
+  .tarot-spread.show{display:block;}
+  .spread-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;}
+  .tarot-card-reveal{border:1px solid rgba(255,215,0,.22);background:rgba(255,215,0,.02);padding:14px 10px;text-align:center;opacity:0;transform:translateY(16px) scale(.97);transition:opacity .5s,transform .5s;border-radius:3px;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+  .tarot-card-reveal.show{opacity:1;transform:translateY(0) scale(1);box-shadow:0 4px 20px rgba(255,215,0,.07);}
+  .tarot-card-reveal.reversed{border-color:rgba(176,96,255,.35);background:rgba(176,96,255,.03);box-shadow:0 4px 20px rgba(176,96,255,.07);}
+  .card-position{font-size:.58rem;color:var(--dim);letter-spacing:2px;margin-bottom:8px;}
+  .card-emoji{font-size:2rem;display:block;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(255,215,0,.35));}
+  .card-name{font-family:'VT323',monospace;font-size:1.2rem;color:var(--gold);letter-spacing:1px;line-height:1.2;text-shadow:0 0 10px rgba(255,215,0,.4);}
+  .card-name.reversed{color:var(--purple);text-shadow:0 0 10px rgba(176,96,255,.4);}
+  .card-rev-label{font-size:.55rem;color:var(--purple);letter-spacing:1px;margin-top:2px;}
+  .card-meaning{font-size:.66rem;color:var(--text);line-height:1.7;margin-top:8px;text-align:left;}
+  .card-keyword{font-size:.6rem;color:rgba(255,215,0,.4);margin-top:4px;letter-spacing:1px;}
+  .tarot-overall{border:1px solid rgba(255,215,0,.15);background:rgba(255,215,0,.02);padding:14px;margin-top:4px;font-size:.75rem;color:var(--text);line-height:1.9;}
+  .tarot-overall-label{color:var(--gold);font-size:.63rem;letter-spacing:2px;display:block;margin-bottom:6px;}
+  .tarot-saved-note{font-size:.6rem;color:var(--green-dim);margin-top:10px;letter-spacing:1px;}
+  .tarot-history-item{padding:8px 0;border-bottom:1px dashed var(--border);font-size:.7rem;}
+  .tarot-history-item:last-child{border-bottom:none;}
+  .th-name{color:var(--gold);font-size:.8rem;text-shadow:0 0 8px rgba(255,215,0,.3);}
+  .th-cards{color:var(--dim);font-size:.62rem;margin-top:2px;line-height:1.6;}
+  .th-date{color:var(--dim);font-size:.58rem;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--orange);padding:24px;width:340px;max-width:90vw;box-shadow:0 0 60px rgba(255,107,0,.12);}
+  .modal-title{font-family:'VT323',monospace;font-size:1.4rem;color:var(--orange);margin-bottom:14px;letter-spacing:2px;text-shadow:0 0 10px rgba(255,107,0,.4);}
+  .modal-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--orange);color:var(--orange);font-family:'Share Tech Mono',monospace;font-size:.9rem;padding:6px 0;outline:none;caret-color:var(--orange);margin-bottom:14px;}
+  .modal-row{display:flex;gap:8px;}
+
+  .reset-btn{background:none;border:none;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;cursor:pointer;letter-spacing:1px;margin-top:10px;padding:0;display:block;transition:color .15s;}
+  .reset-btn:hover{color:var(--green);}
+  .reset-btn::before{content:'> ';}
+  .page-footer{text-align:center;font-size:.58rem;color:var(--dim);margin-top:24px;letter-spacing:2px;}
+
+  /* SHARE */
+  .share-box{margin-top:12px;border:1px solid rgba(0,229,255,.2);background:rgba(0,229,255,.02);padding:12px;box-shadow:0 0 20px rgba(0,229,255,.04);}
+  .share-box-title{font-size:.6rem;color:var(--cyan);letter-spacing:2px;margin-bottom:8px;}
+  .share-link-row{display:flex;gap:6px;align-items:center;}
+  .share-link-input{flex:1;background:rgba(0,0,0,.4);border:1px solid rgba(0,229,255,.2);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:.58rem;padding:6px 8px;outline:none;letter-spacing:.5px;cursor:text;}
+  .share-copy-btn{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:.63rem;padding:6px 10px;cursor:pointer;white-space:nowrap;transition:all .15s;letter-spacing:1px;}
+  .share-copy-btn:hover{background:rgba(0,229,255,.18);box-shadow:0 0 12px rgba(0,229,255,.18);}
+  .share-copy-btn.copied{background:var(--green-dark);border-color:var(--green-dim);color:var(--green);}
+  .share-msg{font-size:.6rem;color:var(--dim);margin-top:6px;line-height:1.6;}
+
+  /* SHARED OVERLAY */
+  .shared-overlay{position:fixed;inset:0;background:var(--bg);z-index:5000;display:none;overflow-y:auto;}
+  .shared-overlay.show{display:block;}
+  .shared-wrap{max-width:560px;margin:0 auto;padding:30px 16px 60px;}
+  .shared-header{border-top:2px solid var(--green);border-bottom:1px solid var(--green-dim);padding:16px 0 12px;margin-bottom:24px;text-align:center;box-shadow:0 4px 24px rgba(0,255,65,.06);}
+  .shared-from{font-size:.62rem;color:var(--dim);letter-spacing:2px;margin-bottom:6px;}
+  .shared-title{font-family:'VT323',monospace;font-size:2rem;color:var(--green);text-shadow:0 0 20px rgba(0,255,65,.7),0 0 50px rgba(0,255,65,.25);letter-spacing:3px;}
+  .shared-names{margin-top:6px;font-size:.8rem;}
+  .shared-section{margin-top:20px;border-top:1px dashed var(--border);padding-top:14px;}
+  .shared-section-title{font-size:.6rem;color:var(--dim);letter-spacing:2px;margin-bottom:10px;}
+  .shared-footer-note{margin-top:24px;text-align:center;font-size:.6rem;color:var(--dim);letter-spacing:1px;border-top:1px solid var(--border);padding-top:14px;}
+
+  /* CLASS SCAN */
+  .class-result-item{display:grid;grid-template-columns:22px 1fr 50px 40px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:.72rem;opacity:0;transform:translateX(-4px);transition:opacity .2s,transform .2s;}
+  .class-result-item.vis{opacity:1;transform:translateX(0);}
+  .class-result-item:last-child{border-bottom:none;}
+  .cr-rank{color:var(--dim);font-size:.6rem;text-align:right;}
+  .cr-name{color:var(--orange);letter-spacing:1px;}
+  .cr-bar{height:3px;background:var(--border);overflow:hidden;border-radius:1px;}
+  .cr-bar-fill{height:100%;background:var(--orange);border-radius:1px;}
+  .cr-pct{color:var(--green);font-size:.78rem;text-align:right;white-space:nowrap;}
+  .cr-pct.low{color:var(--red);}
+  .class-result-item.top1 .cr-name{color:var(--green);text-shadow:0 0 8px rgba(0,255,65,.3);}
+  .class-result-item.top1 .cr-pct{color:var(--green);text-shadow:0 0 10px rgba(0,255,65,.6);}
+  .class-result-item.top1 .cr-rank{color:var(--amber);}
+  .class-result-item.bot1 .cr-name{color:var(--red);}
+  .class-result-item.bot1 .cr-pct{color:var(--red);}
+  .class-result-item.bot1 .cr-bar-fill{background:var(--red);}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="boot-header">
+    <div>
+      <div class="sys-title">GOONGHAP<span class="blink">_</span>SYS</div>
+      <div class="sys-sub">// 이름 획수 기반 인연 지수 분석 시스템 v2.0</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <div class="sys-meta"><div id="sysDate">—</div><div style="color:var(--green-dim)">STATUS: <span style="color:var(--green)">ONLINE</span></div></div>
+      <button onclick="resetAllData()" style="background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.3);color:rgba(255,60,60,.7);font-family:'Share Tech Mono',monospace;font-size:.58rem;padding:3px 10px;cursor:pointer;letter-spacing:1px;transition:all .15s;" onmouseover="this.style.background='var(--red)';this.style.color='var(--bg)'" onmouseout="this.style.background='rgba(255,60,60,.08)';this.style.color='rgba(255,60,60,.7)'">[ 전체 데이터 초기화 ]</button>
+    </div>
+  </div>
+
+  <div class="main-tab-row">
+    <button class="main-tab" id="mainTab0" onclick="switchTab(0)">[ 타로 연애운 ]</button>
+    <button class="main-tab act-green" id="mainTab1" onclick="switchTab(1)">[ 궁합 계산기 ]</button>
+    <button class="main-tab" id="mainTab2" onclick="switchTab(2)">[ 오늘의 운세 ]</button>
+    <button class="main-tab" id="mainTab3" onclick="switchTab(3)">[ 저장 파일 ]</button>
+  </div>
+
+  <!-- ══ TAB 0: TAROT ══ -->
+  <div class="tab-page" id="tabPage0">
+    <div class="columns">
+      <div>
+        <div class="block ac-tarot">
+          <div class="block-title t-tarot"><span>TAROT_LOVE.EXE</span><span class="tag">[LOVE READING]</span></div>
+          <div class="block-body">
+            <!-- intro -->
+            <div class="tarot-intro" id="tarotIntro">
+              <div class="tarot-title-big">✦ TAROT ✦</div>
+              <div class="tarot-sub-text">// 연애운 3장 배열 · 과거 · 현재 · 미래</div>
+              <input class="tarot-name-input" type="text" id="tarotName" placeholder="이름을 입력하세요..." maxlength="6" autocomplete="off">
+              <button class="tarot-start-btn" onclick="startTarot()">▶ 점괘 시작</button>
+              <div class="tarot-note">// 이름을 기반으로 고정된 운세가 계산됩니다</div>
+            </div>
+            <!-- boot -->
+            <div class="tarot-boot" id="tarotBoot"></div>
+            <!-- card pick -->
+            <div class="card-pick-area" id="cardPickArea">
+              <div class="card-pick-label" id="cardPickLabel">카드를 <strong>3장</strong> 고르세요</div>
+              <div class="card-deck" id="cardDeck"></div>
+              <div style="font-size:.6rem;color:var(--dim);">// 고른 카드: <span id="pickedCount" style="color:var(--gold)">0</span> / 3</div>
+            </div>
+            <!-- spread result -->
+            <div class="tarot-spread" id="tarotSpread">
+              <div class="spread-row" id="spreadRow"></div>
+              <div class="tarot-overall" id="tarotOverall"></div>
+              <div class="tarot-saved-note" id="tarotSavedNote"></div>
+              <button class="reset-btn" style="margin-top:10px" onclick="resetTarot()">RESET / 다시 뽑기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- right: history -->
+      <div>
+        <div class="block ac-tarot">
+          <div class="block-title t-tarot"><span>TAROT_HISTORY.EXE</span><span class="tag">[SAVED]</span></div>
+          <div class="block-body">
+            <div style="font-size:.63rem;color:var(--dim);margin-bottom:10px;">// 이름별 타로 기록이 저장됩니다<br>// 같은 이름은 항상 같은 카드가 나옵니다</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="font-size:.6rem;color:var(--dim);" id="tarotHistoryCount">// 기록: 0개</div>
+              <button onclick="clearTarotHistory()" style="background:none;border:none;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">[ 전체 삭제 ]</button>
+            </div>
+            <div id="tarotHistory"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 1: CALCULATOR ══ -->
+  <div class="tab-page active" id="tabPage1">
+    <div class="columns">
+      <div>
+        <div class="block">
+          <div class="block-title"><span>INPUT_MODULE.EXE</span><span class="tag">[01/04]</span></div>
+          <div class="block-body">
+            <div class="cmd-line"><span class="prompt">SUBJECT_A &gt;</span><input class="cmd-input" type="text" id="name1" placeholder="이름 입력..." maxlength="6" autocomplete="off"></div>
+            <div class="cmd-line"><span class="prompt">SUBJECT_B &gt;</span><input class="cmd-input" type="text" id="name2" placeholder="이름 입력..." maxlength="6" autocomplete="off"></div>
+            <button class="exec-btn" onclick="calculate()">[ EXECUTE ANALYSIS ]</button>
+          </div>
+        </div>
+        <div class="block" id="sec02" style="display:none">
+          <div class="block-title"><span>STROKE_PARSER.EXE</span><span class="tag">[02/04]</span></div>
+          <div class="block-body" id="strokeBody"></div>
+        </div>
+        <div class="block" id="sec03" style="display:none">
+          <div class="block-title"><span>CALC_ENGINE.EXE</span><span class="tag">[03/04]</span></div>
+          <div class="block-body"><div id="processWrap"></div></div>
+        </div>
+        <div class="block result-block" id="sec04" style="display:none">
+          <div class="block-title"><span>RESULT_OUTPUT.EXE</span><span class="tag">[04/04]</span></div>
+          <div class="result-top">
+            <div class="result-pct-box"><div class="result-pct-num" id="rNum">--</div><div class="result-pct-unit">COMPAT.<br>INDEX</div></div>
+            <div class="result-info"><div class="result-grade" id="rGrade"></div><div class="result-hearts" id="rHearts"></div><div class="result-bar-wrap"><div class="result-bar" id="rBar"></div></div></div>
+          </div>
+          <div class="result-body" id="rMsg"></div>
+          <div class="result-footer"><span id="rNames"></span><span class="ok-badge" id="okBadge">ANALYSIS OK</span></div>
+        </div>
+        <!-- share box removed -->
+        <button class="reset-btn" id="resetBtn" style="display:none" onclick="resetCalc()">RESET / 처음부터</button>
+      </div>
+      <div>
+        <div class="block ac-purple">
+          <div class="block-title t-purple"><span>BEST_MATCH_FINDER.EXE</span><span class="tag">[SCANNER]</span></div>
+          <div class="block-body">
+            <div class="finder-note"><span style="color:var(--purple)">//</span> 이름 입력 → 궁합 높은/낮은 이름 스캔</div>
+            <div class="tab-row"><button class="tab-btn active" id="tab2" onclick="setFinderTab(2)">2글자</button><button class="tab-btn" id="tab3" onclick="setFinderTab(3)">3글자</button></div>
+            <div class="cmd-line">
+              <span class="prompt" style="color:rgba(176,96,255,.7)">TARGET &gt;</span>
+              <input class="cmd-input" type="text" id="finderName" placeholder="이름 입력..." maxlength="6" autocomplete="off" style="border-color:rgba(176,96,255,.3);color:var(--purple);caret-color:var(--purple)">
+            </div>
+            <button class="exec-btn btn-purple" onclick="runFinder()">[ SCAN ALL NAMES ]</button>
+            <div class="scan-status" id="scanStatus" style="color:var(--purple)">SCANNING...</div>
+            <div class="scan-bar-wrap" id="scanBarWrap"><div class="scan-bar best" id="scanBar"></div></div>
+            <div class="rank-list" id="rankList"></div>
+            <div id="worstSection" style="display:none">
+              <hr class="term-divider" style="margin:12px 0">
+              <div style="font-size:.6rem;color:var(--red);letter-spacing:2px;margin-bottom:8px;">// WORST MATCH — DANGER ZONE</div>
+              <div class="rank-list" id="worstList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: FORTUNE ══ -->
+  <div class="tab-page" id="tabPage2">
+    <div class="columns">
+      <div>
+        <div class="block ac-amber">
+          <div class="block-title t-amber"><span>TODAY_FORTUNE.EXE</span><span class="tag">[DAILY]</span></div>
+          <div class="block-body">
+            <div class="fortune-center" id="fortuneStart">
+              <div class="fortune-date-badge" id="fortuneDateBadge">—</div>
+              <div style="font-size:.65rem;color:var(--dim);margin-bottom:20px;letter-spacing:1px;">// 오늘 날짜 기반 운세 분석</div>
+              <button class="fortune-start-btn" onclick="startFortune()">▶ START ANALYSIS</button>
+              <div class="fortune-note">// 버튼을 누르면 시스템이 오늘의 운세를 계산합니다</div>
+            </div>
+            <div class="boot-terminal" id="bootTerminal"></div>
+            <div class="fortune-result" id="fortuneResult">
+              <div class="fortune-card">
+                <div class="fortune-card-top">
+                  <div class="fortune-stat"><div class="fortune-stat-num" id="fLove">--</div><div class="fortune-stars" id="fLoveStar"></div><div class="fortune-stat-label">LOVE</div></div>
+                  <div class="fortune-stat"><div class="fortune-stat-num" id="fLuck">--</div><div class="fortune-stars" id="fLuckStar"></div><div class="fortune-stat-label">LUCK</div></div>
+                  <div class="fortune-stat"><div class="fortune-stat-num" id="fEnergy">--</div><div class="fortune-stars" id="fEnergyStar"></div><div class="fortune-stat-label">ENERGY</div></div>
+                </div>
+                <div class="fortune-advice"><span class="adv-label">TODAY'S ADVICE</span><span id="fAdvice"></span></div>
+                <div class="fortune-lucky"><div>LUCKY COLOR: <span id="fColor"></span></div><div>LUCKY NUM: <span id="fNum2"></span></div><div>LUCKY TIME: <span id="fTime"></span></div></div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+                <button class="exec-btn btn-amber" style="margin:0;flex:1" onclick="saveTodayFortune()">[ 오늘 운세 저장 ]</button>
+                <button class="reset-btn" style="margin:0" onclick="resetFortune()">RESET</button>
+              </div>
+              <div id="fortuneSavedMsg" style="display:none;font-size:.63rem;color:var(--green);margin-top:6px;letter-spacing:1px;">// SAVED TO STORAGE ✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="block ac-amber">
+          <div class="block-title t-amber"><span>FORTUNE_LOG.EXE</span><span class="tag">[HISTORY]</span></div>
+          <div class="block-body">
+            <div style="font-size:.63rem;color:var(--dim);margin-bottom:10px;">// 이름 입력 → 개인 운세 분석 & 저장</div>
+            <div class="cmd-line">
+              <span class="prompt" style="color:rgba(255,179,0,.7)">NAME &gt;</span>
+              <input class="cmd-input" type="text" id="fortuneName" placeholder="내 이름..." maxlength="6" autocomplete="off" style="border-color:rgba(255,179,0,.3);color:var(--amber);caret-color:var(--amber)">
+            </div>
+            <button class="exec-btn btn-amber" onclick="calcPersonalFortune()">[ 개인 운세 분석 ]</button>
+            <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:.6rem;color:var(--dim);letter-spacing:1px;" id="fortuneLogCount"></div>
+              <button onclick="clearFortuneLog()" style="background:none;border:none;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">[ 전체 삭제 ]</button>
+            </div>
+            <div class="save-log" id="personalFortuneLog"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 3: SAVE FILES ══ -->
+  <div class="tab-page" id="tabPage3">
+    <div class="block ac-orange">
+      <div class="block-title t-orange"><span>FILE_MANAGER.EXE</span><span class="tag">[STORAGE]</span></div>
+      <div class="block-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:.63rem;color:var(--dim);">// 저장 파일을 선택하거나 새 파일을 만드세요</div>
+          <button onclick="deleteAllFiles()" style="background:none;border:none;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">[ 전체 삭제 ]</button>
+        </div>
+        <div class="file-grid" id="fileGrid"></div>
+      </div>
+    </div>
+    <div class="file-workspace" id="fileWorkspace">
+      <div class="block ac-orange">
+        <div class="block-title t-orange"><span>WORKSPACE.EXE</span><span class="tag" id="wsTag">—</span></div>
+        <div class="block-body">
+          <div class="workspace-header">
+            <div><div class="workspace-title" id="wsTitle">—</div><div class="workspace-meta" id="wsMeta">—</div></div>
+            <button class="exec-btn btn-red" style="width:auto;margin:0;padding:6px 14px" onclick="closeWorkspace()">[ CLOSE ]</button>
+          </div>
+
+          <!-- mode tabs -->
+          <div class="tab-row" style="margin-bottom:14px;">
+            <button class="tab-btn active" id="wsTab0" onclick="switchWsMode(0)">개별 궁합</button>
+            <button class="tab-btn" id="wsTab1" onclick="switchWsMode(1)">반 궁합 스캔 ★</button>
+          </div>
+
+          <!-- MODE 0: 개별 궁합 -->
+          <div id="wsModeIndiv">
+            <div class="columns">
+              <div>
+                <div style="font-size:.63rem;color:var(--dim);margin-bottom:10px;">// 이 파일에 궁합을 추가합니다</div>
+                <div class="cmd-line"><span class="prompt" style="color:rgba(255,107,0,.7)">NAME_A &gt;</span><input class="cmd-input" type="text" id="wsName1" placeholder="이름 A..." maxlength="6" autocomplete="off" style="border-color:rgba(255,107,0,.3);color:var(--orange);caret-color:var(--orange)"></div>
+                <div class="cmd-line"><span class="prompt" style="color:rgba(255,107,0,.7)">NAME_B &gt;</span><input class="cmd-input" type="text" id="wsName2" placeholder="이름 B..." maxlength="6" autocomplete="off" style="border-color:rgba(255,107,0,.3);color:var(--orange);caret-color:var(--orange)"></div>
+                <button class="exec-btn btn-orange" onclick="addToFile()">[ 궁합 추가 & 저장 ]</button>
+              </div>
+              <div>
+                <div style="font-size:.63rem;color:var(--dim);margin-bottom:6px;">// 저장된 궁합 기록</div>
+                <div class="save-log" id="wsLog"></div>
+                <div class="report-section">
+                  <button class="report-btn" onclick="generateReport()">[ 리포트 생성 ]</button>
+                  <div class="report-out" id="reportOut"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODE 1: 반 궁합 스캔 -->
+          <div id="wsModeClass" style="display:none">
+            <div class="columns">
+              <div>
+                <div style="font-size:.63rem;color:var(--dim);margin-bottom:10px;">// 내 이름과 반 전체 이름을 입력하세요<br>// 한 명씩 자동으로 궁합을 계산합니다</div>
+                <div class="cmd-line">
+                  <span class="prompt" style="color:rgba(255,107,0,.7)">내 이름 &gt;</span>
+                  <input class="cmd-input" type="text" id="wsMyName" placeholder="내 이름..." maxlength="6" autocomplete="off" style="border-color:rgba(255,107,0,.5);color:var(--orange);caret-color:var(--orange);font-size:1rem">
+                </div>
+                <div style="font-size:.63rem;color:var(--dim);margin:10px 0 6px;">// 반 학생 이름 (엔터로 구분, 또는 쉼표/공백)</div>
+                <textarea id="wsClassNames"
+                  placeholder="예시:&#10;김민준&#10;이서연&#10;박지수&#10;최현우&#10;..."
+                  style="width:100%;height:140px;background:rgba(255,107,0,.04);border:1px solid rgba(255,107,0,.2);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.78rem;padding:10px;outline:none;resize:vertical;line-height:1.8;caret-color:var(--orange);"
+                  onkeydown="if(event.key==='Tab'){event.preventDefault();this.value+='\t';}"></textarea>
+                <div style="font-size:.6rem;color:var(--dim);margin:5px 0 10px;" id="wsClassCount">// 0명 입력됨</div>
+                <button class="exec-btn btn-orange" onclick="runClassScan()">[ 반 전체 궁합 스캔 ]</button>
+
+                <!-- scan progress -->
+                <div id="classScanStatus" style="display:none;margin-top:10px;">
+                  <div style="font-size:.63rem;color:var(--orange);margin-bottom:4px;" id="classScanMsg">SCANNING...</div>
+                  <div style="height:2px;background:var(--border);overflow:hidden;"><div id="classScanBar" style="height:100%;background:var(--orange);width:0;transition:width .08s linear;"></div></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:.63rem;color:var(--dim);margin-bottom:6px;">// 스캔 결과 — 정렬: 높은 순</div>
+                <div id="classResults"></div>
+                <div class="report-section" id="classReportSection" style="display:none">
+                  <button class="report-btn" style="background:rgba(255,107,0,.08);border-color:rgba(255,107,0,.4);color:var(--orange)" onclick="generateClassReport()">[ 반 궁합 리포트 생성 ]</button>
+                  <div class="report-out" id="classReportOut"></div>
+                  <!-- class share -->
+                  <div class="share-box" id="classShareBox" style="display:none;margin-top:10px;border-color:rgba(0,229,255,.2)">
+                    <div class="share-box-title">// 리포트 공유하기 — 상대방에게 전송</div>
+                    <div class="share-link-row">
+                      <input class="share-link-input" type="text" id="classShareInput" readonly>
+                      <button class="share-copy-btn" id="classShareCopyBtn" onclick="copyClassShareLink()">[ COPY ]</button>
+                    </div>
+                    <div class="share-msg">// 링크를 열면 반 궁합 리포트 전체가 표시됩니다<br>// TOP 3 · WORST 3 · 전체 순위 포함</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">NEW_FILE.EXE</div>
+    <div style="font-size:.63rem;color:var(--dim);margin-bottom:12px;">// 새 저장 파일의 이름을 입력하세요</div>
+    <input class="modal-input" type="text" id="modalInput" placeholder="파일 이름..." maxlength="20" onkeydown="if(event.key==='Enter')confirmNewFile()">
+    <div class="modal-row">
+      <button class="exec-btn btn-orange" style="margin:0" onclick="confirmNewFile()">[ CREATE ]</button>
+      <button class="exec-btn btn-red" style="margin:0;width:auto;padding:9px 16px" onclick="closeModal()">[ CANCEL ]</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-footer">GOONGHAP.SYS v2.0 © 2025 · 이름 획수 기반 인연 분석</div>
+
+<!-- CLASS REPORT SHARE OVERLAY -->
+<div class="shared-overlay" id="sharedOverlay">
+  <div class="shared-wrap" style="max-width:640px">
+    <div class="shared-header">
+      <div class="shared-from">// GOONGHAP.SYS — 반 궁합 분석 리포트</div>
+      <div class="shared-title">CLASS COMPAT. REPORT</div>
+      <div class="shared-names" id="sharedNames" style="margin-top:6px;font-size:.8rem"></div>
+    </div>
+
+    <!-- summary stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--border);margin-bottom:20px;">
+      <div style="padding:14px 10px;text-align:center;border-right:1px solid var(--border);">
+        <div style="font-family:'VT323',monospace;font-size:2.4rem;color:var(--green);text-shadow:0 0 15px rgba(0,255,65,.5);line-height:1" id="sharedAvg">--%</div>
+        <div style="font-size:.58rem;color:var(--dim);letter-spacing:2px;margin-top:4px">전체 평균</div>
+      </div>
+      <div style="padding:14px 10px;text-align:center;border-right:1px solid var(--border);">
+        <div style="font-family:'VT323',monospace;font-size:2.4rem;color:var(--cyan);line-height:1" id="sharedBestPct">--%</div>
+        <div style="font-size:.58rem;color:var(--dim);letter-spacing:2px;margin-top:4px">최고 궁합</div>
+      </div>
+      <div style="padding:14px 10px;text-align:center;">
+        <div style="font-family:'VT323',monospace;font-size:2.4rem;color:var(--red);line-height:1" id="sharedWorstPct">--%</div>
+        <div style="font-size:.58rem;color:var(--dim);letter-spacing:2px;margin-top:4px">최저 궁합</div>
+      </div>
+    </div>
+
+    <!-- top 3 -->
+    <div class="shared-section" style="border-top:none;padding-top:0">
+      <div class="shared-section-title" style="color:var(--green)">// TOP 3 — 가장 잘 맞는 친구</div>
+      <div id="sharedTop3"></div>
+    </div>
+
+    <!-- worst 3 -->
+    <div class="shared-section">
+      <div class="shared-section-title" style="color:var(--red)">// WORST 3 — 기운이 다른 친구</div>
+      <div id="sharedWorst3"></div>
+    </div>
+
+    <!-- full list -->
+    <div class="shared-section">
+      <div class="shared-section-title">// 전체 순위 — 반 친구들 궁합 퍼센트</div>
+      <div id="sharedFullList" style="columns:2;column-gap:16px;"></div>
+    </div>
+
+    <div class="shared-footer-note">
+      이 리포트는 GOONGHAP.SYS에서 생성되었습니다<br>
+      <span style="color:var(--green-dim);margin-top:4px;display:block">나의 반 궁합도 확인해보세요</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CORE ENGINE
+// ════════════════════════════════════════
+const STROKE={'ㄱ':2,'ㄴ':2,'ㄷ':3,'ㄹ':5,'ㅁ':4,'ㅂ':4,'ㅅ':2,'ㅇ':1,'ㅈ':3,'ㅊ':4,'ㅋ':3,'ㅌ':4,'ㅍ':4,'ㅎ':3,'ㄲ':4,'ㄸ':6,'ㅃ':8,'ㅆ':4,'ㅉ':6,'ㅏ':2,'ㅐ':3,'ㅑ':3,'ㅒ':4,'ㅓ':2,'ㅔ':3,'ㅕ':3,'ㅖ':4,'ㅗ':2,'ㅘ':4,'ㅙ':5,'ㅚ':3,'ㅛ':3,'ㅜ':2,'ㅝ':4,'ㅞ':5,'ㅟ':3,'ㅠ':3,'ㅡ':1,'ㅢ':2,'ㅣ':1};
+const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+const JONG=['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const JONG_S={'':0,'ㄱ':2,'ㄲ':4,'ㄳ':4,'ㄴ':2,'ㄵ':5,'ㄶ':5,'ㄷ':3,'ㄹ':5,'ㄺ':7,'ㄻ':9,'ㄼ':9,'ㄽ':7,'ㄾ':9,'ㄿ':8,'ㅀ':8,'ㅁ':4,'ㅂ':4,'ㅄ':6,'ㅅ':2,'ㅆ':4,'ㅇ':1,'ㅈ':3,'ㅊ':4,'ㅋ':3,'ㅌ':4,'ㅍ':4,'ㅎ':3};
+function charStroke(ch){const code=ch.charCodeAt(0);if(code>=0xAC00&&code<=0xD7A3){const idx=code-0xAC00,jong=idx%28,jung=((idx-jong)/28)%21,cho=Math.floor((idx-jong)/28/21);return(STROKE[CHO[cho]]||0)+(STROKE[JUNG[jung]]||0)+(JONG_S[JONG[jong]]||0);}return/[a-zA-Z]/.test(ch)?2:1;}
+function nameStrokes(name){return[...name].map(ch=>({ch,s:charStroke(ch)}));}
+function interleave(a,b){const out=[],ml=Math.max(a.length,b.length);for(let i=0;i<ml;i++){if(i<a.length)out.push({ch:a[i],who:'a',s:charStroke(a[i])});if(i<b.length)out.push({ch:b[i],who:'b',s:charStroke(b[i])});}return out;}
+function reduceRow(arr){const r=[];for(let i=0;i<arr.length-1;i++)r.push((arr[i]+arr[i+1])%10);return r;}
+function calcCompat(n1,n2){const il=interleave([...n1],[...n2]);let cur=il.map(x=>x.s%10);while(cur.length>2)cur=reduceRow(cur);return parseInt(`${cur[0]}${cur[1]}`);}
+function seededRng(seed){let s=seed;return function(max){s=Math.sin(s+1)*99999;return Math.abs(Math.floor(s%max));};}
+function nameSeed(name){return[...name].reduce((a,c,i)=>a+charStroke(c)*(i+1)*31,0)+[...name].reduce((a,c)=>a+c.charCodeAt(0),0);}
+
+// ════════════════════════════════════════
+// TAROT DATA
+// ════════════════════════════════════════
+const TAROT_CARDS=[
+  {name:'THE FOOL',emoji:'🌟',keywords:'새로운 시작, 순수함, 모험',
+   love_up:'새로운 설렘이 찾아옵니다. 마음을 열고 첫걸음을 내딛어 보세요.',
+   love_rev:'준비 없이 뛰어드는 것은 금물. 상대의 마음을 먼저 확인하세요.'},
+  {name:'THE MAGICIAN',emoji:'✨',keywords:'의지, 능력, 행동력',
+   love_up:'당신의 매력이 빛을 발하는 시기. 적극적으로 다가가세요.',
+   love_rev:'겉모습만 화려한 관계를 경계하세요. 진실성이 필요합니다.'},
+  {name:'HIGH PRIESTESS',emoji:'🌙',keywords:'직관, 신비, 내면의 지혜',
+   love_up:'직관을 믿으세요. 말하지 않아도 통하는 깊은 인연이 있습니다.',
+   love_rev:'비밀이 관계를 가로막고 있습니다. 솔직한 대화가 필요해요.'},
+  {name:'THE EMPRESS',emoji:'🌸',keywords:'풍요, 사랑, 여성성',
+   love_up:'사랑이 무르익는 시기입니다. 감정을 표현하면 좋은 결실을 맺어요.',
+   love_rev:'의존적인 관계에서 벗어나세요. 자신을 먼저 사랑하는 것이 중요합니다.'},
+  {name:'THE EMPEROR',emoji:'👑',keywords:'안정, 권위, 보호',
+   love_up:'믿을 수 있는 든든한 사람이 곁에 있습니다. 안정적인 관계를 구축하세요.',
+   love_rev:'통제욕이 관계를 망칠 수 있습니다. 상대방의 자유를 존중하세요.'},
+  {name:'THE LOVERS',emoji:'💞',keywords:'사랑, 선택, 조화',
+   love_up:'운명적인 만남이 기다리고 있습니다. 중요한 선택의 순간이 옵니다.',
+   love_rev:'가치관의 충돌이 있습니다. 서로의 차이를 인정하는 것이 필요해요.'},
+  {name:'THE CHARIOT',emoji:'⚡',keywords:'승리, 의지력, 전진',
+   love_up:'감정을 적극적으로 표현하세요. 밀어붙이면 원하는 결과를 얻습니다.',
+   love_rev:'감정이 너무 격해져 있습니다. 한발 물러서서 상황을 바라보세요.'},
+  {name:'STRENGTH',emoji:'🦁',keywords:'용기, 인내, 내면의 힘',
+   love_up:'진심과 인내로 상대의 마음을 열 수 있습니다. 포기하지 마세요.',
+   love_rev:'감정적인 소진이 오고 있습니다. 자신을 돌아볼 시간이 필요해요.'},
+  {name:'THE HERMIT',emoji:'🕯️',keywords:'성찰, 고독, 내면 탐구',
+   love_up:'혼자만의 시간을 통해 진정한 사랑이 무엇인지 깨닫게 됩니다.',
+   love_rev:'고립이 심해지고 있습니다. 주변 사람들에게 마음을 열어보세요.'},
+  {name:'WHEEL OF FORTUNE',emoji:'🎡',keywords:'운명, 전환점, 행운',
+   love_up:'운명의 전환점이 찾아옵니다. 뜻밖의 만남이 삶을 바꿔놓을 수 있어요.',
+   love_rev:'과거의 패턴을 반복하고 있습니다. 변화를 두려워하지 마세요.'},
+  {name:'JUSTICE',emoji:'⚖️',keywords:'균형, 공정, 진실',
+   love_up:'진실한 관계만이 오래갑니다. 솔직함이 최고의 매력입니다.',
+   love_rev:'불공평한 관계를 정리해야 할 때입니다. 자신의 가치를 아세요.'},
+  {name:'THE HANGED MAN',emoji:'🌀',keywords:'희생, 관점의 전환, 기다림',
+   love_up:'지금은 기다릴 때입니다. 인내가 아름다운 결실을 만들어 낼 거예요.',
+   love_rev:'더 이상 희생만 할 수는 없습니다. 상대에게 변화를 요구하세요.'},
+  {name:'DEATH',emoji:'🦋',keywords:'변화, 끝과 시작, 변환',
+   love_up:'낡은 관계가 끝나고 새로운 사랑이 시작됩니다. 두려워하지 마세요.',
+   love_rev:'변화를 거부하면 관계가 정체됩니다. 용기 있게 놓아주세요.'},
+  {name:'TEMPERANCE',emoji:'🌈',keywords:'균형, 절제, 조화',
+   love_up:'서두르지 않고 차근차근 쌓아가는 사랑이 가장 오래갑니다.',
+   love_rev:'극단적인 감정 기복이 관계를 힘들게 합니다. 균형을 찾으세요.'},
+  {name:'THE DEVIL',emoji:'🔥',keywords:'욕망, 집착, 속박',
+   love_up:'강한 끌림이 있습니다. 하지만 집착과 사랑을 구분하는 것이 중요해요.',
+   love_rev:'건강하지 않은 집착에서 벗어날 때입니다. 자신을 해방시키세요.'},
+  {name:'THE TOWER',emoji:'⚡',keywords:'급변, 충격, 계시',
+   love_up:'충격적인 진실이 밝혀지지만, 그것이 더 나은 미래의 시작입니다.',
+   love_rev:'변화에 저항하는 것이 더 큰 고통을 만듭니다. 유연하게 대처하세요.'},
+  {name:'THE STAR',emoji:'⭐',keywords:'희망, 치유, 영감',
+   love_up:'상처가 치유되고 아름다운 인연이 다가옵니다. 희망을 잃지 마세요.',
+   love_rev:'자신감을 회복하는 것이 먼저입니다. 스스로를 믿어보세요.'},
+  {name:'THE MOON',emoji:'🌕',keywords:'직관, 환상, 무의식',
+   love_up:'꿈같은 로맨스가 펼쳐집니다. 하지만 환상과 현실을 구분하세요.',
+   love_rev:'혼란스러운 감정 속에 있습니다. 명확하게 생각할 시간이 필요해요.'},
+  {name:'THE SUN',emoji:'☀️',keywords:'기쁨, 활력, 성공',
+   love_up:'사랑이 활짝 꽃피는 시기입니다. 기쁨과 행복이 넘쳐납니다.',
+   love_rev:'너무 많은 것을 기대하고 있습니다. 작은 행복도 소중히 여기세요.'},
+  {name:'JUDGEMENT',emoji:'🎺',keywords:'재탄생, 각성, 새로운 시작',
+   love_up:'과거를 청산하고 완전히 새로운 사랑을 시작할 준비가 되었습니다.',
+   love_rev:'과거에 대한 후회가 현재를 방해하고 있습니다. 용서하고 앞으로 나아가세요.'},
+  {name:'THE WORLD',emoji:'🌍',keywords:'완성, 성취, 통합',
+   love_up:'사랑이 완성에 이릅니다. 오랜 노력이 아름다운 결실을 맺는 시기입니다.',
+   love_rev:'아직 완전하지 않습니다. 조금 더 인내하면 완성에 가까워집니다.'},
+  {name:'ACE OF CUPS',emoji:'💧',keywords:'새로운 감정, 사랑의 시작',
+   love_up:'순수한 감정이 새로 싹트고 있습니다. 마음이 설레는 만남이 옵니다.',
+   love_rev:'감정을 억누르고 있습니다. 솔직한 표현이 관계를 살립니다.'},
+  {name:'TWO OF CUPS',emoji:'🥂',keywords:'파트너십, 상호 매력, 연결',
+   love_up:'서로에 대한 깊은 이해와 연결이 이루어집니다. 완벽한 파트너십이에요.',
+   love_rev:'관계에 불균형이 생겼습니다. 솔직한 대화로 균형을 찾으세요.'},
+  {name:'THREE OF CUPS',emoji:'🎉',keywords:'축하, 우정, 기쁨',
+   love_up:'행복한 소식이 찾아옵니다. 주변의 축복 속에서 사랑이 빛납니다.',
+   love_rev:'제3자가 관계에 영향을 미치고 있습니다. 경계를 명확히 하세요.'},
+  {name:'TEN OF CUPS',emoji:'🌈',keywords:'행복한 가정, 완성된 사랑',
+   love_up:'진정한 행복과 완성된 사랑이 기다리고 있습니다. 소망이 이루어집니다.',
+   love_rev:'이상과 현실의 차이를 인정하세요. 완벽한 관계는 없습니다.'},
+];
+
+const POSITIONS=['PAST · 과거','PRESENT · 현재','FUTURE · 미래'];
+const OVERALL_MSGS=[
+  '세 장의 카드가 강한 사랑의 흐름을 보여줍니다. 과거의 경험이 현재를 성장시키고, 밝은 미래로 이어집니다.',
+  '변화의 시기를 지나고 있습니다. 흔들리더라도 자신의 중심을 잡으면 아름다운 결과가 찾아옵니다.',
+  '내면의 목소리에 귀를 기울이는 것이 중요합니다. 직관이 올바른 방향을 가리키고 있습니다.',
+  '새로운 시작의 에너지가 가득합니다. 과거를 내려놓고 현재에 충실하면 미래가 열립니다.',
+  '인내와 기다림 끝에 반드시 좋은 인연이 찾아옵니다. 지금은 자신을 갈고닦는 시간입니다.',
+  '사랑에 있어 솔직함이 가장 강력한 무기입니다. 진심은 언제나 통합니다.',
+  '과거의 상처가 오히려 더 깊은 사랑을 할 수 있는 힘이 됩니다. 경험이 지혜가 되었습니다.',
+];
+
+// ════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════
+const tabActs=['act-tarot','act-green','act-amber','act-orange'];
+function switchTab(n){
+  document.querySelectorAll('.tab-page').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.main-tab').forEach((t,i)=>{t.className='main-tab';if(i===n)t.classList.add(tabActs[n]);});
+  if(n===3)renderFileGrid();
+}
+// init tab1 active
+document.getElementById('mainTab1').classList.add('act-green');
+
+// ════════════════════════════════════════
+// TAB 0: TAROT
+// ════════════════════════════════════════
+let tarotName='', tarotPicked=[], tarotRunning=false;
+
+const TAROT_BOOT_LINES=[
+  {t:'TAROT_LOVE.EXE — INITIALIZING',cls:''},
+  {t:'Loading major arcana database...    [OK]',cls:'d'},
+  {t:'Loading minor arcana database...    [OK]',cls:'d'},
+  {t:'Parsing name vibration frequency... [OK]',cls:'d'},
+  {t:'',cls:''},
+  {t:'> CALCULATING CELESTIAL ALIGNMENT...',cls:''},
+  {t:'> SHUFFLING CARDS WITH NAME SEED...',cls:'p'},
+  {t:'> BINDING FATE TO IDENTITY...',cls:'p'},
+  {t:'',cls:''},
+  {t:'>>> DECK READY — CHOOSE 3 CARDS <<<',cls:'g'},
+];
+
+function startTarot(){
+  const name=document.getElementById('tarotName').value.trim();
+  if(!name){alert('이름을 입력하세요.');return;}
+  tarotName=name; tarotPicked=[]; tarotRunning=true;
+
+  // check saved
+  const saved=getTarotHistory();
+  const existing=saved.find(r=>r.name===name);
+  if(existing){
+    document.getElementById('tarotIntro').style.display='none';
+    showSavedTarot(existing);
+    return;
+  }
+
+  document.getElementById('tarotIntro').style.display='none';
+  const boot=document.getElementById('tarotBoot');
+  boot.classList.add('show'); boot.innerHTML='';
+  TAROT_BOOT_LINES.forEach((line,i)=>{
+    const d=document.createElement('div');d.className=`tarot-boot-line ${line.cls}`;
+    d.textContent=line.t||'\u00a0';boot.appendChild(d);
+    setTimeout(()=>d.classList.add('vis'),i*130);
+  });
+  setTimeout(()=>{boot.classList.remove('show');showCardPick();},TAROT_BOOT_LINES.length*130+500);
+}
+
+function showCardPick(){
+  // build 10 card backs
+  const area=document.getElementById('cardPickArea'),deck=document.getElementById('cardDeck');
+  area.style.display='block'; deck.innerHTML=''; tarotPicked=[];
+  for(let i=0;i<10;i++){
+    const c=document.createElement('div');c.className='card-face-down';
+    c.innerHTML='<span class="card-symbol">✦</span>';
+    c.dataset.idx=i;
+    c.onclick=()=>pickCard(c,i);
+    deck.appendChild(c);
+  }
+  document.getElementById('pickedCount').textContent='0';
+}
+
+function pickCard(el,idx){
+  if(el.classList.contains('picked'))return;
+  if(tarotPicked.length>=3)return;
+  el.classList.add('picked');
+  el.innerHTML='✓';
+  tarotPicked.push(idx);
+  document.getElementById('pickedCount').textContent=tarotPicked.length;
+  if(tarotPicked.length===3){
+    setTimeout(()=>{
+      document.getElementById('cardPickArea').style.display='none';
+      revealTarot();
+    },400);
+  }
+}
+
+function revealTarot(){
+  const rng=seededRng(nameSeed(tarotName));
+  // pick 3 cards deterministically from name seed, but use user's pick order for positions
+  const cardIndices=[];
+  const used=new Set();
+  // generate pool from name seed
+  for(let i=0;i<50;i++){
+    const ci=rng(TAROT_CARDS.length);
+    if(!used.has(ci)){used.add(ci);cardIndices.push(ci);}
+    if(cardIndices.length>=3)break;
+  }
+  // reversed? use pick position parity + seed
+  const reversals=[rng(2)===0,rng(2)===0,rng(2)===0];
+  const overallIdx=rng(OVERALL_MSGS.length);
+
+  const data={name:tarotName,cards:cardIndices,reversals,overallIdx,date:new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'})};
+  saveTarotHistory(data);
+  renderTarotSpread(data);
+}
+
+function showSavedTarot(data){
+  document.getElementById('tarotBoot').classList.remove('show');
+  document.getElementById('cardPickArea').style.display='none';
+  renderTarotSpread(data, true);
+}
+
+function renderTarotSpread(data, fromSave=false){
+  const spread=document.getElementById('tarotSpread'),row=document.getElementById('spreadRow');
+  row.innerHTML=''; spread.classList.add('show');
+
+  data.cards.forEach((ci,i)=>{
+    const card=TAROT_CARDS[ci];
+    const rev=data.reversals[i];
+    const div=document.createElement('div');
+    div.className=`tarot-card-reveal ${rev?'reversed':''}`;
+    div.innerHTML=`
+      <div class="card-position">${POSITIONS[i]}</div>
+      <span class="card-emoji" style="${rev?'filter:grayscale(.4)':''}">${card.emoji}</span>
+      <div class="card-name ${rev?'reversed':''}">${card.name}</div>
+      ${rev?'<div class="card-rev-label">REVERSED</div>':''}
+      <div class="card-keyword">${card.keywords}</div>
+      <div class="card-meaning">${rev?card.love_rev:card.love_up}</div>
+    `;
+    row.appendChild(div);
+    setTimeout(()=>div.classList.add('show'),i*300+100);
+  });
+
+  const overall=document.getElementById('tarotOverall');
+  overall.innerHTML=`<span class="tarot-overall-label">// OVERALL READING</span>${OVERALL_MSGS[data.overallIdx]}`;
+
+  const note=document.getElementById('tarotSavedNote');
+  note.textContent=fromSave?`// LOADED FROM STORAGE — ${data.date}`:`// SAVED · ${data.name}의 운세는 항상 동일합니다`;
+
+  renderTarotHistory();
+}
+
+function resetTarot(){
+  tarotRunning=false; tarotPicked=[]; tarotName='';
+  document.getElementById('tarotIntro').style.display='block';
+  document.getElementById('tarotName').value='';
+  document.getElementById('tarotBoot').classList.remove('show');
+  document.getElementById('cardPickArea').style.display='none';
+  document.getElementById('tarotSpread').classList.remove('show');
+  document.getElementById('spreadRow').innerHTML='';
+}
+
+// tarot storage
+function getTarotHistory(){return JSON.parse(localStorage.getItem('goonghap_tarot')||'[]');}
+function saveTarotHistory(data){
+  let h=getTarotHistory();
+  h=h.filter(r=>r.name!==data.name); // overwrite same name
+  h.unshift(data);
+  localStorage.setItem('goonghap_tarot',JSON.stringify(h.slice(0,50)));
+  renderTarotHistory();
+}
+function renderTarotHistory(){
+  const h=getTarotHistory();
+  const el=document.getElementById('tarotHistory');
+  const cnt=document.getElementById('tarotHistoryCount');
+  cnt.textContent=`// 기록: ${h.length}개`;
+  el.innerHTML='';
+  if(h.length===0){el.innerHTML='<div style="font-size:.62rem;color:var(--dim);padding:6px 0;">// 저장된 기록이 없습니다</div>';return;}
+  h.forEach(rec=>{
+    const div=document.createElement('div');div.className='tarot-history-item';
+    const cardNames=rec.cards.map((ci,i)=>{
+      const c=TAROT_CARDS[ci];
+      return `${rec.reversals[i]?'↓':'↑'}${c.name}`;
+    }).join(' / ');
+    div.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="th-name" style="cursor:pointer;text-decoration:underline" onclick="loadTarotByName('${rec.name}')">${rec.name}</span>
+        <span class="th-date">${rec.date}</span>
+      </div>
+      <div class="th-cards">${cardNames}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+function loadTarotByName(name){
+  const h=getTarotHistory();
+  const rec=h.find(r=>r.name===name);
+  if(!rec)return;
+  resetTarot();
+  tarotName=name;
+  document.getElementById('tarotIntro').style.display='none';
+  showSavedTarot(rec);
+}
+function clearTarotHistory(){
+  localStorage.removeItem('goonghap_tarot');
+  renderTarotHistory();
+}
+
+// ════════════════════════════════════════
+// TAB 1: CALCULATOR
+// ════════════════════════════════════════
+function calculate(){
+  const n1=document.getElementById('name1').value.trim(),n2=document.getElementById('name2').value.trim();
+  if(!n1||!n2){alert('두 이름을 모두 입력하세요.');return;}
+  updateClock();
+  renderStroke(n1,n2);
+  const il=interleave([...n1],[...n2]);
+  const initNums=il.map(x=>x.s%10);
+  const rows=[initNums];let cur=initNums;
+  while(cur.length>2){cur=reduceRow(cur);rows.push(cur);}
+  renderProcess(il,rows);
+  const last=rows[rows.length-1];
+  const pct=parseInt(`${last[0]}${last[1]}`);
+  setTimeout(()=>renderResult(pct,n1,n2),rows.length*220+300);
+}
+function renderStroke(n1,n2){
+  document.getElementById('sec02').style.display='block';
+  const body=document.getElementById('strokeBody');body.innerHTML='';
+  [[n1,'a','SUBJECT_A'],[n2,'b','SUBJECT_B']].forEach(([name,cls,label],idx)=>{
+    const strokes=nameStrokes(name),total=strokes.reduce((a,x)=>a+x.s,0);
+    const chars=strokes.map(x=>`<span class="val-${cls}">${x.ch}</span><span class="comment">(${x.s})</span>`).join('<span class="comment">+</span>');
+    const line=document.createElement('div');line.className='term-line';
+    line.innerHTML=`<span class="comment">${label} </span><span class="val-${cls}">"${name}"</span><span class="comment"> → </span>${chars}<span class="comment"> = </span><span class="val">${total}</span>`;
+    body.appendChild(line);
+    if(idx===0){const hr=document.createElement('hr');hr.className='term-divider';body.appendChild(hr);}
+  });
+}
+function renderProcess(il,rows){
+  document.getElementById('sec03').style.display='block';
+  const wrap=document.getElementById('processWrap');wrap.innerHTML='';
+  const i1=document.createElement('div');i1.className='term-line';i1.style.marginBottom='8px';
+  i1.innerHTML='<span class="comment">// 교차 배치 → 획수 일의자리</span>';wrap.appendChild(i1);
+  const cr=document.createElement('div');cr.className='char-row';
+  il.forEach(item=>{const p=document.createElement('span');p.className=`char-pill ${item.who}`;p.textContent=`${item.ch}:${item.s%10}`;cr.appendChild(p);});
+  wrap.appendChild(cr);
+  const hr=document.createElement('hr');hr.className='term-divider';wrap.appendChild(hr);
+  rows.forEach((row,ri)=>{
+    if(ri>0){const a=document.createElement('div');a.className='row-arrow';a.textContent=`→ step ${ri}`;wrap.appendChild(a);}
+    const rd=document.createElement('div');rd.className='num-row';
+    const isFinal=ri===rows.length-1;
+    row.forEach((num,ni)=>{
+      const cell=document.createElement('div');cell.className='num-cell'+(isFinal?' final':'');
+      cell.textContent=num;rd.appendChild(cell);
+      setTimeout(()=>cell.classList.add('vis'),ri*220+ni*40);
+    });
+    wrap.appendChild(rd);
+  });
+}
+function renderResult(pct,n1,n2){
+  document.getElementById('sec04').style.display='block';
+  document.getElementById('rNum').textContent=pct+'%';
+  document.getElementById('rGrade').textContent=getGrade(pct);
+  document.getElementById('rHearts').textContent=getHearts(pct);
+  document.getElementById('rNames').textContent=`${n1} × ${n2}`;
+  document.getElementById('rMsg').innerHTML=`<span class="prefix">SYS &gt; </span>${getMsg(pct,n1,n2)}`;
+  document.getElementById('resetBtn').style.display='block';
+  setTimeout(()=>{document.getElementById('rBar').style.width=pct+'%';document.getElementById('okBadge').classList.add('show');},200);
+}
+function resetCalc(){
+  document.getElementById('name1').value='';document.getElementById('name2').value='';
+  ['sec02','sec03','sec04'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('rBar').style.width='0';document.getElementById('okBadge').classList.remove('show');
+  document.getElementById('resetBtn').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// SCANNER
+const NM2=['지수','서연','민준','서준','도윤','시우','주원','하준','이준','지호','지아','서현','민서','채원','수아','다은','지우','유나','하은','예린','수빈','유진','지민','은서','예은','아린','나은','지연','소율','혜원','민재','현우','재원','준서','성민','태양','동현','민혁','지훈','성준','태민','기현','상현','진우','유준','재혁','승우','민성','현준','태준','하윤','다인','예나','수연','지은','채린','소연','예지','아영','민지','유빈','소희','지현','예슬','수현','나리','지혜','하린','소원','채은','우진','시현','승준','재민','주호','민규','현수','성호','준혁'];
+const NM3=['김민준','이서연','박지수','최민서','정서준','강도윤','조시우','윤주원','장하준','임이준','한지호','오지아','서서현','신채원','권수아','황다은','안지우','송유나','홍하은','전예린','남수빈','심유진','류지민','백은서','문예은','고아린','구나은','배지연','노소율','천혜원','마민재','석현우','방재원','표준서','태성민','곽태양','엄동현','추민혁','라지훈','지성준','하태민','나기현','도상현','서진우','민유준','김재혁','이승우','박민성','최현준','정태준','강하윤','조다인','윤예나','장수연','임지은','한채린','오소연','서예지','신아영','권민지','황유빈','안소희','송지현','홍예슬','전수현','남나리','심지혜','류하린','백소원','문채은'];
+let finderTab=2;
+function setFinderTab(n){finderTab=n;document.getElementById('tab2').classList.toggle('active',n===2);document.getElementById('tab3').classList.toggle('active',n===3);}
+function runFinder(){
+  const target=document.getElementById('finderName').value.trim();
+  if(!target){alert('이름을 입력하세요.');return;}
+  const pool=finderTab===2?NM2:NM3;
+  document.getElementById('rankList').innerHTML='';document.getElementById('worstList').innerHTML='';
+  document.getElementById('worstSection').style.display='none';
+  const statusEl=document.getElementById('scanStatus'),barWrap=document.getElementById('scanBarWrap'),bar=document.getElementById('scanBar');
+  statusEl.classList.add('show');barWrap.classList.add('show');bar.style.width='0%';
+  const results=pool.map(name=>({name,pct:calcCompat(target,name)}));
+  results.sort((a,b)=>b.pct-a.pct);
+  const top=results.slice(0,10),bottom=results.slice(-10).reverse();
+  let progress=0;
+  const interval=setInterval(()=>{
+    progress+=4;bar.style.width=Math.min(progress,100)+'%';
+    statusEl.textContent=`SCANNING... ${Math.min(progress,100)}%  (${pool.length} names)`;
+    if(progress>=100){clearInterval(interval);statusEl.textContent=`SCAN COMPLETE — ${pool.length} names analyzed`;setTimeout(()=>showRanking(top,bottom),200);}
+  },18);
+}
+function showRanking(top,bottom){
+  const rl=document.getElementById('rankList');rl.innerHTML='';
+  const h=document.createElement('div');h.className='term-line';h.innerHTML='<span class="comment">// TOP 10 BEST MATCH</span>';h.style.marginBottom='4px';rl.appendChild(h);
+  top.forEach((item,i)=>{
+    const div=document.createElement('div');div.className=`rank-item ${i===0?'rank-1':''}`;
+    div.innerHTML=`<span class="rank-num">${String(i+1).padStart(2,'0')}</span><span class="rank-name">${item.name}</span><div class="rank-bar-mini"><div class="rank-bar-fill" style="width:${item.pct}%"></div></div><span class="rank-pct">${item.pct}%</span>`;
+    rl.appendChild(div);setTimeout(()=>div.classList.add('vis'),i*55);
+  });
+  const ws=document.getElementById('worstSection'),wl=document.getElementById('worstList');ws.style.display='block';wl.innerHTML='';
+  bottom.forEach((item,i)=>{
+    const div=document.createElement('div');div.className=`rank-item worst ${i===0?'worst-1':''}`;
+    div.innerHTML=`<span class="rank-num">${String(i+1).padStart(2,'0')}</span><span class="rank-name">${item.name}</span><div class="rank-bar-mini"><div class="rank-bar-fill" style="width:${item.pct}%"></div></div><span class="rank-pct">${item.pct}%</span>`;
+    wl.appendChild(div);setTimeout(()=>div.classList.add('vis'),600+i*55);
+  });
+}
+
+// ════════════════════════════════════════
+// TAB 2: FORTUNE
+// ════════════════════════════════════════
+const ADVICE=['오늘은 새로운 만남에 열린 마음을 가지세요. 예상치 못한 인연이 찾아올 수 있습니다.','과거에 연연하지 말고 현재에 집중하세요. 지금 이 순간이 가장 중요합니다.','솔직한 대화가 관계를 깊게 만듭니다. 마음속 이야기를 꺼내보세요.','오늘은 무리하지 말고 충분한 휴식을 취하세요. 재충전의 시간이 필요합니다.','작은 친절이 큰 행운을 가져옵니다. 주변 사람들에게 먼저 다가가 보세요.','결정을 서두르지 마세요. 충분히 생각하고 신중하게 행동하는 것이 좋습니다.','오늘은 창의적인 아이디어가 넘칩니다. 그 에너지를 적극적으로 활용하세요.','감사한 마음을 표현하세요. 작은 감사가 관계를 더욱 단단하게 만듭니다.','오늘 만나는 사람에게 진심을 다하세요. 진정성이 모든 것을 이깁니다.','혼자만의 시간을 가지세요. 내면의 목소리에 귀를 기울여보세요.','긍정적인 에너지를 발산하면 좋은 일이 따라옵니다. 미소를 잃지 마세요.','오늘은 모험을 즐기는 날. 익숙한 것에서 벗어나 새로운 것을 시도해보세요.'];
+const COLORS=['빨강','주황','노랑','초록','파랑','남색','보라','분홍','하늘','민트','금색','은색'];
+const TIMES=['07:00-09:00','09:00-11:00','11:00-13:00','13:00-15:00','15:00-17:00','17:00-19:00','19:00-21:00','21:00-23:00'];
+const BLINES=[{t:'GOONGHAP.SYS FORTUNE MODULE v4.0',cls:''},{t:'Loading celestial data...            [OK]',cls:'dim'},{t:"Parsing today's date seed...         [OK]",cls:'dim'},{t:'Connecting to fate server...         [OK]',cls:'dim'},{t:'',cls:''},{t:'> INITIALIZING LOVE INDEX...',cls:''},{t:'> CALCULATING LUCK COEFFICIENT...',cls:''},{t:'> ANALYZING ENERGY FIELD...',cls:''},{t:'',cls:''},{t:'>>> COMPUTATION COMPLETE <<<',cls:'green'},{t:'',cls:''},{t:'LOADING RESULT...',cls:'cyan'}];
+let fortuneRunning=false,lastFortuneData=null;
+function startFortune(){
+  if(fortuneRunning)return;fortuneRunning=true;
+  document.getElementById('fortuneStart').style.display='none';
+  const terminal=document.getElementById('bootTerminal');
+  terminal.classList.add('show');terminal.innerHTML='';
+  BLINES.forEach((line,i)=>{const div=document.createElement('div');div.className=`boot-line ${line.cls}`;div.textContent=line.t||'\u00a0';terminal.appendChild(div);setTimeout(()=>div.classList.add('vis'),i*140);});
+  setTimeout(()=>{terminal.style.display='none';showFortuneResult();},BLINES.length*140+600);
+}
+function showFortuneResult(){
+  const now=new Date();
+  const dateKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  const seed=now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate();
+  function sr(s,max){let x=Math.sin(s)*10000;return Math.floor((x-Math.floor(x))*max);}
+  const love=sr(seed,100),luck=sr(seed*2,100),energy=sr(seed*3,100);
+  const avg=Math.round((love+luck+energy)/3);
+  lastFortuneData={dateKey,love,luck,energy,avg,advice:ADVICE[sr(seed*4,ADVICE.length)],color:COLORS[sr(seed*5,COLORS.length)],num:sr(seed*6,99)+1,time:TIMES[sr(seed*7,TIMES.length)]};
+  document.getElementById('fLove').textContent=love;document.getElementById('fLuck').textContent=luck;document.getElementById('fEnergy').textContent=energy;
+  document.getElementById('fLoveStar').textContent=toStars(love);document.getElementById('fLuckStar').textContent=toStars(luck);document.getElementById('fEnergyStar').textContent=toStars(energy);
+  document.getElementById('fAdvice').textContent=lastFortuneData.advice;
+  document.getElementById('fColor').textContent=lastFortuneData.color;
+  document.getElementById('fNum2').textContent=lastFortuneData.num;
+  document.getElementById('fTime').textContent=lastFortuneData.time;
+  document.getElementById('fortuneResult').classList.add('show');
+  document.getElementById('fortuneSavedMsg').style.display='none';
+}
+function toStars(v){const n=Math.round(v/20);return'★'.repeat(n)+'☆'.repeat(5-n);}
+function resetFortune(){fortuneRunning=false;document.getElementById('fortuneStart').style.display='block';document.getElementById('bootTerminal').classList.remove('show');document.getElementById('fortuneResult').classList.remove('show');document.getElementById('fortuneSavedMsg').style.display='none';}
+function saveTodayFortune(){
+  if(!lastFortuneData){alert('운세를 먼저 확인하세요.');return;}
+  const logs=JSON.parse(localStorage.getItem('goonghap_fortune_log')||'[]');
+  const todayKey=lastFortuneData.dateKey;
+  if(logs.find(l=>l.dateKey===todayKey&&l.type==='daily')){document.getElementById('fortuneSavedMsg').textContent='// ALREADY SAVED FOR TODAY ✓';document.getElementById('fortuneSavedMsg').style.display='block';return;}
+  logs.unshift({...lastFortuneData,type:'daily',savedAt:new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})});
+  localStorage.setItem('goonghap_fortune_log',JSON.stringify(logs.slice(0,100)));
+  document.getElementById('fortuneSavedMsg').textContent='// SAVED TO STORAGE ✓';document.getElementById('fortuneSavedMsg').style.display='block';
+  renderFortuneLog();
+}
+function calcPersonalFortune(){
+  const name=document.getElementById('fortuneName').value.trim();
+  if(!name){alert('이름을 입력하세요.');return;}
+  const now=new Date();
+  const dateKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  const seed=[...name].reduce((a,c)=>a+charStroke(c),0)*(now.getMonth()+1)*now.getDate();
+  function sr(s,max){let x=Math.sin(s)*10000;return Math.floor((x-Math.floor(x))*max);}
+  const love=sr(seed,100),luck=sr(seed*2,100),energy=sr(seed*3,100),avg=Math.round((love+luck+energy)/3);
+  const savedAt=now.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const logs=JSON.parse(localStorage.getItem('goonghap_fortune_log')||'[]');
+  logs.unshift({type:'personal',name,love,luck,energy,avg,dateKey,savedAt});
+  localStorage.setItem('goonghap_fortune_log',JSON.stringify(logs.slice(0,100)));
+  document.getElementById('fortuneName').value='';renderFortuneLog();
+}
+function renderFortuneLog(){
+  const logs=JSON.parse(localStorage.getItem('goonghap_fortune_log')||'[]');
+  const container=document.getElementById('personalFortuneLog');
+  document.getElementById('fortuneLogCount').textContent=`// 저장된 기록: ${logs.length}개`;
+  container.innerHTML='';
+  if(logs.length===0){container.innerHTML='<div style="font-size:.62rem;color:var(--dim);padding:8px 0;">// 저장된 기록이 없습니다</div>';return;}
+  logs.forEach((rec,i)=>{
+    const item=document.createElement('div');item.className='save-log-item';
+    item.innerHTML=rec.type==='daily'
+      ?`<div><span style="color:var(--amber);font-size:.78rem;">📅 오늘의 운세</span> <span style="color:var(--dim);font-size:.58rem;">${rec.savedAt}</span></div><div style="font-size:.63rem;color:var(--dim);">💘${rec.love} 🍀${rec.luck} ⚡${rec.energy}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:.68rem;color:var(--amber);">${toStars(rec.avg)}</span><button class="save-log-del" onclick="deleteFortuneLog(${i})">✕</button></div>`
+      :`<div><span class="val-a">${rec.name}</span> <span style="color:var(--dim);font-size:.58rem;">${rec.savedAt}</span></div><div style="font-size:.63rem;color:var(--dim);">💘${rec.love} 🍀${rec.luck} ⚡${rec.energy}</div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:.68rem;color:var(--amber);">${toStars(rec.avg)}</span><button class="save-log-del" onclick="deleteFortuneLog(${i})">✕</button></div>`;
+    container.appendChild(item);
+  });
+}
+function deleteFortuneLog(idx){const logs=JSON.parse(localStorage.getItem('goonghap_fortune_log')||'[]');logs.splice(idx,1);localStorage.setItem('goonghap_fortune_log',JSON.stringify(logs));renderFortuneLog();}
+function clearFortuneLog(){localStorage.removeItem('goonghap_fortune_log');renderFortuneLog();}
+
+// ════════════════════════════════════════
+// TAB 3: SAVE FILES
+// ════════════════════════════════════════
+let currentFileId=null;
+function getFiles(){return JSON.parse(localStorage.getItem('goonghap_files')||'{}');}
+function saveFiles(data){localStorage.setItem('goonghap_files',JSON.stringify(data));}
+function renderFileGrid(){
+  const files=getFiles(),grid=document.getElementById('fileGrid');grid.innerHTML='';
+  Object.entries(files).forEach(([id,file])=>{
+    const card=document.createElement('div');card.className=`file-card ${id===currentFileId?'active-file':''}`;card.onclick=()=>openWorkspace(id);
+    const count=file.records?file.records.length:0,avg=count>0?Math.round(file.records.reduce((a,r)=>a+r.pct,0)/count):0;
+    card.innerHTML=`<button class="file-card-del" onclick="event.stopPropagation();deleteFile('${id}')">✕</button><div class="file-card-name">📁 ${file.name}</div><div class="file-card-meta">생성: ${file.created}<br>기록: ${count}개${count>0?` | 평균 ${avg}%`:''}</div>`;
+    grid.appendChild(card);
+  });
+  const nb=document.createElement('button');nb.className='file-new-btn';nb.innerHTML='+ 새 저장 파일 만들기';nb.onclick=openModal;grid.appendChild(nb);
+}
+function openModal(){document.getElementById('modalOverlay').classList.add('show');setTimeout(()=>document.getElementById('modalInput').focus(),100);}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');document.getElementById('modalInput').value='';}
+function confirmNewFile(){
+  const name=document.getElementById('modalInput').value.trim();if(!name){alert('파일 이름을 입력하세요.');return;}
+  const files=getFiles(),id='file_'+Date.now(),now=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
+  files[id]={name,created:now,records:[]};saveFiles(files);closeModal();renderFileGrid();openWorkspace(id);
+}
+function deleteFile(id){const files=getFiles();delete files[id];saveFiles(files);if(currentFileId===id){currentFileId=null;document.getElementById('fileWorkspace').classList.remove('show');}renderFileGrid();}
+function openWorkspace(id){
+  currentFileId=id;const files=getFiles(),file=files[id];
+  document.getElementById('wsTitle').textContent=`📁 ${file.name}`;document.getElementById('wsTag').textContent=id;
+  const count=file.records?file.records.length:0;document.getElementById('wsMeta').textContent=`생성: ${file.created} | 기록: ${count}개`;
+  document.getElementById('fileWorkspace').classList.add('show');document.getElementById('reportOut').classList.remove('show');
+  // reset mode to individual
+  switchWsMode(0);
+  document.getElementById('classResults').innerHTML='';
+  document.getElementById('classScanStatus').style.display='none';
+  document.getElementById('classReportSection').style.display='none';
+  document.getElementById('classReportOut').classList.remove('show');
+  renderWorkspaceLog();renderFileGrid();
+  document.getElementById('fileWorkspace').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeWorkspace(){currentFileId=null;document.getElementById('fileWorkspace').classList.remove('show');renderFileGrid();}
+function addToFile(){
+  if(!currentFileId){alert('파일을 먼저 열어주세요.');return;}
+  const n1=document.getElementById('wsName1').value.trim(),n2=document.getElementById('wsName2').value.trim();
+  if(!n1||!n2){alert('두 이름을 입력하세요.');return;}
+  const pct=calcCompat(n1,n2),files=getFiles();
+  const now=new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  files[currentFileId].records.unshift({n1,n2,pct,time:now});saveFiles(files);
+  document.getElementById('wsName1').value='';document.getElementById('wsName2').value='';
+  renderWorkspaceLog();renderFileGrid();
+  document.getElementById('wsMeta').textContent=`생성: ${files[currentFileId].created} | 기록: ${files[currentFileId].records.length}개`;
+}
+function renderWorkspaceLog(){
+  const files=getFiles(),file=files[currentFileId];
+  const log=document.getElementById('wsLog');log.innerHTML='';
+  if(!file.records||file.records.length===0){log.innerHTML='<div style="font-size:.65rem;color:var(--dim);padding:10px 0;">// 아직 기록이 없습니다</div>';return;}
+  file.records.forEach((rec,i)=>{
+    const item=document.createElement('div');item.className='save-log-item';
+    item.innerHTML=`<div class="save-log-names"><span class="na">${rec.n1}</span> × <span class="nb">${rec.n2}</span></div><div class="save-log-pct ${rec.pct<40?'low':''}">${rec.pct}%</div><div style="display:flex;align-items:center;gap:6px"><span class="save-log-time">${rec.time}</span><button class="save-log-del" onclick="deleteRecord(${i})">✕</button></div>`;
+    log.appendChild(item);
+  });
+}
+function deleteRecord(idx){const files=getFiles();files[currentFileId].records.splice(idx,1);saveFiles(files);renderWorkspaceLog();renderFileGrid();}
+function generateReport(){
+  const files=getFiles(),file=files[currentFileId],recs=file.records||[];
+  const out=document.getElementById('reportOut');out.classList.add('show');
+  if(recs.length===0){out.innerHTML='<span style="color:var(--dim)">// 기록이 없습니다.</span>';return;}
+  const avg=Math.round(recs.reduce((a,r)=>a+r.pct,0)/recs.length);
+  const best=recs.reduce((a,b)=>a.pct>b.pct?a:b),worst=recs.reduce((a,b)=>a.pct<b.pct?a:b);
+  const now=new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  out.innerHTML=`<span style="color:var(--orange)">═══════════════════════════════════</span><br><span style="color:var(--orange)">  GOONGHAP REPORT — ${file.name}</span><br><span style="color:var(--orange)">═══════════════════════════════════</span><br><span style="color:var(--dim)">생성: ${now}</span><br><br><span style="color:var(--dim)">총 기록수 :</span> <span style="color:var(--green)">${recs.length}개</span><br><span style="color:var(--dim)">평균 궁합 :</span> <span style="color:var(--green)">${avg}%</span><br><span style="color:var(--dim)">최고 궁합 :</span> <span style="color:var(--cyan)">${best.n1} × ${best.n2}</span> <span style="color:var(--green)">${best.pct}%</span><br><span style="color:var(--dim)">최저 궁합 :</span> <span style="color:var(--red)">${worst.n1} × ${worst.n2}</span> <span style="color:var(--red)">${worst.pct}%</span><br><br><span style="color:var(--dim)">── 전체 기록 ──────────────────</span><br>${recs.map((r,i)=>`<span style="color:var(--dim)">${String(i+1).padStart(2,'0')}.</span> <span style="color:var(--text)">${r.n1} × ${r.n2}</span> <span style="color:${r.pct>=60?'var(--green)':'var(--red)'}">${r.pct}%</span> <span style="color:var(--dim)">${getGrade(r.pct)}</span>`).join('<br>')}<br><br><span style="color:var(--orange)">═══════════════════════════════════</span>`;
+}
+
+// ════════════════════════════════════════
+// WORKSPACE MODE SWITCH
+// ════════════════════════════════════════
+function switchWsMode(n){
+  document.getElementById('wsModeIndiv').style.display=n===0?'block':'none';
+  document.getElementById('wsModeClass').style.display=n===1?'block':'none';
+  document.getElementById('wsTab0').classList.toggle('active',n===0);
+  document.getElementById('wsTab1').classList.toggle('active',n===1);
+}
+
+// ════════════════════════════════════════
+// CLASS SCAN
+// ════════════════════════════════════════
+let lastClassResults=null;
+
+function updateClassCount(){
+  const ta=document.getElementById('wsClassNames');
+  if(!ta)return;
+  const names=parseClassNames(ta.value);
+  document.getElementById('wsClassCount').textContent=`// ${names.length}명 입력됨`;
+}
+function parseClassNames(raw){
+  return raw.split(/[\n,\s，、]+/).map(s=>s.trim()).filter(s=>s.length>=1&&s.length<=8);
+}
+
+function runClassScan(){
+  const myName=document.getElementById('wsMyName').value.trim();
+  const raw=document.getElementById('wsClassNames').value;
+  const names=parseClassNames(raw);
+  if(!myName){alert('내 이름을 입력하세요.');return;}
+  if(names.length===0){alert('반 학생 이름을 입력하세요.');return;}
+
+  const statusWrap=document.getElementById('classScanStatus');
+  const msg=document.getElementById('classScanMsg');
+  const bar=document.getElementById('classScanBar');
+  const resultsEl=document.getElementById('classResults');
+  const reportSec=document.getElementById('classReportSection');
+  statusWrap.style.display='block'; bar.style.width='0%'; resultsEl.innerHTML=''; reportSec.style.display='none';
+  document.getElementById('classReportOut').classList.remove('show');
+
+  const results=names.map(name=>({name,pct:calcCompat(myName,name)}));
+  results.sort((a,b)=>b.pct-a.pct);
+  lastClassResults={myName,results,scannedAt:new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})};
+
+  // also save all to file
+  if(currentFileId){
+    const files=getFiles();
+    const now=new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    results.forEach(r=>{files[currentFileId].records.unshift({n1:myName,n2:r.name,pct:r.pct,time:now});});
+    saveFiles(files);
+    renderWorkspaceLog();
+    document.getElementById('wsMeta').textContent=`생성: ${files[currentFileId].created} | 기록: ${files[currentFileId].records.length}개`;
+    renderFileGrid();
+  }
+
+  let prog=0;
+  const interval=setInterval(()=>{
+    prog+=3; bar.style.width=Math.min(prog,100)+'%';
+    msg.textContent=`SCANNING... ${Math.min(prog,100)}%  (${names.length}명)`;
+    if(prog>=100){
+      clearInterval(interval);
+      msg.textContent=`SCAN COMPLETE — ${names.length}명 분석 완료`;
+      setTimeout(()=>renderClassResults(results),200);
+    }
+  },15);
+}
+
+function renderClassResults(results){
+  const el=document.getElementById('classResults');
+  el.innerHTML='';
+  const last=results.length-1;
+
+  const hdr=document.createElement('div');
+  hdr.style.cssText='font-size:.6rem;color:var(--dim);margin-bottom:6px;';
+  hdr.innerHTML=`<span style="color:var(--orange)">// ${results.length}명 전체 순위</span>`;
+  el.appendChild(hdr);
+
+  results.forEach((item,i)=>{
+    const isTop=i===0, isBot=i===last;
+    const div=document.createElement('div');
+    div.className=`class-result-item ${isTop?'top1':''} ${isBot?'bot1':''}`;
+    div.innerHTML=`
+      <span class="cr-rank">${String(i+1).padStart(2,'0')}</span>
+      <span class="cr-name">${item.name}${isTop?' ★':isBot?' ☆':''}</span>
+      <div class="cr-bar"><div class="cr-bar-fill" style="width:${item.pct}%"></div></div>
+      <span class="cr-pct ${item.pct<40?'low':''}">${item.pct}%</span>
+    `;
+    el.appendChild(div);
+    setTimeout(()=>div.classList.add('vis'),i*40);
+  });
+
+  document.getElementById('classReportSection').style.display='block';
+}
+
+function generateClassReport(){
+  if(!lastClassResults){return;}
+  const {myName,results,scannedAt}=lastClassResults;
+  const out=document.getElementById('classReportOut');
+  out.classList.add('show');
+  const avg=Math.round(results.reduce((a,r)=>a+r.pct,0)/results.length);
+  const best=results[0], worst=results[results.length-1];
+  const top3=results.slice(0,3), bot3=results.slice(-3).reverse();
+
+  out.innerHTML=`
+<span style="color:var(--orange)">╔═══════════════════════════════════╗</span><br>
+<span style="color:var(--orange)">  반 궁합 스캔 리포트</span><br>
+<span style="color:var(--orange)">╚═══════════════════════════════════╝</span><br>
+<span style="color:var(--dim)">기준: </span><span style="color:var(--orange)">${myName}</span>  <span style="color:var(--dim)">분석일: ${scannedAt}</span><br>
+<span style="color:var(--dim)">분석 인원: </span><span style="color:var(--green)">${results.length}명</span>  <span style="color:var(--dim)">전체 평균: </span><span style="color:var(--green)">${avg}%</span><br>
+<br>
+<span style="color:var(--green)">── TOP 3 잘 맞는 사람 ─────────────</span><br>
+${top3.map((r,i)=>`<span style="color:var(--amber)">${['🥇','🥈','🥉'][i]}</span> <span style="color:var(--cyan)">${r.name}</span> <span style="color:var(--green)">${r.pct}%</span> <span style="color:var(--dim)">${getGrade(r.pct)}</span>`).join('<br>')}<br>
+<br>
+<span style="color:var(--red)">── WORST 3 안 맞는 사람 ───────────</span><br>
+${bot3.map((r,i)=>`<span style="color:var(--dim)">${i+1}.</span> <span style="color:rgba(255,60,60,.8)">${r.name}</span> <span style="color:var(--red)">${r.pct}%</span> <span style="color:var(--dim)">${getGrade(r.pct)}</span>`).join('<br>')}<br>
+<br>
+<span style="color:var(--dim)">── 전체 순위 ─────────────────────</span><br>
+${results.map((r,i)=>`<span style="color:var(--dim)">${String(i+1).padStart(2,'0')}.</span> <span style="color:${r.pct>=60?'var(--text)':r.pct>=40?'var(--dim)':'rgba(255,60,60,.7)'}">${r.name}</span> <span style="color:${r.pct>=60?'var(--green)':'var(--red)'}">${r.pct}%</span>`).join('  ')}<br>
+<br>
+<span style="color:var(--orange)">═══════════════════════════════════</span>
+  `;
+
+  // share link — hash based (works in local files too)
+  const shareBox=document.getElementById('classShareBox');
+  shareBox.style.display='block';
+  const payload=btoa(unescape(encodeURIComponent(JSON.stringify({me:myName,cls:results.map(r=>r.name)}))));
+  const base=window.location.href.split('#')[0];
+  const link=`${base}#r=${payload}`;
+  document.getElementById('classShareInput').value=link;
+  document.getElementById('classShareCopyBtn').textContent='[ COPY ]';
+  document.getElementById('classShareCopyBtn').classList.remove('copied');
+}
+
+function copyClassShareLink(){
+  const input=document.getElementById('classShareInput');
+  navigator.clipboard.writeText(input.value).then(()=>{
+    const btn=document.getElementById('classShareCopyBtn');
+    btn.textContent='[ COPIED ✓ ]';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='[ COPY ]';btn.classList.remove('copied');},2500);
+  }).catch(()=>{input.select();document.execCommand('copy');});
+}
+
+// URL SHARE — class report
+function checkSharedUrl(){
+  const hash=window.location.hash;
+  if(!hash||!hash.startsWith('#r='))return;
+  try{
+    const payload=hash.slice(3);
+    const data=JSON.parse(decodeURIComponent(escape(atob(payload))));
+    if(data.me&&data.cls&&data.cls.length>0){
+      renderSharedClassReport(data.me, data.cls);
+    }
+  }catch(e){console.warn('share url parse error',e);}
+}
+
+function renderSharedClassReport(myName,names){
+  const results=names.map(name=>({name,pct:calcCompat(myName,name)}));
+  results.sort((a,b)=>b.pct-a.pct);
+  const avg=Math.round(results.reduce((a,r)=>a+r.pct,0)/results.length);
+  const top3=results.slice(0,3), bot3=results.slice(-3).reverse();
+
+  document.getElementById('sharedOverlay').classList.add('show');
+  document.getElementById('sharedNames').textContent=`${myName} 기준 · 반 학생 ${results.length}명`;
+  document.getElementById('sharedAvg').textContent=avg+'%';
+  document.getElementById('sharedBestPct').textContent=results[0].pct+'%';
+  document.getElementById('sharedWorstPct').textContent=results[results.length-1].pct+'%';
+
+  // top 3
+  const top3el=document.getElementById('sharedTop3'); top3el.innerHTML='';
+  top3.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);';
+    row.innerHTML=`<span style="font-size:1.2rem">${['🥇','🥈','🥉'][i]}</span><span style="color:var(--cyan);font-size:.9rem;flex:1;letter-spacing:1px">${r.name}</span><span style="font-family:\'VT323\',monospace;font-size:1.4rem;color:var(--green);text-shadow:0 0 10px rgba(0,255,65,.4)">${r.pct}%</span><span style="font-size:.6rem;color:var(--dim);margin-left:4px">${getGrade(r.pct)}</span>`;
+    top3el.appendChild(row);
+  });
+
+  // worst 3
+  const w3el=document.getElementById('sharedWorst3'); w3el.innerHTML='';
+  bot3.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);';
+    row.innerHTML=`<span style="font-size:.75rem;color:var(--dim);width:20px;text-align:right">${i+1}.</span><span style="color:rgba(255,60,60,.8);font-size:.9rem;flex:1;letter-spacing:1px">${r.name}</span><span style="font-family:\'VT323\',monospace;font-size:1.4rem;color:var(--red)">${r.pct}%</span><span style="font-size:.6rem;color:var(--dim);margin-left:4px">${getGrade(r.pct)}</span>`;
+    w3el.appendChild(row);
+  });
+
+  // full list 2-col
+  const fullEl=document.getElementById('sharedFullList'); fullEl.innerHTML='';
+  results.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:6px;align-items:center;padding:4px 0;break-inside:avoid;font-size:.72rem;border-bottom:1px solid var(--border);margin-bottom:2px;';
+    const col=r.pct>=60?'var(--green)':r.pct>=40?'var(--text)':'var(--red)';
+    row.innerHTML=`<span style="color:var(--dim);font-size:.6rem;width:20px;text-align:right">${String(i+1).padStart(2,'0')}</span><span style="flex:1;color:var(--text)">${r.name}</span><span style="font-family:\'VT323\',monospace;font-size:1rem;color:${col}">${r.pct}%</span>`;
+    fullEl.appendChild(row);
+  });
+}
+
+function deleteAllFiles(){
+  localStorage.removeItem('goonghap_files');
+  currentFileId=null;
+  document.getElementById('fileWorkspace').classList.remove('show');
+  renderFileGrid();
+}
+function resetAllData(){
+  ['goonghap_tarot','goonghap_fortune_log','goonghap_files'].forEach(k=>localStorage.removeItem(k));
+  currentFileId=null;
+  document.getElementById('fileWorkspace').classList.remove('show');
+  renderFileGrid(); renderFortuneLog(); renderTarotHistory();
+}
+
+// ════════════════════════════════════════
+function getGrade(p){if(p>=90)return'PERFECT MATCH';if(p>=75)return'HIGH COMPAT.';if(p>=60)return'GOOD MATCH';if(p>=45)return'NEUTRAL';if(p>=30)return'LOW COMPAT.';return'MISMATCH';}
+function getHearts(p){if(p>=90)return'♥ ♥ ♥ ♥ ♥';if(p>=75)return'♥ ♥ ♥ ♥';if(p>=60)return'♥ ♥ ♥';if(p>=45)return'♥ ♥';if(p>=30)return'♥';return'♡';}
+function getMsg(p,n1,n2){if(p>=90)return`${n1}와(과) ${n2}는 운명적 천생연분입니다.`;if(p>=75)return`${n1}와(과) ${n2}는 매우 높은 궁합입니다.`;if(p>=60)return`${n1}와(과) ${n2}는 안정적인 궁합입니다.`;if(p>=45)return`${n1}와(과) ${n2}는 보통 수준의 궁합입니다.`;if(p>=30)return`${n1}와(과) ${n2}는 기운의 차이가 존재합니다.`;return`${n1}와(과) ${n2}는 극과 극의 기운을 보입니다.`;}
+function updateClock(){const now=new Date();document.getElementById('sysDate').textContent=now.toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+
+// init
+updateClock();setInterval(updateClock,1000);
+const today=new Date();
+document.getElementById('fortuneDateBadge').textContent=today.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+renderFileGrid();renderFortuneLog();renderTarotHistory();
+checkSharedUrl();
+const _ta=document.getElementById('wsClassNames');
+if(_ta)_ta.addEventListener('input',updateClassCount);
+</script>
+</body>
+</html>

@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>리듬 블레이드 — RHYTHM BLADE</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#05040a; }
+  body {
+    font-family:'Press Start 2P', 'Courier New', monospace;
+    color:#e8ecff; user-select:none; -webkit-user-select:none;
+    touch-action:none;
+  }
+  #game { position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 30%, #15102b 0%, #07060f 70%, #03020a 100%); }
+  #cv { image-rendering:pixelated; image-rendering:crisp-edges; display:block;
+    box-shadow:0 0 0 3px #2a2350, 0 0 40px rgba(90,120,255,0.25), 0 14px 40px rgba(0,0,0,0.6);
+    background:#0a0716; touch-action:none; }
+  /* CRT scanlines */
+  #scan { position:fixed; inset:0; pointer-events:none; z-index:50;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 2px, transparent 4px);
+    mix-blend-mode:multiply; opacity:.55; }
+  #vig { position:fixed; inset:0; pointer-events:none; z-index:49;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%); }
+
+  .screen { position:fixed; inset:0; z-index:60; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center; }
+  .screen.on { display:flex; animation:fade .25s ease; }
+  @keyframes fade { from{opacity:0} to{opacity:1} }
+
+  .panel { background:linear-gradient(180deg, rgba(20,16,44,.92), rgba(10,8,24,.95));
+    border:3px solid #4a3fb0; border-radius:4px; padding:26px 22px;
+    box-shadow:0 0 0 3px #0a0818, 0 0 28px rgba(110,90,255,.35); max-width:560px; width:100%; }
+
+  h1.title { font-size:clamp(20px,7vw,42px); line-height:1.35; letter-spacing:1px;
+    color:#ffd84d; text-shadow:3px 3px 0 #b3340c, 6px 6px 0 rgba(0,0,0,.5), 0 0 18px rgba(255,150,40,.5); }
+  .sub { margin-top:14px; font-size:clamp(8px,2.4vw,12px); color:#8fd0ff; letter-spacing:1px; }
+  .tag { margin-top:8px; font-size:clamp(7px,2vw,10px); color:#7c79a8; }
+
+  .blink { animation:blink 1s steps(2,start) infinite; }
+  @keyframes blink { 50%{opacity:0} }
+
+  button {
+    font-family:inherit; cursor:pointer; color:#fff;
+    background:linear-gradient(180deg,#5b6cff,#3a3fb0);
+    border:none; border-radius:3px; padding:14px 18px; font-size:clamp(9px,2.6vw,13px);
+    letter-spacing:1px; box-shadow:0 4px 0 #21205a, 0 4px 10px rgba(0,0,0,.4);
+    transition:transform .06s, box-shadow .06s; position:relative; }
+  button:active { transform:translateY(3px); box-shadow:0 1px 0 #21205a; }
+  .btnRow { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:20px; }
+  .ghost { background:linear-gradient(180deg,#2a2750,#1a1838); box-shadow:0 4px 0 #100f24, 0 4px 10px rgba(0,0,0,.4); }
+  .ghost:active { box-shadow:0 1px 0 #100f24; }
+
+  .songCard { width:100%; text-align:left; padding:16px; display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(90deg,#241f4d,#191535); margin-bottom:12px; box-shadow:0 4px 0 #100f24; }
+  .songCard:active { transform:translateY(3px); box-shadow:0 1px 0 #100f24; }
+  .songCard .nm { font-size:clamp(10px,3vw,15px); color:#fff; }
+  .songCard .meta { font-size:8px; color:#9b97c8; margin-top:8px; line-height:1.5; }
+  .stars { letter-spacing:2px; }
+  .best { font-size:8px; color:#ffd84d; margin-top:6px; }
+  .sLabel { font-size:8px; color:#7c79a8; margin-top:6px;}
+
+  #rankLetter { font-size:clamp(48px,18vw,110px); line-height:1; text-shadow:4px 4px 0 rgba(0,0,0,.5), 0 0 24px currentColor;
+    animation:pop .4s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from{transform:scale(.2);opacity:0} to{transform:scale(1);opacity:1} }
+  .statLine { font-size:clamp(8px,2.5vw,12px); margin:8px 0; display:flex; justify-content:space-between; gap:18px; color:#cdd2ff; }
+  .statLine b { color:#fff; }
+  .badge { display:inline-block; margin-top:12px; padding:6px 10px; font-size:9px; color:#0a0716;
+    background:#ffd84d; box-shadow:0 0 12px rgba(255,216,77,.6); }
+
+  #pauseBtn { position:fixed; top:10px; right:10px; z-index:70; display:none;
+    padding:10px 12px; font-size:11px; background:linear-gradient(180deg,#2a2750,#1a1838); box-shadow:0 3px 0 #100f24; }
+  .hint { font-size:clamp(7px,2vw,10px); color:#7c79a8; margin-top:18px; line-height:1.8; }
+  .kbd { color:#9be36b; }
+  .err { color:#ff8080; font-size:10px; margin-top:14px; display:none; }
+
+  /* ---- charge / burst ---- */
+  #burstBtn{ position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:71; display:none;
+    padding:12px 20px; font-size:11px; color:#0a0716; border-radius:3px;
+    background:linear-gradient(180deg,#ffe680,#ff9b3a); box-shadow:0 0 0 3px #5a2a00, 0 0 24px rgba(255,180,60,.85);
+    animation:burstPulse .5s ease-in-out infinite alternate; }
+  @keyframes burstPulse{ from{ box-shadow:0 0 0 3px #5a2a00,0 0 14px rgba(255,180,60,.6);} to{ box-shadow:0 0 0 3px #5a2a00,0 0 32px rgba(255,210,90,1);} }
+
+  /* ---- chips ---- */
+  .coinChip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#ffd84d;
+    background:rgba(10,8,24,.7); border:2px solid #4a3fb0; border-radius:3px; padding:8px 12px; }
+  .equipChip{ font-size:8px; color:#9be36b; margin-top:12px; letter-spacing:1px; }
+
+  /* ---- gacha shop ---- */
+  .gachaTop{ display:flex; justify-content:center; gap:12px; margin:6px 0 14px; flex-wrap:wrap; }
+  .pullBtn{ background:linear-gradient(180deg,#b06bff,#6a2db0); box-shadow:0 4px 0 #3a1466,0 4px 10px rgba(0,0,0,.4); }
+  .pullBtn.big{ background:linear-gradient(180deg,#ffd24d,#e8870a); color:#0a0716; box-shadow:0 4px 0 #7a3a00,0 4px 12px rgba(0,0,0,.4); }
+  .pullBtn:disabled{ filter:grayscale(.7) brightness(.7); cursor:default; }
+  .cost{ display:block; font-size:8px; margin-top:6px; opacity:.9; }
+  .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px; max-height:40vh; overflow:auto; padding:4px; }
+  .auraCell{ background:linear-gradient(180deg,#1a1638,#100d24); border:2px solid #2a2750; border-radius:3px; padding:6px 3px; display:flex; flex-direction:column; align-items:center; }
+  .auraCell.locked{ opacity:.4; filter:grayscale(1); }
+  .auraCell.equipped{ border-color:#9be36b !important; box-shadow:0 0 10px rgba(155,227,107,.5); }
+  .auraCell .an{ font-size:7px; margin-top:4px; line-height:1.35; color:#dfe3ff; }
+  .auraCell .ar{ font-size:6px; margin-top:3px; }
+  .bladeCanvas{ image-rendering:pixelated; width:30px; height:46px; }
+  .r-N{ color:#cfd8ee;} .r-R{ color:#6aa8ff;} .r-SR{ color:#c98bff;} .r-SSR{ color:#ffd84d;}
+  .b-N{ border-color:#3a4666;} .b-R{ border-color:#2f5b99;} .b-SR{ border-color:#7a3aa6;} .b-SSR{ border-color:#a6760a;}
+
+  /* ---- reveal overlay ---- */
+  #revealScreen{ background:radial-gradient(ellipse at center,#0a0820 0%,#02010a 80%); }
+  #rays{ position:absolute; inset:-60%; z-index:-1; opacity:0;
+    background:conic-gradient(from 0deg, transparent 0 8deg, rgba(255,255,255,.07) 8deg 12deg, transparent 12deg 20deg, rgba(255,255,255,.05) 20deg 24deg);
+    animation:spin 14s linear infinite; transition:opacity .6s; }
+  #revealScreen.go #rays{ opacity:.8; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  #revealCards{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; max-width:560px; }
+  .revCard{ position:relative; display:flex; flex-direction:column; align-items:center; padding:8px 6px; border-radius:4px;
+    background:rgba(12,9,28,.55); border:2px solid #333; opacity:0; transform:scale(.4) translateY(12px);
+    animation:revPop .42s cubic-bezier(.2,1.7,.4,1) forwards; }
+  @keyframes revPop{ to{ opacity:1; transform:scale(1) translateY(0);} }
+  .revCard.single{ padding:18px 22px; }
+  .revCard.single .bladeCanvas{ width:64px; height:96px; }
+  .revCard .rn{ font-size:8px; margin-top:8px; color:#fff; line-height:1.3; }
+  .revCard.single .rn{ font-size:13px; }
+  .revCard .rr{ font-size:7px; margin-top:5px; }
+  .revCard.single .rr{ font-size:10px; }
+  .revCard.isnew::after{ content:'NEW'; position:absolute; top:3px; right:3px; font-size:6px; color:#0a0716; background:#9be36b; padding:1px 3px; border-radius:2px; }
+  .flashWhite{ position:fixed; inset:0; background:#fff; z-index:80; pointer-events:none; opacity:0; }
+  .flashWhite.on{ animation:fw .55s ease-out; }
+  @keyframes fw{ 0%{opacity:.92} 100%{opacity:0} }
+
+  /* ---- cutscene ---- */
+  #skipHint{ position:fixed; bottom:14px; right:14px; z-index:62; font-size:8px; color:#cdd2ff;
+    background:rgba(0,0,0,.45); padding:6px 10px; border-radius:3px; display:none; }
+</style>
+</head>
+<body>
+  <div id="game">
+    <canvas id="cv" width="320" height="180"></canvas>
+  </div>
+  <div id="vig"></div>
+  <div id="scan"></div>
+
+  <button id="pauseBtn">⏸</button>
+
+  <!-- TITLE -->
+  <div class="screen on" id="titleScreen">
+    <div class="panel">
+      <h1 class="title">리듬<br>블레이드</h1>
+      <div class="sub">RHYTHM&nbsp;BLADE</div>
+      <div class="tag">박자에 맞춰 검을 휘둘러라</div>
+      <div class="btnRow">
+        <button id="startBtn" class="blink">▶ 모험 시작</button>
+      </div>
+      <div class="btnRow" style="margin-top:12px">
+        <button id="gachaBtn" class="ghost">🗡 검기 뽑기</button>
+        <button id="skinBtn" class="ghost">🥷 스킨 뽑기</button>
+      </div>
+      <div class="btnRow" style="margin-top:10px">
+        <button id="storyBtn" class="ghost">▤ 스토리</button>
+        <button id="freeBtn" class="ghost">♪ 자유 모드</button>
+      </div>
+      <div class="equipChip" id="titleEquip"></div>
+      <div class="hint">
+        <span class="kbd">←</span> / <span class="kbd">A</span> 왼쪽 &nbsp;·&nbsp; <span class="kbd">→</span> / <span class="kbd">D</span> 오른쪽<br>
+        모바일 : 화면 <b>좌/우</b> 터치 &nbsp;·&nbsp; <span class="kbd">Space</span> 검기 폭발
+      </div>
+    </div>
+  </div>
+
+  <!-- SONG SELECT -->
+  <div class="screen" id="selectScreen">
+    <div class="panel">
+      <h1 class="title" style="font-size:clamp(16px,5vw,28px)">곡 선택</h1>
+      <div style="margin-top:18px">
+        <button class="songCard" id="song0"></button>
+        <button class="songCard" id="song1"></button>
+        <button class="songCard" id="song2"></button>
+      </div>
+      <div class="btnRow"><button id="backBtn" class="ghost">← 뒤로</button></div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="resultScreen">
+    <div class="panel">
+      <div class="sLabel" id="resSong"></div>
+      <div id="rankLetter">S</div>
+      <div id="resBadge"></div>
+      <div style="margin-top:16px">
+        <div class="statLine"><span>SCORE</span><b id="resScore">0</b></div>
+        <div class="statLine"><span>정확도</span><b id="resAcc">0%</b></div>
+        <div class="statLine"><span>PERFECT</span><b id="resP">0</b></div>
+        <div class="statLine"><span>GOOD</span><b id="resG">0</b></div>
+        <div class="statLine"><span>MISS</span><b id="resM">0</b></div>
+        <div class="statLine"><span>최대 콤보</span><b id="resC">0</b></div>
+        <div class="statLine" style="color:#ffd84d"><span>획득 검혼 ◆</span><b id="resCoins">0</b></div>
+      </div>
+      <div class="btnRow">
+        <button id="retryBtn">↻ 다시</button>
+        <button id="toSelectBtn" class="ghost">맵으로</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="screen" id="overScreen">
+    <div class="panel">
+      <h1 class="title" style="color:#ff5a5a; text-shadow:3px 3px 0 #5a0c0c, 0 0 18px rgba(255,60,60,.6); font-size:clamp(20px,6vw,38px)">패배...</h1>
+      <div class="sub" style="color:#ff9b9b">체력이 모두 소진되었다</div>
+      <div style="margin-top:16px">
+        <div class="statLine"><span>SCORE</span><b id="ovScore">0</b></div>
+        <div class="statLine"><span>최대 콤보</span><b id="ovC">0</b></div>
+        <div class="statLine" style="color:#ffd84d"><span>획득 검혼 ◆</span><b id="ovCoins">0</b></div>
+      </div>
+      <div class="btnRow">
+        <button id="ovRetryBtn">↻ 다시</button>
+        <button id="ovSelectBtn" class="ghost">맵으로</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div class="screen" id="pauseScreen">
+    <div class="panel" style="max-width:380px">
+      <h1 class="title" style="font-size:clamp(18px,5vw,30px)">일시정지</h1>
+      <div class="btnRow" style="flex-direction:column">
+        <button id="resumeBtn">▶ 계속하기</button>
+        <button id="quitBtn" class="ghost">맵으로</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GACHA SHOP -->
+  <div class="screen" id="gachaScreen">
+    <div class="panel" style="max-width:600px">
+      <h1 class="title" id="gachaTitle" style="font-size:clamp(16px,5vw,28px); color:#c98bff; text-shadow:3px 3px 0 #3a1466,0 0 18px rgba(180,90,255,.6)">검기 뽑기</h1>
+      <div class="gachaTop">
+        <button id="tabBlade" class="ghost" style="padding:8px 12px;font-size:9px">🗡 검기</button>
+        <button id="tabSkin" class="ghost" style="padding:8px 12px;font-size:9px">🥷 스킨</button>
+        <span class="coinChip">◆ <b id="gachaCoins">0</b></span>
+      </div>
+      <div class="btnRow" style="margin-top:0">
+        <button id="pull1" class="pullBtn">1회 뽑기<span class="cost">◆ 100</span></button>
+        <button id="pull10" class="pullBtn big">10연 뽑기<span class="cost">◆ 900 · 희귀확정</span></button>
+      </div>
+      <div class="sLabel" style="margin-top:14px"><span id="ownLabel">보유 검기</span> <span id="ownCount"></span> &nbsp;·&nbsp; 탭하여 장착</div>
+      <div class="grid" id="auraGrid"></div>
+      <div class="btnRow"><button id="gachaBack" class="ghost">← 뒤로</button></div>
+    </div>
+  </div>
+
+  <!-- REVEAL -->
+  <div class="screen" id="revealScreen">
+    <div id="rays"></div>
+    <div id="revealCards"></div>
+    <button id="revealConfirm" style="margin-top:22px; display:none">확인</button>
+  </div>
+  <div class="flashWhite" id="flashWhite"></div>
+
+  <button id="burstBtn">⚡ 검기 폭발</button>
+  <div id="skipHint">탭 / Space → 건너뛰기</div>
+
+<script>
+"use strict";
+/* ============================================================
+   RHYTHM BLADE — 8bit rhythm sword game
+   ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = 320, H = 180;
+ctx.imageSmoothingEnabled = false;
+
+/* ---------- layout constants ---------- */
+const CX = 160, GROUND = 126;
+const L_LINE = 124, R_LINE = 196;     // x where enemy must be hit
+const L_EDGE = -18, R_EDGE = 338;
+
+/* ---------- timing windows (ms) ---------- */
+const PERFECT = 58, GOOD = 115;
+
+/* ---------- helpers ---------- */
+const rnd = (a,b)=> a + Math.random()*(b-a);
+function R(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h)); }
+function shade(hex,f){
+  const c=parseInt(hex.slice(1),16); let r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+  r=Math.min(255,r*f)|0; g=Math.min(255,g*f)|0; b=Math.min(255,b*f)|0;
+  return 'rgb('+r+','+g+','+b+')';
+}
+function rgba(hex,a){ const c=parseInt(hex.slice(1),16); return 'rgba('+((c>>16)&255)+','+((c>>8)&255)+','+(c&255)+','+a+')'; }
+const A4=440;
+const NOTEMAP={'C':-9,'C#':-8,'D':-7,'D#':-6,'E':-5,'F':-4,'F#':-3,'G':-2,'G#':-1,'A':0,'A#':1,'B':2};
+function freq(name){
+  const m=name.match(/^([A-G]#?)(\d)$/); if(!m) return 440;
+  const semis = NOTEMAP[m[1]] + (parseInt(m[2])-4)*12;
+  return A4*Math.pow(2, semis/12);
+}
+
+/* ============================================================
+   AUDIO ENGINE  (chiptune: 2 pulse + triangle + noise)
+   ============================================================ */
+let actx=null, master=null, noiseBuf=null;
+function initAudio(){
+  if(actx) return;
+  actx = new (window.AudioContext||window.webkitAudioContext)();
+  master = actx.createGain(); master.gain.value=0.32; master.connect(actx.destination);
+  const len = Math.floor(actx.sampleRate*1);
+  noiseBuf = actx.createBuffer(1,len,actx.sampleRate);
+  const d=noiseBuf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+}
+function resumeAudio(){ if(actx && actx.state==='suspended') actx.resume(); }
+
+function tone(f,t,dur,type,vol,target){
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(target||master);
+  o.start(t); o.stop(t+dur+0.05);
+}
+function kick(t){
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type='triangle';
+  o.frequency.setValueAtTime(165,t);
+  o.frequency.exponentialRampToValueAtTime(46,t+0.11);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.95,t+0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+0.2);
+}
+function snare(t){
+  const s=actx.createBufferSource(); s.buffer=noiseBuf;
+  const f=actx.createBiquadFilter(); f.type='highpass'; f.frequency.value=1300;
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.55,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+0.16);
+  tone(190,t,0.09,'triangle',0.18);
+}
+function hat(t){
+  const s=actx.createBufferSource(); s.buffer=noiseBuf;
+  const f=actx.createBiquadFilter(); f.type='highpass'; f.frequency.value=8200;
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.22,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+0.06);
+}
+/* real-time SFX */
+function sfxSlash(){ if(!actx)return; const t=actx.currentTime; tone(820,t,0.07,'square',0.16); tone(1300,t+0.012,0.05,'square',0.10); }
+function sfxPerfect(){ if(!actx)return; const t=actx.currentTime; tone(1300,t,0.06,'square',0.18); tone(1950,t+0.05,0.10,'square',0.16); }
+function sfxGold(){ if(!actx)return; const t=actx.currentTime; tone(1568,t,0.06,'square',0.18); tone(2093,t+0.06,0.06,'square',0.16); tone(2637,t+0.12,0.12,'square',0.16); }
+function sfxMiss(){ if(!actx)return; const t=actx.currentTime; tone(150,t,0.18,'sawtooth',0.22); tone(110,t+0.02,0.18,'sawtooth',0.18); }
+function sfxWhiff(){ if(!actx)return; const t=actx.currentTime;
+  const s=actx.createBufferSource(); s.buffer=noiseBuf;
+  const f=actx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1800;
+  const g=actx.createGain(); g.gain.setValueAtTime(0.10,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+0.08);
+}
+function sfxReady(){ if(!actx)return; const t=actx.currentTime; tone(880,t,0.07,'square',0.16); tone(1175,t+0.06,0.07,'square',0.16); tone(1568,t+0.12,0.16,'square',0.18); }
+function sfxBurst(){ if(!actx)return; const t=actx.currentTime;
+  tone(220,t,0.5,'sawtooth',0.22); tone(330,t,0.5,'sawtooth',0.16);
+  tone(1320,t,0.16,'square',0.16); tone(1760,t+0.08,0.18,'square',0.16); tone(2640,t+0.18,0.3,'square',0.16);
+  kick(t); snare(t+0.12); snare(t+0.24); }
+function sfxSSR(){ if(!actx)return; const t=actx.currentTime;
+  tone(523,t,0.12,'square',0.15); tone(659,t+0.10,0.12,'square',0.15); tone(784,t+0.20,0.12,'square',0.15);
+  tone(1047,t+0.30,0.14,'square',0.18); tone(1568,t+0.42,0.32,'square',0.18);
+  tone(196,t,0.6,'triangle',0.20); }
+
+/* scheduler */
+let schedTimer=null, schedStep=0, songStartTime=0;
+function startMusic(){
+  schedStep=0;
+  songStartTime = actx.currentTime + 1.25; // lead-in for count-down
+  schedTimer = setInterval(schedule, 25);
+}
+function schedule(){
+  const steps = song.steps, sd = song.stepDur, total = steps.length;
+  while(schedStep < total && songStartTime + schedStep*sd < actx.currentTime + 0.13){
+    const t = songStartTime + schedStep*sd;
+    const st = steps[schedStep];
+    if(t > actx.currentTime){
+      if(st.kick) kick(t);
+      if(st.snare) snare(t);
+      if(st.hat) hat(t);
+      if(st.mel) tone(freq(st.mel), t, st.melDur, 'square', 0.15);
+      if(st.bass) tone(freq(st.bass), t, st.bassDur, 'triangle', 0.20);
+    }
+    schedStep++;
+  }
+}
+function stopMusic(){ if(schedTimer){ clearInterval(schedTimer); schedTimer=null; } }
+
+/* ============================================================
+   SONG / CHART DATA
+   ============================================================ */
+const E=(s,side,t)=>({step:s,side,type:t||'normal'}); // side 0=left 1=right
+function expand(loop,total){ const a=[]; for(let s=0;s<total;s++) a.push(loop[s%loop.length]); return a; }
+
+function buildSong(def){
+  const beatDur=60/def.bpm, stepDur=beatDur/4;
+  const total=def.bars*16;
+  const melEx=expand(def.mel,total), bassEx=expand(def.bass,total);
+  const steps=[];
+  for(let s=0;s<total;s++){
+    const bl=s%16;
+    const st={ kick:def.drum.kick.includes(bl), snare:def.drum.snare.includes(bl), hat:def.drum.hat.includes(bl), mel:null, bass:null, melDur:0, bassDur:0 };
+    const mt=melEx[s];
+    if(mt && mt!=='.' && mt!=='-'){ let ties=0,k=s+1; while(k<total && melEx[k]==='-'){ties++;k++;} st.mel=mt; st.melDur=(1+ties)*stepDur*0.92; }
+    const bt=bassEx[s];
+    if(bt && bt!=='.' && bt!=='-'){ let ties=0,k=s+1; while(k<total && bassEx[k]==='-'){ties++;k++;} st.bass=bt; st.bassDur=(1+ties)*stepDur*0.96; }
+    steps.push(st);
+  }
+  const notes=[];
+  for(let b=0;b<def.bars;b++){
+    const cbar=def.schedule[b]; if(!cbar) continue;
+    for(const ev of cbar){
+      const beat=(b*16+ev.step)/4;
+      const approach = ev.type==='fast' ? def.approach*0.7 : def.approach;
+      notes.push({ beat, side:ev.side, type:ev.type, approach, spawnBeat:beat-approach });
+    }
+  }
+  notes.sort((a,b)=>a.spawnBeat-b.spawnBeat);
+  let last=0; for(const n of notes) if(n.beat>last) last=n.beat;
+  return { name:def.name, diff:def.diff, bpm:def.bpm, beatDur, stepDur, steps, notes, totalNotes:notes.length, songEndBeat:last+4, color:def.color };
+}
+
+/* ---- chart bar patterns ---- */
+// EASY
+const e_rest=[];
+const e_A=[E(0,0),E(4,1),E(8,0),E(12,1)];
+const e_B=[E(0,1),E(4,0),E(8,1),E(12,0)];
+const e_G=[E(0,0),E(4,1),E(8,0,'gold'),E(12,1)];
+const e_D=[E(0,0),E(2,1),E(4,0),E(8,1),E(10,0),E(12,1)];
+// NORMAL
+const n_A=[E(0,0),E(4,1),E(6,0),E(8,1),E(12,0),E(14,1)];
+const n_B=[E(0,1),E(2,0),E(4,1),E(8,0),E(10,1),E(12,0)];
+const n_G=[E(0,0),E(4,1,'gold'),E(8,0),E(12,1,'gold')];
+const n_F=[E(0,0,'fast'),E(4,1,'fast'),E(8,0),E(10,1),E(12,0,'fast'),E(14,1,'fast')];
+const n_DN=[E(0,0),E(2,1),E(4,0),E(6,1),E(8,0),E(10,1),E(12,0),E(14,1)];
+// HARD
+const h_R1=[E(0,0),E(2,1),E(4,0),E(6,1),E(8,0),E(10,1),E(12,0),E(14,1)];
+const h_R2=[E(0,0),E(2,0),E(4,1),E(6,1),E(8,0),E(10,0),E(12,1),E(14,1)];
+const h_F=[E(0,0,'fast'),E(2,1,'fast'),E(4,0,'fast'),E(6,1,'fast'),E(8,0,'fast'),E(10,1,'fast'),E(12,0,'fast'),E(14,1,'fast')];
+const h_G=[E(0,0,'gold'),E(4,1),E(8,0,'gold'),E(12,1)];
+const h_MIX=[E(0,0),E(2,1,'fast'),E(4,0),E(6,1),E(8,0,'fast'),E(10,1),E(12,0,'gold'),E(14,1)];
+
+const SONG_DEFS = [
+  {
+    name:'첫 출전', diff:1, bpm:112, bars:24, approach:2.6, color:'#9be36b',
+    mel:('G4 . C5 . E5 . C5 . G4 . C5 . E5 . D5 . '+
+         'F4 . A4 . C5 . A4 . F4 . A4 . C5 . B4 . '+
+         'E4 . G4 . C5 . G4 . E4 . G4 . B4 . D5 . '+
+         'D4 . G4 . B4 . D5 . G5 . - . F5 . D5 .').trim().split(/\s+/),
+    bass:('C3 . . . . . . . G3 . . . . . . . '+
+          'F3 . . . . . . . C4 . . . . . . . '+
+          'A3 . . . . . . . E3 . . . . . . . '+
+          'G3 . . . . . . . D3 . . . . . . .').trim().split(/\s+/),
+    drum:{ kick:[0,8], snare:[4,12], hat:[0,2,4,6,8,10,12,14] },
+    schedule:[e_rest,e_A,e_A,e_B,e_G,e_A,e_B,e_D,e_rest,e_A,e_B,e_G,e_D,e_A,e_B,e_D,e_rest,e_G,e_D,e_A,e_B,e_D,e_G,e_rest]
+  },
+  {
+    name:'그림자 검사', diff:2, bpm:138, bars:26, approach:2.1, color:'#c08bff',
+    mel:('A4 . C5 . E5 . C5 . A4 . E5 . D5 . C5 . '+
+         'G4 . B4 . D5 . B4 . G4 . D5 . C5 . B4 . '+
+         'F4 . A4 . C5 . A4 . F4 . C5 . E5 . D5 . '+
+         'E4 . G4 . B4 . E5 . D5 . - . C5 . B4 .').trim().split(/\s+/),
+    bass:('A3 . . . E3 . . . A3 . . . E3 . . . '+
+          'G3 . . . D3 . . . G3 . . . D3 . . . '+
+          'F3 . . . C3 . . . F3 . . . C3 . . . '+
+          'E3 . . . B2 . . . E3 . . . B2 . . .').trim().split(/\s+/),
+    drum:{ kick:[0,8,11], snare:[4,12], hat:[0,2,4,6,8,10,12,14] },
+    schedule:[e_rest,n_A,n_A,n_B,n_G,n_A,n_B,n_DN,n_F,n_A,n_B,n_G,e_rest,n_A,n_B,n_DN,n_F,n_A,n_G,n_DN,n_B,n_F,n_DN,n_G,n_DN,e_rest]
+  },
+  {
+    name:'광폭', diff:3, bpm:168, bars:28, approach:1.75, color:'#ff5a5a',
+    mel:('E5 . G5 . B5 . G5 . E5 . B5 . A5 . G5 . '+
+         'D5 . F5 . A5 . F5 . D5 . A5 . G5 . F5 . '+
+         'C5 . E5 . G5 . E5 . C5 . G5 . B5 . A5 . '+
+         'B4 . E5 . G5 . B5 . E6 . - . D6 . B5 .').trim().split(/\s+/),
+    bass:('E3 . E3 . E3 . E3 . B2 . B2 . B2 . B2 . '+
+          'D3 . D3 . D3 . D3 . A2 . A2 . A2 . A2 . '+
+          'C3 . C3 . C3 . C3 . G2 . G2 . G2 . G2 . '+
+          'B2 . B2 . B2 . B2 . E3 . E3 . E3 . E3 .').trim().split(/\s+/),
+    drum:{ kick:[0,4,8,12], snare:[4,12], hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] },
+    schedule:[e_rest,h_R1,h_R1,h_R2,h_G,h_R1,h_F,h_MIX,h_R2,h_R1,h_F,h_G,h_MIX,h_R2,e_rest,h_R1,h_F,h_MIX,h_R2,h_F,h_G,h_MIX,h_R1,h_F,h_R2,h_MIX,h_G,e_rest]
+  }
+];
+const SONGS = SONG_DEFS.map(buildSong);
+const bestScores = [0,0,0];
+
+/* ============================================================
+   검기 (BLADE AURA) — gacha data + currency
+   ============================================================ */
+const RARITY = {
+  N:  { key:'N',  name:'일반', col:'#cfd8ee', rate:50 },
+  R:  { key:'R',  name:'희귀', col:'#6aa8ff', rate:34 },
+  SR: { key:'SR', name:'영웅', col:'#c98bff', rate:13 },
+  SSR:{ key:'SSR',name:'전설', col:'#ffd84d', rate:3  },
+};
+// dmg=score mult · chg=charge-gain mult · heal=heal mult · win=ms added to timing windows
+const AURAS = [
+  { id:'mu',   name:'무명검', r:'N',  col:'#dfe6f0', glow:'#9fb0d0', dmg:1.00, chg:1.0, heal:1.0, win:0, desc:'평범한 강철의 검.' },
+  { id:'cg',   name:'청강검', r:'N',  col:'#7fc4ff', glow:'#3a8fff', dmg:1.00, chg:1.0, heal:1.0, win:0, desc:'차가운 청색 검광.' },
+  { id:'nok',  name:'녹풍검', r:'N',  col:'#8ef07a', glow:'#3fbf3f', dmg:1.00, chg:1.0, heal:1.0, win:0, desc:'바람을 가르는 녹빛.' },
+  { id:'ash',  name:'회월검', r:'N',  col:'#c9d0e0', glow:'#8a93b5', dmg:1.00, chg:1.0, heal:1.0, win:0, desc:'흐린 달빛의 검.' },
+  { id:'hong', name:'홍염검', r:'R',  col:'#ff6a4a', glow:'#ff3a1a', dmg:1.05, chg:1.0, heal:1.0, win:0, desc:'타오르는 불꽃. 점수 +5%.' },
+  { id:'noej', name:'뇌전검', r:'R',  col:'#ffe14d', glow:'#ffc400', dmg:1.00, chg:1.3, heal:1.0, win:0, desc:'번개의 속도. 검기 충전 +30%.' },
+  { id:'han',  name:'한빙검', r:'R',  col:'#7af0ff', glow:'#00c4ff', dmg:1.00, chg:1.0, heal:1.7, win:0, desc:'얼음의 회복. 회복 +70%.' },
+  { id:'ja',   name:'자전검', r:'R',  col:'#c08bff', glow:'#9b4dff', dmg:1.05, chg:1.15,heal:1.0, win:0, desc:'보랏빛 뇌격. 점수+5%, 충전+15%.' },
+  { id:'hyul', name:'혈화검', r:'SR', col:'#ff4d6a', glow:'#ff1a4d', dmg:1.13, chg:1.0, heal:1.0, win:0, desc:'붉은 영웅검. 점수 +13%.' },
+  { id:'geum', name:'황금검', r:'SR', col:'#ffd84d', glow:'#ffb400', dmg:1.10, chg:1.25,heal:1.0, win:0, desc:'황금빛 광휘. 점수+10%, 충전+25%.' },
+  { id:'cheon',name:'천뢰검', r:'SSR',col:'#fff2a0', glow:'#fff04d', dmg:1.18, chg:1.4, heal:1.2, win:6, desc:'하늘의 뇌신검. 점수+18%, 충전+40%, 판정 완화.' },
+  { id:'heuk', name:'흑야검', r:'SSR',col:'#b06bff', glow:'#7a1aff', dmg:1.22, chg:1.2, heal:1.0, win:9, desc:'어둠을 삼키는 마검. 점수+22%, 판정 대폭 완화.' },
+  { id:'yong', name:'용광검', r:'SSR',col:'#ff8a3a', glow:'#ff5a00', dmg:1.20, chg:1.3, heal:1.4, win:4, desc:'용의 숨결. 점수+20%, 회복·충전 강화.' },
+];
+const AURA_BY_ID = {}; for(const a of AURAS) AURA_BY_ID[a.id]=a;
+const AURA_IDS_BY_R = { N:[], R:[], SR:[], SSR:[] };
+for(const a of AURAS) AURA_IDS_BY_R[a.r].push(a.id);
+
+/* ============================================================
+   주인공 스킨 (SKIN) — second gacha banner
+   palette: { cloth, cloth2, sash, skin, hair, band }
+   ============================================================ */
+const SKINS = [
+  { id:'ronin', name:'무사', r:'N',  pal:{cloth:'#3b5bdb',cloth2:'#2b3f9e',sash:'#e8c84a',skin:'#ffd8a8',hair:'#16161f',band:'#e03131'}, desc:'기본 검사.' },
+  { id:'kuro',  name:'흑의 검객', r:'N',  pal:{cloth:'#2a2d3a',cloth2:'#16181f',sash:'#7a7f95',skin:'#e8c49a',hair:'#0a0a10',band:'#5a5f75'}, desc:'그림자처럼 움직인다.' },
+  { id:'snow',  name:'설원 순찰자', r:'R',  pal:{cloth:'#cfe6ff',cloth2:'#9bc2e6',sash:'#5a8fd6',skin:'#ffe0c0',hair:'#3a4a6a',band:'#ffffff'}, desc:'프로스트바이트의 수호자.' },
+  { id:'crim',  name:'홍련 무사', r:'R',  pal:{cloth:'#b3260c',cloth2:'#7a1808',sash:'#ffd84d',skin:'#ffd8a8',hair:'#1a0a0a',band:'#ff7a4a'}, desc:'불꽃을 두른 검사.' },
+  { id:'gold',  name:'황금 장군', r:'SR', pal:{cloth:'#e8b008',cloth2:'#9c7400',sash:'#fff2a0',skin:'#ffd8a8',hair:'#3a2a08',band:'#fff2a0'}, desc:'골드 갱을 정복한 자.' },
+  { id:'mech',  name:'기계 검귀', r:'SR', pal:{cloth:'#3a8f9e',cloth2:'#1a5f6e',sash:'#7df9ff',skin:'#c0d0d8',hair:'#0a2a30',band:'#00e0ff'}, desc:'로봇01단지의 병기.' },
+  { id:'lich',  name:'리치 검성', r:'SSR',pal:{cloth:'#7a3aa6',cloth2:'#4a1a6e',sash:'#c98bff',skin:'#d8c0e8',hair:'#2a0a3a',band:'#e0a0ff'}, desc:'리치 묘지의 망령 검성. 박자 판정 완화.', win:6 },
+  { id:'void',  name:'공허의 검신', r:'SSR',pal:{cloth:'#1a1030',cloth2:'#0a0518',sash:'#b06bff',skin:'#cfb8ff',hair:'#000010',band:'#d04dff'}, desc:'@°#^₩에서 온 존재. 검기 충전 가속.', chg:1.3 },
+];
+const SKIN_BY_ID = {}; for(const s of SKINS) SKIN_BY_ID[s.id]=s;
+const SKIN_IDS_BY_R = { N:[], R:[], SR:[], SSR:[] };
+for(const s of SKINS) SKIN_IDS_BY_R[s.r].push(s.id);
+
+/* ============================================================
+   월드맵 / 스테이지 (positions in 320x180 canvas, from world map)
+   type: stage | boss | final
+   ============================================================ */
+const STAGES = [
+  { id:0,  name:'센터 숲',      x:158, y:96,  song:0, spd:1.00, type:'stage', col:'#6fcf57', desc:'모든 것이 시작되는 숲.' },
+  { id:1,  name:'무법지',        x:82,  y:80,  song:0, spd:1.12, type:'stage', col:'#caa15a', desc:'법이 없는 황야.' },
+  { id:2,  name:'고울의 늪',     x:86,  y:126, song:1, spd:1.05, type:'stage', col:'#4fbf9e', desc:'안개 낀 늪지대.' },
+  { id:3,  name:'루인즈',        x:128, y:150, song:1, spd:1.12, type:'boss',  col:'#8fa05a', boss:'고대 수호상', desc:'폐허의 수호자가 깨어난다.' },
+  { id:4,  name:'프로스트바이트', x:150, y:30,  song:1, spd:1.18, type:'stage', col:'#9bd6ff', desc:'얼어붙은 설산.' },
+  { id:5,  name:'골드 갱',       x:150, y:62,  song:0, spd:1.30, type:'boss',  col:'#ffd84d', boss:'골드 갱 두목', desc:'황금에 미친 도적단.' },
+  { id:6,  name:'리치 묘지',     x:212, y:40,  song:2, spd:1.10, type:'stage', col:'#c08bff', desc:'망자가 잠든 묘지.' },
+  { id:7,  name:'로봇01단지',    x:252, y:66,  song:2, spd:1.22, type:'boss',  col:'#7df9ff', boss:'기계 검귀', desc:'폭주한 전투 병기.' },
+  { id:8,  name:'파이팅 아레나', x:252, y:108, song:2, spd:1.18, type:'stage', col:'#ff9b3a', desc:'전사들의 투기장.' },
+  { id:9,  name:'백스테이지',    x:196, y:134, song:2, spd:1.30, type:'stage', col:'#b04a4a', desc:'무대 뒤편의 어둠.' },
+  { id:10, name:'노틸러스',      x:256, y:158, song:2, spd:1.38, type:'boss',  col:'#4a9bd6', boss:'심연의 소용돌이', desc:'바다를 삼키는 소용돌이.' },
+  { id:11, name:'@°#^₩',        x:48,  y:38,  song:2, spd:1.55, type:'final', col:'#ff2ee0', boss:'글리치 군주', desc:'차원의 균열. 최종 보스.' },
+];
+const STAGE_ORDER = STAGES.map(s=>s.id); // sequential unlock by index
+// path links for drawing (index -> next index)
+const MAP_LINKS = [[0,1],[0,2],[2,3],[1,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[1,11],[5,11]];
+
+/* ============================================================
+   SAVE / LOAD  (localStorage with in-memory fallback)
+   ============================================================ */
+const SAVE_KEY='rhythm_blade_save_v3';
+let coins = 1000;
+let owned = { mu:true };          // owned blades
+let ownedSkins = { ronin:true };  // owned skins
+let equipped = 'mu';
+let equippedSkin = 'ronin';
+let bestScores2 = {};             // per-stage best
+let cleared = {};                 // stageId -> true
+let finalUnlocked=false, finalCleared=false;
+
+function defaultUnlocked(){ return { 0:true }; }
+let unlocked = defaultUnlocked();
+
+function saveGame(){
+  try{
+    const data={ coins, owned, ownedSkins, equipped, equippedSkin, bestScores2, cleared, unlocked, finalUnlocked, finalCleared, bestScores };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  }catch(e){ /* file:// or blocked — keep in memory only */ }
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY); if(!raw) return;
+    const d=JSON.parse(raw);
+    if(typeof d.coins==='number') coins=d.coins;
+    if(d.owned) owned=d.owned; if(!owned.mu) owned.mu=true;
+    if(d.ownedSkins) ownedSkins=d.ownedSkins; if(!ownedSkins.ronin) ownedSkins.ronin=true;
+    if(d.equipped && AURA_BY_ID[d.equipped]) equipped=d.equipped;
+    if(d.equippedSkin && SKIN_BY_ID[d.equippedSkin]) equippedSkin=d.equippedSkin;
+    if(d.bestScores2) bestScores2=d.bestScores2;
+    if(d.cleared) cleared=d.cleared;
+    if(d.unlocked) unlocked=d.unlocked; unlocked[0]=true;
+    finalUnlocked=!!d.finalUnlocked; finalCleared=!!d.finalCleared;
+    if(Array.isArray(d.bestScores)) for(let i=0;i<3&&i<d.bestScores.length;i++) bestScores[i]=d.bestScores[i];
+  }catch(e){}
+}
+function curAura(){ return AURA_BY_ID[equipped] || AURA_BY_ID.mu; }
+function curSkin(){ return SKIN_BY_ID[equippedSkin] || SKIN_BY_ID.ronin; }
+function skinBonus(){ const s=curSkin(); return { win:s.win||0, chg:s.chg||1 }; }
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+let state='title';          // title | map | play | pause | result | over | gacha | reveal | cutscene | finisher
+let song=SONGS[0], songIdx=0;
+let stage=null, stageId=0, speedMul=1;
+let enemies=[], particles=[], judges=[];
+let spawnPtr=0;
+let score=0, combo=0, maxCombo=0, perfectN=0, goodN=0, missN=0, health=100;
+let shakeAmt=0, comboPop=0, flash=0, pauseAt=0;
+let charge=0, burstReady=false, burstFlash=0, burstT=0;
+let streaks=[];            // big slash streaks across the lane
+const player={ slashT:0, side:2 };
+
+/* boss */
+let boss=null;             // {name,hp,maxHp,phase,col,...} when active
+let bossEvents=[];         // generated parry/rush events (beat-based)
+let bossEvtPtr=0;
+let projectiles=[];        // incoming parry projectiles
+let bossCutIn=0, bossCutText='';
+/* finisher */
+let fin=null;              // finisher state object
+
+/* background stars */
+const stars=[]; for(let i=0;i<46;i++) stars.push({x:rnd(0,W),y:rnd(2,86),b:rnd(0.3,1),s:rnd(1,2.6)});
+
+function curBeat(){ return (actx.currentTime - songStartTime) / song.beatDur; }
+function comboMult(){ return Math.min(4, 1 + Math.floor(combo/12)); }
+
+/* ============================================================
+   GAMEPLAY
+   ============================================================ */
+function startStage(sid){
+  initAudio(); resumeAudio();
+  stage = STAGES.find(s=>s.id===sid) || STAGES[0];
+  stageId = stage.id;
+  songIdx = stage.song; song = SONGS[songIdx];
+  speedMul = stage.spd || 1;
+  enemies=[]; particles=[]; judges=[]; projectiles=[]; streaks=[];
+  spawnPtr=0; score=0; combo=0; maxCombo=0; perfectN=0; goodN=0; missN=0; health=100;
+  shakeAmt=0; comboPop=0; flash=0; player.slashT=0; player.side=2;
+  charge=0; burstReady=false; burstFlash=0; burstT=0;
+  boss=null; bossEvents=[]; bossEvtPtr=0; bossCutIn=0; fin=null;
+  document.getElementById('burstBtn').style.display='none';
+  showScreen(null);
+  document.getElementById('pauseBtn').style.display='block';
+  state='play';
+  startMusic();
+  if(stage.type==='boss' || stage.type==='final') setupBoss(stage);
+}
+/* legacy alias used by retry buttons */
+function startGame(idx){ startStage(typeof idx==='number'?idx:stageId); }
+
+function spawnEnemy(n){
+  const appr = n.approach / (speedMul||1);
+  enemies.push({ side:n.side, type:n.type, targetBeat:n.beat, startBeat:n.beat-appr, approach:appr,
+    state:'approach', x:(n.side===0?L_EDGE:R_EDGE), y:GROUND, p:0, alpha:1, t:rnd(0,10), vx:0, vy:0 });
+}
+
+function slash(side){
+  // finisher beat-mash takes priority
+  if(state==='finisher'){ finisherHit(side); return; }
+  if(state!=='play') return;
+  const now=performance.now();
+  if(side===0){ if(now-slash._l<70) return; slash._l=now; }
+  else { if(now-slash._r<70) return; slash._r=now; }
+  player.slashT=1; player.side=side;
+  sfxSlash();
+  const cb=curBeat(), bms=song.beatDur*1000;
+  const winB = curAura().win + skinBonus().win;
+  const gw=GOOD+winB, pw=PERFECT+winB;
+
+  // try parry first (boss projectiles)
+  if(boss){
+    let bp=null, bpErr=1e9;
+    for(const pr of projectiles){
+      if(pr.side!==side || pr.done) continue;
+      const err=Math.abs((pr.hitBeat-cb)*bms);
+      if(err<bpErr){ bpErr=err; bp=pr; }
+    }
+    if(bp && bpErr<=gw){ parry(bp, bpErr<=pw); return; }
+  }
+
+  // normal enemy slash
+  let best=null, bestErr=1e9;
+  for(const e of enemies){
+    if(e.side!==side || e.state!=='approach') continue;
+    const err=Math.abs((e.targetBeat-cb)*bms);
+    if(err<bestErr){ bestErr=err; best=e; }
+  }
+  if(!best){ sfxWhiff(); return; }
+  if(bestErr<=gw){
+    resolveHit(best, bestErr<=pw);
+  } else {
+    sfxWhiff();
+    addJudge('이르다!', '#7aa2ff', side);
+  }
+}
+slash._l=0; slash._r=0;
+
+function parry(pr, perfect){
+  pr.done=true; pr.remove=true;
+  combo++; if(combo>maxCombo) maxCombo=combo; comboPop=1;
+  const A=curAura();
+  const dmg=(perfect?9:5)*A.dmg;
+  if(boss){ boss.hp=Math.max(0,boss.hp-dmg); boss.hitFlash=1; }
+  if(!burstReady){ charge=Math.min(100,charge+(perfect?9:5)*A.chg*skinBonus().chg); if(charge>=100){charge=100;burstReady=true;burstFlash=1;sfxReady();document.getElementById('burstBtn').style.display='block';} }
+  const px=pr.side===0?L_LINE:R_LINE;
+  if(perfect){ perfectN++; sfxPerfect(); burst(px,GROUND-10,A.glow,18); shake(3.5); flash=Math.max(flash,0.4); addJudge('패리!','#7df9ff',pr.side); }
+  else { goodN++; sfxSlash(); burst(px,GROUND-10,'#9be36b',10); shake(1.8); addJudge('막기','#9be36b',pr.side); }
+  // counter streak toward boss
+  streaks.push({ y:GROUND-18, x:(pr.side===0?L_LINE:R_LINE), dir:(pr.side===0?1:-1), sp:18, w:34, col:A.glow, life:0.6, delay:0 });
+  if(boss && boss.hp<=0) startFinisher();
+}
+
+function resolveHit(e, perfect){
+  e.state='dead'; e.remove=true;
+  combo++; if(combo>maxCombo) maxCombo=combo; comboPop=1;
+  const mult=comboMult();
+  const A=curAura();
+  let pts = perfect?100:50;
+  if(e.type==='gold'){ pts += perfect?200:60; }
+  score += Math.round(pts*mult*A.dmg);
+  // chip boss HP when fighting a boss
+  if(boss){ boss.hp=Math.max(0,boss.hp-(perfect?3:1.5)*A.dmg); boss.hitFlash=Math.max(boss.hitFlash||0,0.5); }
+  // charge gauge
+  if(!burstReady){
+    charge += (perfect?7:4)*(e.type==='gold'?1.5:1)*A.chg*skinBonus().chg;
+    if(charge>=100){ charge=100; burstReady=true; burstFlash=1; sfxReady();
+      document.getElementById('burstBtn').style.display='block'; }
+  }
+  const px = e.side===0?L_LINE:R_LINE;
+  if(e.type==='gold'){
+    perfect?perfectN++:goodN++;
+    sfxGold(); burst(px,GROUND-6,'#ffd84d',26); shake(4); flash=Math.max(flash,0.5);
+    addJudge(perfect?'PERFECT!':'GOOD', '#ffd84d', e.side);
+    health=Math.min(100,health+(perfect?2:0.5)*A.heal);
+  } else if(perfect){
+    perfectN++; sfxPerfect();
+    burst(px,GROUND-6, e.type==='fast'?'#ff9bd6':'#7df9ff',20); shake(3); flash=Math.max(flash,0.35);
+    addJudge('PERFECT', '#7df9ff', e.side);
+    health=Math.min(100,health+1.5*A.heal);
+  } else {
+    goodN++; sfxSlash();
+    burst(px,GROUND-6,'#9be36b',13); shake(1.5);
+    addJudge('GOOD', '#9be36b', e.side);
+    health=Math.min(100,health+0.4*A.heal);
+  }
+  if(boss && boss.hp<=0) startFinisher();
+}
+
+function triggerBurst(){
+  if(state!=='play' || !burstReady) return;
+  const A=curAura();
+  burstReady=false; charge=0; burstT=1; burstFlash=1;
+  document.getElementById('burstBtn').style.display='none';
+  sfxBurst(); shake(7); flash=Math.max(flash,0.8);
+  let cleared=0;
+  for(const e of enemies){
+    if(e.state!=='approach') continue;
+    cleared++;
+    e.state='dead'; e.remove=true;
+    combo++; if(combo>maxCombo) maxCombo=combo;
+    const base = e.type==='gold'?260:120;
+    score += Math.round(base*comboMult()*A.dmg);
+    perfectN++;
+    burst(e.x, GROUND-6, A.glow, 18);
+  }
+  comboPop=1;
+  if(boss){ boss.hp=Math.max(0,boss.hp-boss.maxHp*0.14); boss.hitFlash=1; addJudge('검기 폭발!', A.glow, 0); if(boss.hp<=0) startFinisher(); }
+  else { addJudge('검기 폭발!', A.glow, 0); addJudge('×'+cleared, '#fff', 1); }
+  for(let i=0;i<5;i++){
+    streaks.push({ y:rnd(GROUND-34,GROUND-2), x:-30, dir:1, sp:rnd(14,22), w:rnd(26,46), col:A.glow, life:1, delay:i*0.045 });
+    streaks.push({ y:rnd(GROUND-34,GROUND-2), x:W+30, dir:-1, sp:rnd(14,22), w:rnd(26,46), col:A.col, life:1, delay:i*0.045+0.02 });
+  }
+}
+
+function doMiss(e){
+  e.state='miss'; e.vx=(e.side===0?-2.4:2.4); e.vy=-1.6; e.alpha=1;
+  combo=0; missN++; health-=12;
+  addJudge('MISS', '#ff5a5a', e.side); sfxMiss(); shake(2.6);
+  if(health<=0){ health=0; gameOver(); }
+}
+
+/* ============================================================
+   BOSS SYSTEM
+   ============================================================ */
+function setupBoss(st){
+  const isFinal = st.type==='final';
+  boss = {
+    name: st.boss || '보스', col: st.col, isFinal,
+    maxHp: isFinal?300:180, hp: isFinal?300:180,
+    phase:0, hitFlash:0, invuln:0, y:42, t:0, dead:false, timeoutBeat: song.songEndBeat-1
+  };
+  bossCutIn=1.4; bossCutText='⚔ '+boss.name+' ⚔';
+  // generate parry event candidates across the fight
+  bossEvents=[]; bossEvtPtr=0; projectiles=[];
+  const start=6, end=Math.floor(song.songEndBeat-2);
+  for(let b=start; b<end; b++){
+    // base: every 2 beats
+    if(b%2===0) bossEvents.push({ hitBeat:b, side:(b/2)%2, phaseMin:0, spawned:false });
+    // phase1: fill odd beats
+    if(b%2===1) bossEvents.push({ hitBeat:b, side:((b-1)/2+1)%2, phaseMin:1, spawned:false });
+    // phase2: offbeat doubles + rush bursts
+    if(b%2===0) bossEvents.push({ hitBeat:b+0.5, side:(b/2+1)%2, phaseMin:2, spawned:false });
+    if(b%8===0) for(let k=0;k<3;k++) bossEvents.push({ hitBeat:b+0.25+k*0.25, side:(b+k)%2, phaseMin:2, spawned:false, rush:true });
+  }
+  bossEvents.sort((a,b)=>a.hitBeat-b.hitBeat);
+}
+const PARRY_LEAD=1.6;  // beats of telegraph
+function spawnProjectile(ev){
+  const lineX = ev.side===0?L_LINE:R_LINE;
+  projectiles.push({ side:ev.side, hitBeat:ev.hitBeat, spawnBeat:ev.hitBeat-PARRY_LEAD,
+    x:CX, y:boss?boss.y+6:42, tx:lineX, ty:GROUND-12, rush:!!ev.rush, done:false, remove:false, hitDone:false });
+}
+function updateBoss(dt, cb, bms){
+  if(!boss) return;
+  boss.t+=dt;
+  boss.hitFlash=Math.max(0,(boss.hitFlash||0)-dt*3);
+  boss.invuln=Math.max(0,(boss.invuln||0)-dt);
+  // phase transitions
+  const hpFrac=boss.hp/boss.maxHp;
+  let np=boss.phase;
+  if(hpFrac<=0.33) np=2; else if(hpFrac<=0.66) np=1; else np=0;
+  if(np>boss.phase){ boss.phase=np; boss.invuln=0.6; bossCutIn=1.2; bossCutText='페이즈 '+(np+1); shake(6); flash=Math.max(flash,0.6); sfxReady(); }
+  // spawn due projectiles
+  for(const ev of bossEvents){
+    if(ev.spawned) continue;
+    if(cb > ev.hitBeat){ ev.spawned=true; continue; }       // window already passed -> skip
+    if(ev.phaseMin>boss.phase) continue;                    // not yet this phase
+    if(cb >= ev.hitBeat-PARRY_LEAD){ ev.spawned=true; spawnProjectile(ev); }
+  }
+  // move projectiles
+  for(const pr of projectiles){
+    if(pr.done){ continue; }
+    const p=Math.max(0,(cb-pr.spawnBeat)/PARRY_LEAD);
+    pr.x = CX + (pr.tx-CX)*Math.min(1,p);
+    pr.y = (boss.y+6) + (pr.ty-(boss.y+6))*Math.min(1,p);
+    pr.p=p;
+    // passed the hit window unparried -> player takes damage
+    if(!pr.hitDone && (cb-pr.hitBeat)*bms > GOOD){
+      pr.hitDone=true; pr.done=true; pr.remove=true;
+      combo=0; missN++; health-=10; addJudge('피격', '#ff5a5a', pr.side); sfxMiss(); shake(2.4);
+      if(health<=0){ health=0; gameOver(); }
+    }
+  }
+  projectiles=projectiles.filter(p=>!p.remove);
+  // boss survived past the song -> fail
+  if(!boss.dead && cb>song.songEndBeat && boss.hp>0){ bossFail(); }
+}
+function bossFail(){
+  stopMusic(); state='over';
+  document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('burstBtn').style.display='none';
+  document.getElementById('ovScore').textContent=score.toLocaleString();
+  document.getElementById('ovC').textContent=maxCombo;
+  const earned=Math.floor(score/120);
+  coins+=earned; saveGame();
+  document.getElementById('ovCoins').textContent=earned.toLocaleString();
+  document.querySelector('#overScreen .sub').textContent=boss.name+'을(를) 쓰러뜨리지 못했다';
+  showScreen('overScreen');
+  boss=null;
+}
+
+/* ============================================================
+   FINISHER — 쌈뽕한 마무리 연타
+   ============================================================ */
+function startFinisher(){
+  if(!boss || fin) return;
+  boss.dead=true;
+  stopMusic();
+  state='finisher';
+  document.getElementById('burstBtn').style.display='none';
+  document.getElementById('pauseBtn').style.display='none';
+  enemies=[]; projectiles=[];
+  fin={ hits:0, need: boss.isFinal?20:14, t:0, prompt: Math.random()<0.5?0:1, sealT:0, blow:false, blowT:0, bx:CX };
+  // dramatic sting
+  finSting();
+  shake(5); flash=Math.max(flash,0.7);
+  addJudge('피니셔!', boss.col, 0);
+}
+function finSting(){
+  if(!actx) return; const t=actx.currentTime;
+  tone(196,t,0.8,'sawtooth',0.18); tone(294,t,0.8,'sawtooth',0.12);
+  kick(t); kick(t+0.25); snare(t+0.5);
+}
+function finisherHit(side){
+  if(!fin || fin.blow) return;
+  const now=performance.now();
+  if(now-(finisherHit._last||0)<55) return; finisherHit._last=now;
+  fin.hits++; fin.prompt = fin.prompt===0?1:0;
+  player.slashT=1; player.side=side; combo++; if(combo>maxCombo)maxCombo=combo;
+  score += Math.round(140*comboMult()*curAura().dmg);
+  const A=curAura();
+  sfxSlash(); if(fin.hits%3===0) sfxPerfect();
+  // slashes raking the boss
+  const yy=rnd(28,64);
+  streaks.push({ y:yy, x:(side===0?-20:W+20), dir:(side===0?1:-1), sp:rnd(16,24), w:rnd(30,50), col: A.glow, life:0.7, delay:0 });
+  burst(CX+rnd(-20,20), boss.y+rnd(-6,12), A.glow, 6);
+  shake(2.2); if(boss) boss.hitFlash=1;
+  if(fin.hits>=fin.need) finalBlow();
+}
+finisherHit._last=0;
+function finalBlow(){
+  if(!fin || fin.blow) return;
+  fin.blow=true; fin.blowT=0;
+  sfxBurst(); if(boss&&boss.isFinal) sfxSSR();
+  shake(9); flash=Math.max(flash,1);
+  // giant cross slash
+  for(let i=0;i<10;i++){
+    streaks.push({ y:rnd(20,70), x:-30, dir:1, sp:rnd(20,30), w:rnd(40,70), col:'#ffffff', life:1, delay:i*0.02 });
+    streaks.push({ y:rnd(20,70), x:W+30, dir:-1, sp:rnd(20,30), w:rnd(40,70), col: boss?boss.col:'#ffd84d', life:1, delay:i*0.02 });
+  }
+  const fw=document.getElementById('flashWhite'); fw.classList.remove('on'); void fw.offsetWidth; fw.classList.add('on');
+}
+
+/* ============================================================
+   STAGE CLEAR / PROGRESSION
+   ============================================================ */
+function unlockFrom(sid){
+  let any=false;
+  for(const [a,b] of MAP_LINKS){ if(a===sid && !unlocked[b]){ unlocked[b]=true; any=true; } }
+  // sequential fallback
+  const idx=STAGE_ORDER.indexOf(sid);
+  if(idx>=0 && idx+1<STAGE_ORDER.length){ const nx=STAGE_ORDER[idx+1]; if(STAGES.find(s=>s.id===nx).type!=='final' && !unlocked[nx]){ unlocked[nx]=true; any=true; } }
+  // final unlock when all non-final cleared
+  const allClear=STAGES.filter(s=>s.type!=='final').every(s=>cleared[s.id]);
+  if(allClear && !finalUnlocked){ finalUnlocked=true; unlocked[11]=true; any=true; }
+  return any;
+}
+function onStageCleared(){
+  cleared[stageId]=true;
+  unlockFrom(stageId);
+  if(stage && stage.type==='final'){ finalCleared=true; }
+  saveGame();
+}
+
+function winStage(){
+  // called after finisher final blow (boss stages)
+  state='result';
+  if(boss && boss.isFinal){
+    if(!ownedSkins.void){ ownedSkins.void=true; }   // guaranteed final reward skin
+  }
+  onStageCleared();
+  showResult(true);
+  boss=null; fin=null;
+}
+
+function burst(x,y,color,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=rnd(0.6,3.2);
+    particles.push({ x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1, life:rnd(0.4,0.9),
+      color: Math.random()<0.3?'#ffffff':color, sz:rnd(1,3) });
+  }
+}
+function addJudge(text,color,side){
+  judges.push({ text, color, side, t:1, y:0 });
+  if(judges.length>6) judges.shift();
+}
+function shake(a){ if(a>shakeAmt) shakeAmt=a; }
+
+function gameOver(){
+  stopMusic(); state='over';
+  document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('burstBtn').style.display='none';
+  boss=null; projectiles=[];
+  if(score>bestScores[songIdx]) bestScores[songIdx]=score;
+  const earned = Math.floor(score/100) + maxCombo*2;
+  coins += earned; saveGame();
+  document.querySelector('#overScreen .sub').textContent='체력이 모두 소진되었다';
+  document.getElementById('ovScore').textContent=score.toLocaleString();
+  document.getElementById('ovC').textContent=maxCombo;
+  document.getElementById('ovCoins').textContent=earned.toLocaleString();
+  showScreen('overScreen');
+}
+function finishSong(){
+  // non-boss stage completed by reaching song end
+  stopMusic(); state='result';
+  showResult(false);
+}
+function showResult(isBoss){
+  document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('burstBtn').style.display='none';
+  if(score>bestScores[songIdx]) bestScores[songIdx]=score;
+  if(!bestScores2[stageId] || score>bestScores2[stageId]) bestScores2[stageId]=score;
+  const total=Math.max(1,song.totalNotes);
+  const acc=(perfectN + goodN*0.5)/total*100;
+  let rank,col;
+  if(missN===0 && acc>=99.5){ rank='SS'; col='#ffd84d'; }
+  else if(acc>=95){ rank='S'; col='#7df9ff'; }
+  else if(acc>=90){ rank='A'; col='#9be36b'; }
+  else if(acc>=80){ rank='B'; col='#74c0fc'; }
+  else if(acc>=70){ rank='C'; col='#ffa94d'; }
+  else { rank='D'; col='#ff6b6b'; }
+  const rl=document.getElementById('rankLetter');
+  rl.textContent= isBoss?'WIN':rank; rl.style.color= isBoss?(stage.col||'#ffd84d'):col;
+  document.getElementById('resSong').textContent= isBoss ? (stage.boss+' 격파!') : (stage.name+'  ·  '+'★'.repeat(song.diff));
+  document.getElementById('resScore').textContent=score.toLocaleString();
+  document.getElementById('resAcc').textContent=acc.toFixed(1)+'%';
+  document.getElementById('resP').textContent=perfectN;
+  document.getElementById('resG').textContent=goodN;
+  document.getElementById('resM').textContent=missN;
+  document.getElementById('resC').textContent=maxCombo;
+  const fullCombo = (missN===0 && (perfectN+goodN)>0);
+  let earned = Math.floor(score/100) + maxCombo*2 + (stage?Math.round(stage.spd*50):50) + (fullCombo?200:0);
+  if(isBoss) earned += stage.type==='final'?2000:500;
+  coins += earned;
+  document.getElementById('resCoins').textContent=earned.toLocaleString();
+  const badge=document.getElementById('resBadge');
+  let bhtml='';
+  if(isBoss) bhtml+='<span class="badge" style="background:'+(stage.col||'#ffd84d')+'">BOSS 격파</span> ';
+  if(fullCombo) bhtml+='<span class="badge">FULL COMBO!</span>';
+  if(isBoss && stage.type==='final') bhtml+='<div class="equipChip" style="color:#b06bff">전설 스킨 「공허의 검신」 획득!</div>';
+  badge.innerHTML=bhtml;
+  if(!isBoss) onStageCleared();   // boss path already called it in winStage
+  showScreen('resultScreen');
+}
+
+/* ============================================================
+   UPDATE
+   ============================================================ */
+function update(dt){
+  // finisher runs its own light update
+  if(state==='finisher' && fin){
+    fin.t+=dt;
+    // decay fx during finisher
+    player.slashT=Math.max(0,player.slashT-dt*7);
+    shakeAmt=Math.max(0,shakeAmt-dt*22);
+    flash=Math.max(0,flash-dt*2.5);
+    for(const p of particles){ p.x+=p.vx*dt*60; p.y+=p.vy*dt*60; p.vy+=0.18*dt*60; p.life-=dt; }
+    particles=particles.filter(p=>p.life>0);
+    for(const s of streaks){ if(s.delay>0){s.delay-=dt;continue;} s.x+=s.dir*s.sp; s.life-=dt*1.3; }
+    streaks=streaks.filter(s=>s.life>0 && s.x>-80 && s.x<W+80);
+    if(fin.blow){ fin.blowT+=dt; if(fin.blowT>1.2) winStage(); }
+    else if(fin.t>7) finalBlow();   // safety auto-resolve if player stops tapping
+    return;
+  }
+  if(state!=='play') return;
+  const cb=curBeat(), bms=song.beatDur*1000;
+
+  // spawn
+  while(spawnPtr<song.notes.length && song.notes[spawnPtr].spawnBeat<=cb){
+    spawnEnemy(song.notes[spawnPtr]); spawnPtr++;
+  }
+  // enemies
+  for(const e of enemies){
+    e.t += dt;
+    if(e.state==='approach'){
+      e.p=(cb - e.startBeat)/e.approach;
+      if(e.side===0) e.x = L_EDGE + (L_LINE-L_EDGE)*e.p;
+      else e.x = R_EDGE + (R_LINE-R_EDGE)*e.p;
+      const errMs=(cb - e.targetBeat)*bms; // + = past line
+      if(errMs > GOOD) doMiss(e);
+    } else if(e.state==='miss'){
+      e.x+=e.vx; e.y+=e.vy; e.vy+=0.32; e.alpha-=dt*2.6;
+      if(e.alpha<=0) e.remove=true;
+    }
+  }
+  enemies = enemies.filter(e=>!e.remove);
+
+  // boss + projectiles
+  if(boss) updateBoss(dt, cb, bms);
+  if(bossCutIn>0) bossCutIn=Math.max(0,bossCutIn-dt);
+
+  // particles
+  for(const p of particles){
+    p.x+=p.vx*dt*60; p.y+=p.vy*dt*60; p.vy+=0.18*dt*60; p.life-=dt;
+  }
+  particles = particles.filter(p=>p.life>0);
+
+  // judges
+  for(const j of judges){ j.t-=dt*1.8; j.y-=dt*14; }
+  judges = judges.filter(j=>j.t>0);
+
+  // fx decay
+  player.slashT=Math.max(0,player.slashT-dt*7);
+  if(player.slashT<=0) player.side=2;
+  comboPop=Math.max(0,comboPop-dt*4);
+  shakeAmt=Math.max(0,shakeAmt-dt*22);
+  flash=Math.max(0,flash-dt*2.5);
+  burstFlash=Math.max(0,burstFlash-dt*2);
+  burstT=Math.max(0,burstT-dt*1.4);
+  // streaks
+  for(const s of streaks){
+    if(s.delay>0){ s.delay-=dt; continue; }
+    s.x += s.dir*s.sp; s.life-=dt*1.3;
+  }
+  streaks = streaks.filter(s=>s.life>0 && s.x>-60 && s.x<W+60);
+
+  // stage end: boss stages handled by bossFail/finisher, normal stages finish here
+  if(!boss && cb>song.songEndBeat) finishSong();
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function drawBackground(beatPulse){
+  // sky
+  const g=ctx.createLinearGradient(0,0,0,GROUND);
+  g.addColorStop(0,'#140d2e'); g.addColorStop(0.6,'#1d1840'); g.addColorStop(1,'#2a1f4d');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,GROUND);
+  // stars
+  const tt=performance.now()/1000;
+  for(const s of stars){
+    const tw=0.5+0.5*Math.sin(tt*2+s.x);
+    R(s.x, s.y, s.s, s.s, 'rgba(255,255,255,'+(s.b*tw*0.9)+')');
+  }
+  // moon
+  ctx.fillStyle='#f4e9b8'; ctx.beginPath(); ctx.arc(272,28,13,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#dfd29a'; ctx.beginPath(); ctx.arc(268,25,3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(277,32,2,0,Math.PI*2); ctx.fill();
+  // mountains
+  ctx.fillStyle='#171232';
+  ctx.beginPath(); ctx.moveTo(-10,GROUND); ctx.lineTo(70,52); ctx.lineTo(150,GROUND); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(120,GROUND); ctx.lineTo(210,40); ctx.lineTo(330,GROUND); ctx.fill();
+  ctx.fillStyle='#221a45';
+  ctx.beginPath(); ctx.moveTo(40,GROUND); ctx.lineTo(120,64); ctx.lineTo(220,GROUND); ctx.fill();
+  // lanterns (rhythmic glow above strike lines)
+  drawLantern(L_LINE, beatPulse);
+  drawLantern(R_LINE, beatPulse);
+  // floor
+  const fg=ctx.createLinearGradient(0,GROUND,0,H);
+  fg.addColorStop(0,'#3a2a1a'); fg.addColorStop(1,'#1c130b');
+  ctx.fillStyle=fg; ctx.fillRect(0,GROUND,W,H-GROUND);
+  R(0,GROUND,W,2,'#5a4226');
+  for(let x=8;x<W;x+=22) R(x,GROUND+2,1,H-GROUND-2,'rgba(0,0,0,0.25)');
+}
+function drawLantern(x,pulse){
+  const glow=0.35+0.65*pulse;
+  ctx.fillStyle='rgba(255,90,60,'+(0.10*glow)+')';
+  ctx.beginPath(); ctx.arc(x,18,16,0,Math.PI*2); ctx.fill();
+  R(x-0.5,2,1,6,'#3a2a1a');
+  R(x-4,8,8,9, shade('#d83a1a', 0.7+0.5*glow));
+  R(x-4,8,8,2, shade('#ff7a4a', 0.8+0.5*glow));
+  R(x-2,17,4,2,'#3a2a1a');
+}
+function drawStrike(x, pulse){
+  const a=0.25+0.55*pulse;
+  R(x-1, GROUND-26, 2, 26, 'rgba(120,200,255,'+a+')');
+  // glow base
+  ctx.fillStyle='rgba(120,200,255,'+(0.18+0.3*pulse)+')';
+  ctx.beginPath(); ctx.ellipse(x,GROUND-1,9,3,0,0,Math.PI*2); ctx.fill();
+  // pointer triangles
+  ctx.fillStyle='rgba(180,225,255,'+(0.6+0.4*pulse)+')';
+  ctx.beginPath(); ctx.moveTo(x-4,GROUND-30); ctx.lineTo(x+4,GROUND-30); ctx.lineTo(x,GROUND-25); ctx.fill();
+}
+
+function drawSamurai(cx, face, slashT){
+  const x=Math.round(cx);
+  const P=curSkin().pal;
+  const bob=Math.round(Math.sin(performance.now()/350)*1);
+  const top=GROUND-22+bob;
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(x,GROUND,9,2.5,0,0,Math.PI*2); ctx.fill();
+  // legs
+  R(x-5,GROUND-7,3,7, shade(P.cloth2,0.8)); R(x+2,GROUND-7,3,7, shade(P.cloth2,0.8));
+  R(x-5,GROUND-1,3,1,'#1a1d30'); R(x+2,GROUND-1,3,1,'#1a1d30');
+  // torso
+  R(x-6,top+10,12,11,P.cloth);
+  R(x-6,top+10,12,3, shade(P.cloth,1.3));
+  R(x-6,top+18,12,2,P.cloth2);
+  // sash
+  R(x-6,top+14,12,2,P.sash);
+  // arms
+  R(x-8,top+12,2,7,P.cloth2); R(x+6,top+12,2,7,P.cloth2);
+  // head
+  R(x-4,top+1,8,8,P.skin);
+  R(x-5,top-1,10,3,P.hair);            // hair
+  R(x-5,top+1,1,5,P.hair); R(x+4,top+1,1,4,P.hair);
+  R(x-2,top-3,4,2,P.hair);             // topknot
+  R(x-4,top+3,8,1,P.band);             // headband
+  R(x+4,top+3,2,1,P.band);
+  // eyes
+  if(face===0){ R(x-3,top+4,1,2,'#16161f'); R(x,top+4,1,2,'#16161f'); }
+  else if(face===1){ R(x,top+4,1,2,'#16161f'); R(x+3,top+4,1,2,'#16161f'); }
+  else { R(x-2,top+4,1,2,'#16161f'); R(x+1,top+4,1,2,'#16161f'); }
+  // sword
+  drawSword(x, top+13, face, slashT);
+}
+function drawSword(hx, hy, face, slashT){
+  const A=curAura();
+  const dir = face===0 ? -1 : 1;
+  const baseX = hx + (face===0 ? -7 : face===1 ? 7 : 7);
+  let ang;
+  if(slashT>0){ const prog=1-slashT; ang = dir*(-2.1 + prog*2.7); }
+  else ang = (face===2?0.6:dir*0.5);
+  // motion arc glow (aura-colored)
+  if(slashT>0){
+    const prog=1-slashT;
+    ctx.save();
+    ctx.strokeStyle=rgba(A.glow, slashT*0.85);
+    ctx.lineWidth=2.6;
+    ctx.beginPath();
+    const s0=dir*(-2.1), s1=dir*(-2.1+prog*2.7);
+    ctx.arc(baseX,hy,17, Math.min(s0,s1), Math.max(s0,s1));
+    ctx.stroke();
+    ctx.strokeStyle=rgba('#ffffff', slashT*0.5);
+    ctx.lineWidth=1; ctx.stroke();
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.translate(baseX, hy); ctx.rotate(ang);
+  ctx.fillStyle='#8a5a2b'; ctx.fillRect(-2,-2,2,4);        // guard
+  ctx.fillStyle=A.col; ctx.fillRect(0,-1.4,17,2.8);         // blade (aura color)
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,-1.4,17,1);       // shine
+  ctx.fillStyle=shade(A.col,0.7); ctx.fillRect(0,1,17,0.8); // lower edge
+  ctx.fillStyle=shade(A.col,1.4); ctx.fillRect(15,-1.4,2,2.8); // tip
+  // idle glow for rare blades
+  if(A.r==='SR' || A.r==='SSR'){
+    ctx.globalAlpha = 0.4 + 0.3*Math.sin(performance.now()/200);
+    ctx.fillStyle=rgba(A.glow,0.5); ctx.fillRect(0,-2.2,17,4.4);
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
+function drawStreaks(){
+  for(const s of streaks){
+    if(s.delay>0) continue;
+    const a=Math.max(0,Math.min(1,s.life));
+    ctx.save();
+    ctx.globalAlpha=a*0.9;
+    // bright core
+    R(s.x, s.y, s.w, 2, '#ffffff');
+    // colored body trailing behind
+    ctx.globalAlpha=a*0.55;
+    R(s.x - s.dir*s.w, s.y-1, s.w, 4, rgba(s.col,0.8));
+    ctx.globalAlpha=a*0.3;
+    R(s.x - s.dir*s.w*1.8, s.y-2, s.w, 6, rgba(s.col,0.5));
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawEnemy(e){
+  ctx.save(); ctx.globalAlpha=Math.max(0,e.alpha);
+  if(e.state==='miss'){
+    // X-eyed slump
+    drawSlime(e.x,e.y, e.t, '#5a5560', true);
+    ctx.restore(); return;
+  }
+  if(e.type==='gold') drawGold(e.x,e.y,e.t);
+  else if(e.type==='fast') drawBat(e.x,e.y,e.t);
+  else drawSlime(e.x,e.y,e.t,'#5fbf52', false);
+  ctx.restore();
+}
+function drawSlime(x,gy,t,col,dead){
+  const sq=Math.sin(t*9)*1.2;
+  const w=13, h=10-sq, yx=gy-h;
+  R(x-w/2,yx,w,h,col);
+  R(x-w/2,yx,w,2,shade(col,1.35));
+  R(x-w/2,gy-2,w,2,shade(col,0.65));
+  R(x-w/2+1,yx+1,1,1,shade(col,1.6));
+  if(dead){
+    R(x-4,yx+3,1,1,'#fff'); R(x-2,yx+5,1,1,'#fff'); R(x-3,yx+4,1,1,'#fff');
+    R(x+1,yx+3,1,1,'#fff'); R(x+3,yx+5,1,1,'#fff'); R(x+2,yx+4,1,1,'#fff');
+  } else {
+    R(x-4,yx+3,2,2,'#fff'); R(x+2,yx+3,2,2,'#fff');
+    R(x-3,yx+4,1,1,'#000'); R(x+3,yx+4,1,1,'#000');
+  }
+}
+function drawBat(x,gy,t){
+  const flap=Math.sin(t*22)>0?1:-1;
+  const cy=gy-8;
+  // wings
+  ctx.fillStyle='#8e44d8';
+  ctx.beginPath(); ctx.moveTo(x-2,cy); ctx.lineTo(x-10,cy-3*flap-2); ctx.lineTo(x-5,cy+2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+2,cy); ctx.lineTo(x+10,cy-3*flap-2); ctx.lineTo(x+5,cy+2); ctx.fill();
+  // body
+  R(x-3,cy-3,6,7,'#6a2db0');
+  R(x-3,cy-3,6,2,'#a05fe0');
+  // ears
+  R(x-3,cy-5,2,2,'#6a2db0'); R(x+1,cy-5,2,2,'#6a2db0');
+  // eyes
+  R(x-2,cy,1,2,'#ff4d4d'); R(x+1,cy,1,2,'#ff4d4d');
+}
+function drawGold(x,gy,t){
+  const sq=Math.sin(t*9)*1;
+  const w=14,h=11-sq,yx=gy-h;
+  const tt=performance.now()/1000;
+  // glow
+  ctx.fillStyle='rgba(255,216,77,0.18)'; ctx.beginPath(); ctx.arc(x,yx+h/2,11,0,Math.PI*2); ctx.fill();
+  R(x-w/2,yx,w,h,'#e8b008');
+  R(x-w/2,yx,w,2,'#ffe680');
+  R(x-w/2,gy-2,w,2,'#9c7400');
+  // crown
+  R(x-4,yx-3,8,2,'#ffe680'); R(x-4,yx-5,2,2,'#ffe680'); R(x-1,yx-5,2,2,'#ffe680'); R(x+2,yx-5,2,2,'#ffe680');
+  // eyes
+  R(x-4,yx+3,2,2,'#fff'); R(x+2,yx+3,2,2,'#fff');
+  R(x-3,yx+4,1,1,'#000'); R(x+3,yx+4,1,1,'#000');
+  // sparkle
+  if(Math.sin(tt*6+x)>0.6){ R(x+5,yx-1,1,1,'#fff'); R(x+5,yx-2,1,1,'#fff'); R(x+4,yx-1,1,1,'#fff'); R(x+6,yx-1,1,1,'#fff'); }
+}
+
+function drawParticles(){
+  for(const p of particles){
+    ctx.globalAlpha=Math.max(0,Math.min(1,p.life*1.6));
+    R(p.x,p.y,p.sz,p.sz,p.color);
+  }
+  ctx.globalAlpha=1;
+}
+
+function text(str,x,y,col,size,align){
+  ctx.font=(size||6)+"px 'Press Start 2P', monospace";
+  ctx.textAlign=align||'left'; ctx.textBaseline='top';
+  ctx.fillStyle=col; ctx.fillText(str,x,y);
+}
+
+function drawHUD(){
+  // health
+  R(6,7,86,6,'#0a0818'); R(6,7,86,6,'rgba(255,255,255,0.06)');
+  const hw=Math.max(0,84*health/100);
+  const hc = health>50?'#5fd35f':health>25?'#ffd84d':'#ff5a5a';
+  R(7,8,hw,4,hc);
+  R(6,7,86,1,'rgba(255,255,255,0.18)');
+  // score
+  text('SCORE', W-6-30, 7, '#7c79a8', 6, 'right');
+  text(String(score).padStart(7,'0'), W-6, 14, '#fff', 7, 'right');
+  // combo
+  if(combo>=2){
+    const sc=1+comboPop*0.6;
+    ctx.save();
+    ctx.translate(CX, 30); ctx.scale(sc,sc);
+    text(String(combo), 0, 0, comboMult()>=4?'#ffd84d':comboMult()>=3?'#ff9bd6':comboMult()>=2?'#7df9ff':'#fff', 14, 'center');
+    ctx.restore();
+    text('COMBO', CX, 46, '#9b97c8', 6, 'center');
+    if(comboMult()>1) text('x'+comboMult(), CX+44, 30, '#ffd84d', 8, 'center');
+  }
+  // judges (near each side)
+  for(const j of judges){
+    ctx.globalAlpha=Math.max(0,Math.min(1,j.t*1.4));
+    const jx = j.side===0?L_LINE:R_LINE;
+    text(j.text, jx, GROUND-44+j.y, j.color, 6, 'center');
+  }
+  ctx.globalAlpha=1;
+  // progress
+  const cb=Math.max(0,curBeat());
+  const pr=Math.min(1, cb/song.songEndBeat);
+  R(0,H-3,W,3,'#0a0818');
+  R(0,H-3,W*pr,3, song.color);
+
+  // charge gauge (under HP)
+  const A=curAura();
+  R(6,16,86,1,'#0a0818');  // gap
+  R(6,18,86,5,'#0a0818');
+  const cw=Math.max(0,84*charge/100);
+  if(burstReady){
+    const pulse=0.5+0.5*Math.sin(performance.now()/120);
+    R(7,19,84,3, rgba(A.glow, 0.6+0.4*pulse));
+    text('검기 MAX!', 6, 25, A.glow, 6);
+  } else {
+    R(7,19,cw,3, rgba(A.glow,0.95));
+    text('검기', 6, 25, '#7c79a8', 6);
+  }
+  R(6,18,86,1,'rgba(255,255,255,0.12)');
+}
+
+function drawCountdown(){
+  const st = actx.currentTime - songStartTime; // negative before start
+  if(st >= 0) return;
+  const num = Math.ceil(-st/0.4);
+  let label = num>0 ? String(num) : '';
+  ctx.globalAlpha=0.85;
+  text('준비...', CX, 50, '#8fd0ff', 8, 'center');
+  if(num<=3 && num>0){
+    const sc = 1 + (1-((-st%0.4)/0.4))*0.5;
+    ctx.save(); ctx.translate(CX,82); ctx.scale(sc,sc);
+    text(label, 0,0, '#ffd84d', 20, 'center'); ctx.restore();
+  }
+  ctx.globalAlpha=1;
+}
+
+/* ---------- BOSS / PROJECTILE / CUT-IN / FINISHER render ---------- */
+function drawBoss(){
+  const bx=CX, by=boss.y + Math.sin(boss.t*2)*3;
+  const flick = boss.invuln>0 && Math.floor(boss.t*20)%2===0;
+  if(flick) return;
+  const col=boss.col, hf=boss.hitFlash||0;
+  ctx.fillStyle=rgba(col, 0.12+0.06*Math.sin(boss.t*4)); ctx.beginPath(); ctx.arc(bx,by+8,26,0,Math.PI*2); ctx.fill();
+  const body = hf>0 ? '#ffffff' : shade(col,0.5);
+  const acc  = hf>0 ? '#ffffff' : col;
+  R(bx-14,by,28,22, body);
+  R(bx-14,by,28,3, shade(col,0.9));
+  R(bx-16,by+4,3,16, body); R(bx+13,by+4,3,16, body);
+  R(bx-18,by-2,5,5, shade(col,0.7)); R(bx+13,by-2,5,5, shade(col,0.7));
+  R(bx-7,by-10,14,11, shade(col,0.6));
+  R(bx-7,by-10,14,3, acc);
+  R(bx-9,by-14,3,5, acc); R(bx+6,by-14,3,5, acc);
+  const ey = boss.phase>=2?'#ff3030': boss.phase>=1?'#ffd84d':'#ffffff';
+  R(bx-4,by-5,3,2,ey); R(bx+1,by-5,3,2,ey);
+  if(boss.isFinal){
+    for(let i=0;i<5;i++){ const gy=by-12+ (Math.floor(rnd(0,24))); R(bx-16, gy, 32, 1, rgba(i%2?'#ff2ee0':'#2effd0', 0.5)); }
+  }
+}
+function drawProjectiles(){
+  for(const pr of projectiles){
+    if(pr.done) continue;
+    const near=Math.max(0,Math.min(1,pr.p));
+    const c = pr.side===0?'#7aa2ff':'#ff8a5a';
+    ctx.strokeStyle=rgba(c,0.18); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(CX,boss.y+6); ctx.lineTo(pr.tx,pr.ty); ctx.stroke();
+    const r=2+near*2.4;
+    ctx.fillStyle=rgba(c,0.4); ctx.beginPath(); ctx.arc(pr.x,pr.y,r+2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=c; ctx.beginPath(); ctx.arc(pr.x,pr.y,r,0,Math.PI*2); ctx.fill();
+    R(pr.x-0.5,pr.y-0.5,1,1,'#fff');
+    if(near>0.7){ const a=(near-0.7)/0.3; text(pr.side===0?'◄':'►', pr.tx, GROUND-40, rgba('#ffffff',a), 8, 'center'); }
+  }
+}
+function drawBossHUD(){
+  const w=180, x=(W-w)/2, y=4;
+  R(x-1,y-1,w+2,8,'#0a0818');
+  R(x,y,w,6,'rgba(255,255,255,0.06)');
+  const hpw=Math.max(0, (w-2)*boss.hp/boss.maxHp);
+  const hc = boss.phase>=2?'#ff3030': boss.phase>=1?'#ff8a3a':boss.col;
+  R(x+1,y+1,hpw,4,hc);
+  R(x,y,w,1,'rgba(255,255,255,0.18)');
+  text(boss.name, CX, y+9, '#fff', 6, 'center');
+  for(let i=0;i<3;i++) R(x+w-2-i*5, y+9, 3, 3, i<=(2-boss.phase)?'#ffffff':'#444');
+}
+function drawCutIn(){
+  const a=Math.min(1, bossCutIn*1.4);
+  ctx.globalAlpha=a*0.5; R(0,72,W,36,'#000'); ctx.globalAlpha=a;
+  R(0,72,W,1, boss?boss.col:'#ffd84d'); R(0,107,W,1, boss?boss.col:'#ffd84d');
+  text(bossCutText, CX, 84, boss?boss.col:'#ffd84d', 10, 'center');
+  ctx.globalAlpha=1;
+}
+function drawFinisher(){
+  ctx.fillStyle='#080510'; ctx.fillRect(0,0,W,H);
+  const tt=performance.now()/1000;
+  const col = boss?boss.col:'#ffd84d';
+  ctx.save(); ctx.translate(CX,H/2);
+  for(let i=0;i<28;i++){ ctx.rotate(Math.PI*2/28); ctx.globalAlpha=0.05+0.05*Math.sin(tt*8+i); R(14,0,W,1, col); }
+  ctx.restore(); ctx.globalAlpha=1;
+  if(boss && !fin.blow){ drawBossBig(CX, 70, col, fin.hits/fin.need); }
+  drawStreaks();
+  drawParticles();
+  if(!fin.blow){
+    const pulse=0.6+0.4*Math.sin(tt*14);
+    const px = fin.prompt===0? 70 : W-70;
+    ctx.globalAlpha=pulse; text(fin.prompt===0?'◄':'►', px, H/2-8, '#fff', 28, 'center'); ctx.globalAlpha=1;
+    text('연 타 !', CX, 18, col, 12, 'center');
+    text('박자 맞춰 마구 베어라', CX, 36, '#cdd2ff', 6, 'center');
+    const gw=160, gx=(W-gw)/2;
+    R(gx,H-22,gw,6,'#0a0818'); R(gx+1,H-21, (gw-2)*Math.min(1,fin.hits/fin.need),4, col);
+    text(fin.hits+' / '+fin.need, CX, H-34, '#fff', 6, 'center');
+  } else {
+    ctx.fillStyle=rgba('#ffffff', 0.5*(1-Math.min(1,fin.blowT/1.2))); ctx.fillRect(0,0,W,H);
+    if(fin.blowT>0.4){
+      text(boss&&boss.isFinal?'최종 보스 격파':'격파!', CX, H/2-16, col, 16, 'center');
+      text(boss?boss.name:'', CX, H/2+8, '#fff', 7, 'center');
+    }
+  }
+  if(flash>0){ ctx.fillStyle=rgba('#ffffff', flash*0.4); ctx.fillRect(0,0,W,H); }
+}
+function drawBossBig(bx,by,col,dmg){
+  const shakeo = dmg*3;
+  bx+=rnd(-shakeo,shakeo);
+  ctx.fillStyle=rgba(col,0.18); ctx.beginPath(); ctx.arc(bx,by,34,0,Math.PI*2); ctx.fill();
+  R(bx-20,by-16,40,32, shade(col,0.5));
+  R(bx-20,by-16,40,4, col);
+  R(bx-10,by-28,20,14, shade(col,0.6));
+  R(bx-13,by-34,4,7,col); R(bx+9,by-34,4,7,col);
+  R(bx-6,by-22,4,3,'#ff3030'); R(bx+2,by-22,4,3,'#ff3030');
+  ctx.strokeStyle=rgba('#ffffff',0.6*dmg); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(bx-10,by-10); ctx.lineTo(bx,by); ctx.lineTo(bx+8,by-14); ctx.stroke();
+}
+
+/* ============================================================
+   WORLD MAP (비트 스타일)
+   ============================================================ */
+const mapSea=[]; for(let i=0;i<30;i++) mapSea.push({x:rnd(0,W),y:rnd(0,H),s:rnd(1,2),ph:rnd(0,6)});
+function stageLocked(s){ if(s.type==='final') return !finalUnlocked; return !unlocked[s.id]; }
+function drawMap(){
+  const tt=performance.now()/1000;
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0a1628'); g.addColorStop(1,'#04101e');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  for(const w of mapSea){ const a=0.10+0.10*Math.sin(tt*1.5+w.ph); R(w.x, w.y+Math.sin(tt+w.ph)*1, w.s,1, rgba('#3a6a9a',a)); }
+  ctx.fillStyle='#3a3320'; ctx.beginPath(); ctx.ellipse(CX-6,100,128,72,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#243d1f'; ctx.beginPath(); ctx.ellipse(CX-6,98,124,68,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2e4d27'; ctx.beginPath(); ctx.ellipse(CX-6,94,112,58,0,0,Math.PI*2); ctx.fill();
+  for(const [a,b] of MAP_LINKS){
+    const sa=STAGES.find(s=>s.id===a), sb=STAGES.find(s=>s.id===b);
+    const open = (!stageLocked(sa));
+    ctx.strokeStyle = open? 'rgba(230,210,150,0.5)':'rgba(120,120,140,0.18)';
+    ctx.lineWidth=1; ctx.setLineDash([2,2]);
+    ctx.beginPath(); ctx.moveTo(sa.x,sa.y); ctx.lineTo(sb.x,sb.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  for(const s of STAGES){
+    const locked=stageLocked(s), done=!!cleared[s.id] || (s.type==='final'&&finalCleared);
+    const pulse=0.5+0.5*Math.sin(tt*3 + s.x);
+    if(s.type==='final'){
+      for(let i=0;i<4;i++) R(s.x-7+i*0.5, s.y-7+ (Math.floor(rnd(0,14))), 14, 1, rgba(i%2?'#ff2ee0':'#2effd0', locked?0.2:0.6));
+    }
+    if(!locked){ ctx.fillStyle=rgba(s.col, 0.18+0.18*pulse); ctx.beginPath(); ctx.arc(s.x,s.y, 8+pulse*3,0,Math.PI*2); ctx.fill(); }
+    const isBoss = s.type==='boss'||s.type==='final';
+    const c = locked? '#3a3f50' : s.col;
+    if(isBoss){ R(s.x-5,s.y-5,10,10, c); R(s.x-5,s.y-5,10,2, shade(c,1.3)); }
+    else { ctx.fillStyle=c; ctx.beginPath(); ctx.arc(s.x,s.y,4,0,Math.PI*2); ctx.fill(); }
+    if(locked){ text('🔒', s.x, s.y-3, '#cdd2ff', 6, 'center'); }
+    else if(done){ ctx.strokeStyle='#9be36b'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(s.x-3,s.y); ctx.lineTo(s.x-1,s.y+2); ctx.lineTo(s.x+3,s.y-3); ctx.stroke(); }
+    else if(isBoss){ text('☠', s.x, s.y-3, '#fff', 6, 'center'); }
+    const ly = s.y<24? s.y+8 : s.y-12;
+    const lab = (s.type==='final' && locked)? '???' : s.name;
+    ctx.globalAlpha = locked?0.5:1;
+    text(lab, s.x, ly, locked?'#8088a0':'#fff', 6, 'center');
+    ctx.globalAlpha=1;
+  }
+  R(0,0,W,12,'rgba(8,8,20,0.7)');
+  text('월드맵', 6, 3, '#ffd84d', 7, 'left');
+  text('◆ '+coins.toLocaleString(), W-6, 3, '#ffd84d', 7, 'right');
+  R(4,H-13,40,11,'rgba(8,8,20,0.7)');
+  text('← 뒤로', 8, H-11, '#cdd2ff', 6, 'left');
+  if(finalUnlocked && !finalCleared){ text('최종 보스 해금!', CX, H-11, '#ff6ad0', 6, 'center'); }
+}
+function canvasXY(clientX, clientY){ const r=cv.getBoundingClientRect(); return { x:(clientX-r.left)/r.width*W, y:(clientY-r.top)/r.height*H }; }
+function mapHit(px,py){
+  if(px<46 && py>H-14){ return {back:true}; }
+  let hit=null, bd=12;
+  for(const s of STAGES){ const d=Math.hypot(px-s.x, py-s.y); if(d<bd){ bd=d; hit=s; } }
+  return hit?{stage:hit}:null;
+}
+function openMap(){ initAudio(); resumeAudio(); state='map'; showScreen(null); document.getElementById('pauseBtn').style.display='none'; }
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+
+  // cutscene takes over the whole canvas
+  if(state==='cutscene' && cut){
+    const sc=CUT_SCENES[cut.idx];
+    const p=Math.min(1, cut.t/sc.t);
+    sc.draw(p);
+    // fade between scenes
+    if(cut.t < 0.25){ ctx.fillStyle=rgba('#000000', 1-cut.t/0.25); ctx.fillRect(0,0,W,H); }
+    if(cut.t > sc.t-0.25){ ctx.fillStyle=rgba('#000000', (cut.t-(sc.t-0.25))/0.25); ctx.fillRect(0,0,W,H); }
+    return;
+  }
+  // world map
+  if(state==='map'){ drawMap(); return; }
+  // finisher cinematic
+  if(state==='finisher' && fin){ drawFinisher(); return; }
+
+  let beatPulse=0;
+  if(state==='play' || state==='pause'){
+    const cb=curBeat();
+    const ph = cb - Math.floor(cb);
+    beatPulse = cb>0 ? Math.max(0, 1 - ph/0.28) : 0;
+  } else {
+    const ph=(performance.now()/650)%1;
+    beatPulse=Math.max(0,1-ph/0.4);
+  }
+
+  ctx.save();
+  if(shakeAmt>0.1) ctx.translate(rnd(-shakeAmt,shakeAmt), rnd(-shakeAmt,shakeAmt));
+
+  drawBackground(beatPulse);
+
+  if(state==='play' || state==='pause'){
+    drawStrike(L_LINE, beatPulse);
+    drawStrike(R_LINE, beatPulse);
+    // beat ring around player
+    if(beatPulse>0.02){
+      ctx.strokeStyle='rgba(255,216,77,'+(beatPulse*0.5)+')';
+      ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(CX,GROUND-8, 14+(1-beatPulse)*8, 0, Math.PI*2); ctx.stroke();
+    }
+    // enemies behind/around
+    for(const e of enemies) drawEnemy(e);
+    if(boss){ drawBoss(); drawProjectiles(); }
+    drawSamurai(CX, player.side, player.slashT);
+    drawStreaks();
+    drawParticles();
+    if(burstT>0){
+      const A=curAura();
+      ctx.fillStyle=rgba(A.glow, burstT*0.35); ctx.fillRect(0,0,W,H);
+    }
+    if(flash>0){ ctx.fillStyle='rgba(255,255,255,'+(flash*0.25)+')'; ctx.fillRect(0,0,W,H); }
+    drawHUD();
+    if(boss) drawBossHUD();
+    if(bossCutIn>0) drawCutIn();
+    drawCountdown();
+  } else {
+    // idle title scene
+    drawSamurai(CX, 2, 0);
+    // ambient slimes
+    const tt=performance.now()/1000;
+    drawSlime(60+Math.sin(tt*0.6)*12, GROUND, tt, '#5fbf52', false);
+    drawGold(250+Math.cos(tt*0.5)*10, GROUND, tt+3);
+  }
+
+  ctx.restore();
+}
+
+/* ============================================================
+   LOOP
+   ============================================================ */
+let lastT=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  if(state==='cutscene') updateCutscene(dt);
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ============================================================
+   SCREENS / UI
+   ============================================================ */
+const SCREENS=['titleScreen','selectScreen','resultScreen','overScreen','pauseScreen','gachaScreen','revealScreen'];
+function showScreen(id){
+  for(const s of SCREENS) document.getElementById(s).classList.toggle('on', s===id);
+}
+function refreshSongCards(){
+  for(let i=0;i<3;i++){
+    const s=SONGS[i];
+    const diffTxt = s.diff===1?'쉬움':s.diff===2?'보통':'어려움';
+    document.getElementById('song'+i).innerHTML =
+      '<div><div class="nm">'+s.name+'</div>'+
+      '<div class="meta">'+diffTxt+' &nbsp; <span class="stars" style="color:'+s.color+'">'+'★'.repeat(s.diff)+'☆'.repeat(3-s.diff)+'</span></div>'+
+      '<div class="meta">'+s.bpm+' BPM</div></div>'+
+      '<div style="text-align:right"><div class="sLabel">BEST</div><div class="best">'+
+      (bestScores[i]>0?bestScores[i].toLocaleString():'-')+'</div></div>';
+  }
+}
+function refreshTitleEquip(){
+  const A=curAura(), S=curSkin();
+  document.getElementById('titleEquip').innerHTML =
+    '🗡 <span class="r-'+A.r+'">'+A.name+'</span> &nbsp; 🥷 <span class="r-'+S.r+'">'+S.name+'</span>';
+}
+
+/* ============================================================
+   검기 아이콘 렌더 (pixel blade onto a canvas)
+   ============================================================ */
+function drawBladeIcon(canvas, aura, big){
+  const c=canvas.getContext('2d'); c.imageSmoothingEnabled=false;
+  const w=canvas.width, h=canvas.height;
+  c.clearRect(0,0,w,h);
+  const sc = big?2:1;
+  c.save(); c.translate(w/2, h/2); c.scale(sc,sc); c.rotate(-Math.PI/4);
+  const bl=22, bw=3;
+  // glow for rare
+  if(aura.r==='SR'||aura.r==='SSR'){
+    c.globalAlpha=0.5; c.fillStyle=aura.glow; c.fillRect(-bw,-bl/2-2, bw*2+1, bl+8); c.globalAlpha=1;
+  }
+  // blade
+  c.fillStyle=aura.col; c.fillRect(-bw/2,-bl/2, bw, bl);
+  c.fillStyle='#ffffff'; c.fillRect(-bw/2,-bl/2, 1, bl);          // shine
+  c.fillStyle=shade(aura.col,1.4); c.fillRect(-bw/2,-bl/2, bw, 2); // tip
+  // guard
+  c.fillStyle='#caa050'; c.fillRect(-4, bl/2-1, 8, 2);
+  // grip
+  c.fillStyle='#6a4a28'; c.fillRect(-1, bl/2+1, 2, 5);
+  c.fillStyle='#3a2a18'; c.fillRect(-1.5, bl/2+6, 3, 1);
+  c.restore();
+}
+
+/* ============================================================
+   GACHA
+   ============================================================ */
+const PULL1=100, PULL10=900;
+function rollRarity(){
+  const x=Math.random()*100;
+  if(x<RARITY.SSR.rate) return 'SSR';
+  if(x<RARITY.SSR.rate+RARITY.SR.rate) return 'SR';
+  if(x<RARITY.SSR.rate+RARITY.SR.rate+RARITY.R.rate) return 'R';
+  return 'N';
+}
+function rollOne(pool){
+  const r=rollRarity();
+  const ids=pool[r];
+  return ids[Math.floor(Math.random()*ids.length)];
+}
+let gachaBanner='blade';   // 'blade' | 'skin'
+function bankPool(){ return gachaBanner==='skin'?SKIN_IDS_BY_R:AURA_IDS_BY_R; }
+function bankDefs(){ return gachaBanner==='skin'?SKINS:AURAS; }
+function bankById(id){ return gachaBanner==='skin'?SKIN_BY_ID[id]:AURA_BY_ID[id]; }
+function bankOwned(){ return gachaBanner==='skin'?ownedSkins:owned; }
+function doPull(n){
+  const cost = n===10?PULL10:PULL1;
+  if(coins<cost) return;
+  coins-=cost;
+  const pool=bankPool();
+  const results=[];
+  for(let i=0;i<n;i++) results.push(rollOne(pool));
+  if(n===10){
+    const hasRare = results.some(id=>bankById(id).r!=='N');
+    if(!hasRare){ const rIds=pool.R; results[9]=rIds[Math.floor(Math.random()*rIds.length)]; }
+  }
+  const own=bankOwned();
+  const enriched = results.map(id=>{ const isNew=!own[id]; own[id]=true; return {id,isNew}; });
+  saveGame();
+  showReveal(enriched, gachaBanner);
+}
+function openGacha(banner){
+  initAudio(); resumeAudio();
+  gachaBanner=banner||'blade';
+  refreshGacha(); showScreen('gachaScreen'); state='gacha';
+}
+function setBanner(b){ gachaBanner=b; sfxSlash(); refreshGacha(); }
+function refreshGacha(){
+  const isSkin=gachaBanner==='skin';
+  document.getElementById('gachaTitle').textContent= isSkin?'스킨 뽑기':'검기 뽑기';
+  document.getElementById('gachaTitle').style.color= isSkin?'#7df9ff':'#c98bff';
+  document.getElementById('ownLabel').textContent= isSkin?'보유 스킨':'보유 검기';
+  document.getElementById('gachaCoins').textContent=coins.toLocaleString();
+  document.getElementById('tabBlade').style.opacity = isSkin?0.5:1;
+  document.getElementById('tabSkin').style.opacity = isSkin?1:0.5;
+  const defs=bankDefs(), own=bankOwned();
+  const ownN=defs.filter(d=>own[d.id]).length;
+  document.getElementById('ownCount').textContent='('+ownN+'/'+defs.length+')';
+  document.getElementById('pull1').disabled = coins<PULL1;
+  document.getElementById('pull10').disabled = coins<PULL10;
+  const grid=document.getElementById('auraGrid');
+  grid.innerHTML='';
+  const order={SSR:0,SR:1,R:2,N:3};
+  const sorted=[...defs].sort((a,b)=> order[a.r]-order[b.r]);
+  for(const a of sorted){
+    const have=!!own[a.id];
+    const eq = isSkin? (equippedSkin===a.id) : (equipped===a.id);
+    const cell=document.createElement('div');
+    cell.className='auraCell b-'+a.r+(have?'':' locked')+(eq?' equipped':'');
+    const cvn=document.createElement('canvas'); cvn.width=30; cvn.height=46; cvn.className='bladeCanvas';
+    cell.appendChild(cvn);
+    const nm=document.createElement('div'); nm.className='an'; nm.textContent=have?a.name:'???';
+    const rr=document.createElement('div'); rr.className='ar r-'+a.r; rr.textContent=have?RARITY[a.r].name:'미보유';
+    cell.appendChild(nm); cell.appendChild(rr);
+    if(have){
+      cell.style.cursor='pointer'; cell.title=a.desc||'';
+      cell.addEventListener('click', ()=>{ if(isSkin) equippedSkin=a.id; else equipped=a.id; sfxPerfect(); saveGame(); refreshGacha(); refreshTitleEquip(); });
+    }
+    grid.appendChild(cell);
+    if(isSkin) drawSkinIcon(cvn, a, false); else drawBladeIcon(cvn, a, false);
+  }
+}
+
+/* ---- skin icon (mini front-facing samurai) ---- */
+function drawSkinIcon(canvas, skin, big){
+  const c=canvas.getContext('2d'); c.imageSmoothingEnabled=false;
+  const w=canvas.width, h=canvas.height; c.clearRect(0,0,w,h);
+  const P=skin.pal; const sc=big?2:1.4;
+  c.save(); c.translate(w/2, h/2+ (big?10:6)); c.scale(sc,sc);
+  // body
+  c.fillStyle=P.cloth; c.fillRect(-6,2,12,11);
+  c.fillStyle=shade(P.cloth,1.3); c.fillRect(-6,2,12,3);
+  c.fillStyle=P.sash; c.fillRect(-6,6,12,2);
+  c.fillStyle=P.cloth2; c.fillRect(-8,4,2,7); c.fillRect(6,4,2,7);
+  // head
+  c.fillStyle=P.skin; c.fillRect(-4,-8,8,8);
+  c.fillStyle=P.hair; c.fillRect(-5,-10,10,3); c.fillRect(-5,-8,1,5); c.fillRect(4,-8,1,4); c.fillRect(-2,-12,4,2);
+  c.fillStyle=P.band; c.fillRect(-4,-6,8,1);
+  c.fillStyle='#16161f'; c.fillRect(-2,-5,1,2); c.fillRect(1,-5,1,2);
+  // rare glow
+  if(skin.r==='SR'||skin.r==='SSR'){ c.globalAlpha=0.3+0.2*Math.sin(performance.now()/250); c.fillStyle=P.band; c.fillRect(-8,-12,16,26); c.globalAlpha=1; }
+  c.restore();
+}
+
+/* ---- reveal sequence (banner-aware) ---- */
+let revealList=[], revealSingle=false, revealBanner='blade';
+function showReveal(list, banner){
+  revealList=list; revealSingle=(list.length===1); revealBanner=banner||'blade';
+  const isSkin=revealBanner==='skin';
+  const byId = isSkin?SKIN_BY_ID:AURA_BY_ID;
+  const rs=document.getElementById('revealScreen');
+  const cards=document.getElementById('revealCards');
+  cards.innerHTML='';
+  showScreen('revealScreen'); state='reveal';
+  rs.classList.add('go');
+  document.getElementById('revealConfirm').style.display='none';
+  const fw=document.getElementById('flashWhite'); fw.classList.remove('on'); void fw.offsetWidth; fw.classList.add('on');
+  const best = list.reduce((m,o)=>Math.max(m, {N:0,R:1,SR:2,SSR:3}[byId[o.id].r]),0);
+  if(best>=3) sfxSSR(); else if(best>=2) sfxGold(); else sfxReady();
+  list.forEach((o,i)=>{
+    const a=byId[o.id];
+    const card=document.createElement('div');
+    card.className='revCard b-'+a.r+(revealSingle?' single':'')+(o.isNew?' isnew':'');
+    card.style.animationDelay=(i*0.07)+'s';
+    card.style.borderColor=RARITY[a.r].col;
+    if(a.r==='SSR') card.style.boxShadow='0 0 18px '+(a.glow||a.pal.band);
+    const cvn=document.createElement('canvas');
+    cvn.width=revealSingle?80:40; cvn.height=revealSingle?120:60; cvn.className='bladeCanvas';
+    card.appendChild(cvn);
+    const nm=document.createElement('div'); nm.className='rn'; nm.textContent=a.name;
+    const rr=document.createElement('div'); rr.className='rr r-'+a.r; rr.textContent=RARITY[a.r].name;
+    card.appendChild(nm); card.appendChild(rr);
+    cards.appendChild(card);
+    if(isSkin) drawSkinIcon(cvn, a, revealSingle); else drawBladeIcon(cvn, a, revealSingle);
+  });
+  setTimeout(()=>{ document.getElementById('revealConfirm').style.display='inline-block'; }, 400+list.length*70);
+}
+function closeReveal(){
+  document.getElementById('revealScreen').classList.remove('go');
+  refreshGacha(); refreshTitleEquip();
+  showScreen('gachaScreen'); state='gacha';
+}
+
+/* ============================================================
+   인트로 컷씬 (cinematic intro)
+   ============================================================ */
+let cut=null;
+const CUT_SCENES=[
+  { t:3.2, draw:(p)=> cutScene1(p) },
+  { t:3.4, draw:(p)=> cutScene2(p) },
+  { t:3.6, draw:(p)=> cutScene3(p) },
+];
+function startCutscene(nextIdx){
+  initAudio(); resumeAudio();
+  cut={ idx:0, t:0, next:nextIdx, done:false };
+  state='cutscene';
+  showScreen(null);
+  document.getElementById('skipHint').style.display='block';
+  cutMusic();
+}
+function cutMusic(){
+  if(!actx) return;
+  const t0=actx.currentTime+0.1, bd=0.5;
+  const mel=['E4','G4','B4','E5','D5','B4','G4','A4', 'F4','A4','C5','E5'];
+  mel.forEach((n,i)=> tone(freq(n), t0+i*bd, bd*0.9, 'square', 0.13));
+  const bass=['E2','E2','C2','C2','G2','G2','A2','A2','D2','D2'];
+  bass.forEach((n,i)=> tone(freq(n), t0+i*bd, bd*0.95, 'triangle', 0.20));
+  for(let i=0;i<22;i++){ kick(t0+i*bd); if(i%2===1) snare(t0+i*bd); }
+}
+function endCutscene(){
+  if(!cut) return;
+  document.getElementById('skipHint').style.display='none';
+  const nx=cut.next; cut=null;
+  if(nx==='map' || !nx){ openMap(); }
+  else { refreshSongCards(); showScreen('selectScreen'); state='select'; }
+}
+function updateCutscene(dt){
+  if(!cut) return;
+  cut.t+=dt;
+  if(cut.t >= CUT_SCENES[cut.idx].t){
+    cut.t=0; cut.idx++;
+    if(cut.idx>=CUT_SCENES.length){ endCutscene(); }
+  }
+}
+/* scene drawing — p = 0..1 progress within scene */
+function cutBox(){ R(0,0,W,H,'#05030c'); }
+function letterbox(){ R(0,0,W,18,'#000'); R(0,H-18,W,18,'#000'); }
+function ctext(str,x,y,col,size,align,alpha){
+  ctx.globalAlpha=alpha===undefined?1:alpha;
+  text(str,x,y,col,size,align||'center');
+  ctx.globalAlpha=1;
+}
+function cutScene1(p){
+  // burning village silhouette, red sky
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#2a0808'); g.addColorStop(0.6,'#5a1208'); g.addColorStop(1,'#1a0604');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // embers
+  const tt=performance.now()/1000;
+  for(let i=0;i<40;i++){ const x=(i*97+tt*30)%W; const y=H-((i*53+tt*60)%H); R(x,y,1,1, rgba('#ff8a3a',0.5+0.5*Math.sin(tt*3+i))); }
+  // village rooftops
+  ctx.fillStyle='#0a0604';
+  for(let x=-10;x<W;x+=34){ ctx.beginPath(); ctx.moveTo(x,H-30); ctx.lineTo(x+17,H-46); ctx.lineTo(x+34,H-30); ctx.fill(); R(x+2,H-30,30,30,'#0a0604'); }
+  // flames flicker
+  for(let x=20;x<W;x+=60){ const fh=10+Math.sin(tt*8+x)*5; R(x,H-30-fh,4,fh, rgba('#ff5a1a',0.8)); R(x+1,H-30-fh*0.6,2,fh*0.6, rgba('#ffd84d',0.9)); }
+  letterbox();
+  if(p>0.12) ctext('평화로운 검의 마을이', CX, 30, '#ffd2c0', 7, 'center', Math.min(1,(p-0.12)*4));
+  if(p>0.45) ctext('하룻밤 사이 불탔다', CX, 44, '#ff8a6a', 7, 'center', Math.min(1,(p-0.45)*4));
+  // skip vignette pulse
+}
+function cutScene2(p){
+  // lone samurai on a hill under the moon
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0a0820'); g.addColorStop(0.7,'#141232'); g.addColorStop(1,'#05040a');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const tt=performance.now()/1000;
+  for(const s of stars){ const tw=0.5+0.5*Math.sin(tt*2+s.x); R(s.x,s.y*0.7,s.s,s.s, rgba('#ffffff',s.b*tw*0.8)); }
+  // big moon
+  ctx.fillStyle='#f4e9b8'; ctx.beginPath(); ctx.arc(CX,52,30,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e6dba4'; ctx.beginPath(); ctx.arc(CX-9,46,5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(CX+7,58,4,0,Math.PI*2); ctx.fill();
+  // hill
+  ctx.fillStyle='#0a0816'; ctx.beginPath(); ctx.moveTo(0,H); ctx.quadraticCurveTo(CX,H-58,W,H); ctx.fill();
+  // samurai silhouette (back view), sword planted
+  const sx=CX, sy=H-46;
+  R(sx-5,sy-22,10,22,'#05040a');           // body
+  R(sx-6,sy-26,12,5,'#05040a');            // shoulders
+  R(sx-3,sy-34,6,8,'#05040a');             // head
+  R(sx-3,sy-37,6,3,'#05040a');             // topknot base
+  // planted sword glints with equipped aura
+  const A=curAura();
+  R(sx+7,sy-30,2,30, A.col);
+  if(Math.sin(tt*4)>0){ R(sx+7,sy-30,2,4,'#ffffff'); }
+  ctx.globalAlpha=0.4; R(sx+6,sy-32,4,34, rgba(A.glow,0.5)); ctx.globalAlpha=1;
+  letterbox();
+  if(p>0.12) ctext('단 한 명의 검사만이', CX, 26, '#cfe0ff', 7, 'center', Math.min(1,(p-0.12)*4));
+  if(p>0.5)  ctext('복수를 맹세했다', CX, H-32, '#9bb8ff', 7, 'center', Math.min(1,(p-0.5)*4));
+}
+function cutScene3(p){
+  // close-up: blade drawn, title slash
+  ctx.fillStyle='#070510'; ctx.fillRect(0,0,W,H);
+  const tt=performance.now()/1000;
+  const A=curAura();
+  // radial speed lines
+  ctx.save(); ctx.translate(CX,H/2);
+  for(let i=0;i<24;i++){ ctx.rotate(Math.PI/12); ctx.globalAlpha=0.06+0.06*Math.sin(tt*6+i); R(20,0,W,1, A.glow); }
+  ctx.restore(); ctx.globalAlpha=1;
+  // the blade sweeping across
+  const sweep = Math.min(1, p*1.4);
+  const bx = -40 + sweep*(W+80);
+  ctx.save();
+  ctx.strokeStyle=rgba('#ffffff',0.95); ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(bx-50, H/2+30); ctx.lineTo(bx+50, H/2-30); ctx.stroke();
+  ctx.strokeStyle=rgba(A.glow,0.7); ctx.lineWidth=7;
+  ctx.beginPath(); ctx.moveTo(bx-70, H/2+38); ctx.lineTo(bx+30, H/2-22); ctx.stroke();
+  ctx.restore();
+  // flash at midpoint
+  if(sweep>0.45 && sweep<0.62){ ctx.fillStyle=rgba('#ffffff', (0.6-(Math.abs(sweep-0.53)*8))); ctx.fillRect(0,0,W,H); }
+  letterbox();
+  // title reveal after sweep
+  if(p>0.62){
+    const a=Math.min(1,(p-0.62)*5);
+    ctx.globalAlpha=a;
+    text('리듬 블레이드', CX, H/2-14, '#ffd84d', 16, 'center');
+    ctx.globalAlpha=a*0.9;
+    text('R H Y T H M   B L A D E', CX, H/2+8, '#8fd0ff', 6, 'center');
+    ctx.globalAlpha=1;
+  }
+}
+
+/* pause */
+function pauseGame(){
+  if(state!=='play') return;
+  stopMusic(); pauseAt=actx.currentTime; state='pause';
+  document.getElementById('burstBtn').style.display='none';
+  showScreen('pauseScreen');
+}
+function resumeGame(){
+  if(state!=='pause') return;
+  const delta=actx.currentTime-pauseAt;
+  songStartTime+=delta;
+  showScreen(null); state='play';
+  if(burstReady) document.getElementById('burstBtn').style.display='block';
+  schedTimer=setInterval(schedule,25);
+}
+
+/* ---------- buttons (addEventListener, no inline onclick) ---------- */
+function bind(id,fn){ const el=document.getElementById(id); if(el) el.addEventListener('click',fn); }
+bind('startBtn', ()=>{ openMap(); });
+bind('storyBtn', ()=>{ startCutscene('map'); });
+bind('gachaBtn', ()=>{ openGacha('blade'); });
+bind('skinBtn', ()=>{ openGacha('skin'); });
+bind('freeBtn', ()=>{ initAudio(); resumeAudio(); refreshSongCards(); showScreen('selectScreen'); state='select'; });
+bind('tabBlade', ()=>setBanner('blade'));
+bind('tabSkin', ()=>setBanner('skin'));
+bind('song0', ()=>startStage(0));
+bind('song1', ()=>startStage(2));
+bind('song2', ()=>startStage(9));
+bind('backBtn', ()=>{ refreshTitleEquip(); showScreen('titleScreen'); state='title'; });
+bind('retryBtn', ()=>startStage(stageId));
+bind('toSelectBtn', ()=>{ openMap(); });
+bind('ovRetryBtn', ()=>startStage(stageId));
+bind('ovSelectBtn', ()=>{ openMap(); });
+bind('resumeBtn', resumeGame);
+bind('quitBtn', ()=>{ stopMusic(); boss=null; openMap(); });
+bind('pull1', ()=>doPull(1));
+bind('pull10', ()=>doPull(10));
+bind('gachaBack', ()=>{ refreshTitleEquip(); showScreen('titleScreen'); state='title'; });
+bind('revealConfirm', closeReveal);
+document.getElementById('pauseBtn').addEventListener('click', (e)=>{ e.stopPropagation(); pauseGame(); });
+document.getElementById('burstBtn').addEventListener('click', (e)=>{ e.stopPropagation(); triggerBurst(); });
+
+/* ---------- input ---------- */
+document.addEventListener('keydown',(e)=>{
+  if(e.repeat && state!=='finisher') return;
+  if(state==='cutscene' && (e.code==='Space'||e.code==='Enter'||e.code==='Escape')){ endCutscene(); e.preventDefault(); return; }
+  if(state==='reveal' && (e.code==='Space'||e.code==='Enter')){ if(document.getElementById('revealConfirm').style.display!=='none') closeReveal(); e.preventDefault(); return; }
+  if(state==='map' && e.code==='Escape'){ refreshTitleEquip(); showScreen('titleScreen'); state='title'; e.preventDefault(); return; }
+  if(e.code==='ArrowLeft'||e.code==='KeyA'){ slash(0); e.preventDefault(); }
+  else if(e.code==='ArrowRight'||e.code==='KeyD'){ slash(1); e.preventDefault(); }
+  else if(e.code==='Space'){ if(state==='play') triggerBurst(); else if(state==='finisher'){ finisherHit(Math.random()<0.5?0:1); } e.preventDefault(); }
+  else if(e.code==='KeyP'){ if(state==='play') pauseGame(); else if(state==='pause') resumeGame(); }
+  else if(e.code==='Escape'){ if(state==='play') pauseGame(); else if(state==='pause') resumeGame(); }
+});
+cv.addEventListener('pointerdown',(e)=>{
+  if(state==='cutscene'){ endCutscene(); e.preventDefault(); return; }
+  if(state==='map'){
+    const pt=canvasXY(e.clientX,e.clientY); const h=mapHit(pt.x,pt.y);
+    if(h){ if(h.back){ refreshTitleEquip(); showScreen('titleScreen'); state='title'; }
+      else if(h.stage){ if(stageLocked(h.stage)){ sfxWhiff(); } else { startStage(h.stage.id); } } }
+    e.preventDefault(); return;
+  }
+  if(state==='finisher'){
+    const r=cv.getBoundingClientRect();
+    const side=(e.clientX-r.left)<r.width/2?0:1; finisherHit(side); e.preventDefault(); return;
+  }
+  if(state!=='play') return;
+  const r=cv.getBoundingClientRect();
+  const side = (e.clientX - r.left) < r.width/2 ? 0 : 1;
+  slash(side);
+  e.preventDefault();
+}, {passive:false});
+// tap skip hint area / reveal background also skips
+document.getElementById('skipHint').addEventListener('click', ()=>{ if(state==='cutscene') endCutscene(); });
+
+/* ---------- resize ---------- */
+function resize(){
+  const pad=8;
+  const scale=Math.min((window.innerWidth-pad)/W, (window.innerHeight-pad)/H);
+  cv.style.width=(W*scale)+'px';
+  cv.style.height=(H*scale)+'px';
+}
+window.addEventListener('resize',resize);
+resize();
+loadGame();
+refreshSongCards();
+refreshTitleEquip();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,5104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>WIFI HUNTER — DEX</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#080c10;font-family:monospace;color:#c0ffd0;min-height:100vh;padding:0 0 60px;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,80,0.012) 2px,rgba(0,255,80,0.012) 4px);pointer-events:none;z-index:999;}
+.header{padding:20px 20px 12px;text-align:center;border-bottom:1px solid #0a2a14;background:rgba(6,14,8,0.97);position:sticky;top:0;z-index:50;}
+.title{font-size:20px;letter-spacing:6px;color:#00ff88;text-shadow:0 0 14px rgba(0,255,136,0.5);cursor:pointer;user-select:none;}
+.sub{font-size:9px;letter-spacing:3px;color:#2a6a3a;margin-top:3px;}
+.tabs{display:flex;gap:10px;padding:14px 16px 0;justify-content:center;}
+.tab{flex:1;max-width:160px;padding:10px;border-radius:8px;border:1px solid #0d3a1a;background:#0a1010;font-family:monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:center;transition:all .2s;}
+.tab:active{opacity:.7;}
+.panel{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;padding:16px;}
+.mcard{background:#0a1018;border:1px solid #0d3a28;border-radius:14px;padding:14px 12px 11px;display:flex;flex-direction:column;align-items:center;gap:7px;width:180px;position:relative;transition:border-color .3s;}
+.mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00ff88,transparent);opacity:.35;border-radius:14px 14px 0 0;}
+.badge{position:absolute;top:8px;right:10px;font-size:9px;color:#1a4a2a;letter-spacing:2px;}
+.mname{font-size:12px;letter-spacing:3px;color:#00ff88;}
+.mssid{font-size:9px;color:#2a5a3a;letter-spacing:1px;}
+.snav{display:flex;align-items:center;gap:7px;margin-top:1px;}
+.sarr{background:none;border:1px solid #0d3a1a;color:#00ff88;font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer;}
+.sarr:active{background:#0a2a14;}
+.slabel{font-size:10px;color:#2a8a4a;letter-spacing:1px;min-width:48px;text-align:center;}
+.ecard{background:#0a0e10;border:1px solid #2a1a10;border-radius:14px;padding:14px 12px 11px;display:flex;flex-direction:column;align-items:center;gap:7px;width:180px;position:relative;transition:border-color .3s;cursor:pointer;}
+.ecard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ff4444,transparent);opacity:.35;border-radius:14px 14px 0 0;}
+.ename{font-size:12px;letter-spacing:3px;color:#ff8844;}
+.etype{font-size:9px;color:#3a2a1a;letter-spacing:2px;}
+.edesc{font-size:10px;color:#5a4a3a;text-align:center;line-height:1.6;}
+.hint{font-size:9px;color:#1a3a1a;letter-spacing:2px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="title" onclick="revealHuawei();revealShame();">WIFI HUNTER</div>
+  <div class="sub">// MONSTER DEX //</div>
+</div>
+<div class="tabs">
+  <button class="tab" id="tab_wifi"  onclick="switchTab('wifi')"  style="color:#00ff88;">📡 WIFI</button>
+  <button class="tab" id="tab_enemy" onclick="switchTab('enemy')" style="color:#ff4444;">⚙️ ENEMY</button>
+</div>
+<div class="panel" id="panel_wifi"  style="display:flex;"></div>
+<div class="panel" id="panel_enemy" style="display:none;"></div>
+<script>
+function rr(ctx,x,y,w,h,r){
+  var tl,tr,br,bl;
+  if(Array.isArray(r)){tl=r[0]||0;tr=r[1]!=null?r[1]:r[0]||0;br=r[2]!=null?r[2]:r[0]||0;bl=r[3]!=null?r[3]:r[0]||0;}
+  else{tl=tr=br=bl=r||0;}
+  ctx.moveTo(x+tl,y);
+  ctx.lineTo(x+w-tr,y);ctx.quadraticCurveTo(x+w,y,x+w,y+tr);
+  ctx.lineTo(x+w,y+h-br);ctx.quadraticCurveTo(x+w,y+h,x+w-br,y+h);
+  ctx.lineTo(x+bl,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-bl);
+  ctx.lineTo(x,y+tl);ctx.quadraticCurveTo(x,y,x+tl,y);
+  ctx.closePath();
+}
+
+function drawASUS(ctx, t) {
+  const cx=60, cy=58;
+  ctx.clearRect(0,0,120,120);
+
+  const bob = Math.sin(t*1.8)*2;
+  const bodyY = cy + bob;
+
+  // 터미널 외부 케이스
+  const termGrad = ctx.createLinearGradient(cx-38, bodyY-34, cx+38, bodyY+36);
+  termGrad.addColorStop(0, '#0d1a0d');
+  termGrad.addColorStop(0.5, '#081408');
+  termGrad.addColorStop(1, '#040c04');
+  ctx.beginPath();
+  rr(ctx,cx-38, bodyY-34, 76, 68, 8);
+  ctx.fillStyle = termGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#00cc44';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 상단 바 (타이틀바)
+  ctx.beginPath();
+  rr(ctx,cx-38, bodyY-34, 76, 16, [8,8,0,0]);
+  ctx.fillStyle = '#0a2010';
+  ctx.fill();
+  ctx.strokeStyle = '#00cc44';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 타이틀바 버튼들
+  const btns = ['#ff5f57','#febc2e','#28c840'];
+  btns.forEach((c,i)=>{
+    ctx.beginPath();
+    ctx.arc(cx-28+i*11, bodyY-26, 3.5, 0, Math.PI*2);
+    ctx.fillStyle = c;
+    ctx.fill();
+  });
+
+  // 타이틀 텍스트
+  ctx.font = '7px Share Tech Mono, monospace';
+  ctx.fillStyle = '#00aa33';
+  ctx.textAlign = 'center';
+  ctx.fillText('ASUS_TERMINAL', cx+8, bodyY-23);
+
+  // 화면 영역
+  ctx.beginPath();
+  ctx.rect(cx-32, bodyY-16, 64, 42);
+  ctx.fillStyle = '#020a02';
+  ctx.fill();
+
+  // 스캔라인
+  for(let i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.rect(cx-32, bodyY-16+i*7, 64, 3);
+    ctx.fillStyle = 'rgba(0,255,80,0.03)';
+    ctx.fill();
+  }
+
+  // 코드 텍스트 라인들 (흘러내리는 효과)
+  ctx.font = '6px Share Tech Mono, monospace';
+  ctx.textAlign = 'left';
+  const codeLines = [
+    '> SCAN_INIT...',
+    '> PKT_INJECT 0xff',
+    '> while(true){',
+    '  hunt();',
+    '> EXECUTE_▮',
+  ];
+  const scrollOffset = (t*20) % 7;
+  codeLines.forEach((line, i) => {
+    const lineY = bodyY - 10 + i*7 - scrollOffset;
+    if(lineY < bodyY-16 || lineY > bodyY+26) return;
+    const alpha = i === codeLines.length-1 ? 0.9 + Math.sin(t*8)*0.1 : 0.5+Math.random()*0.1;
+    ctx.fillStyle = `rgba(0,255,80,${alpha})`;
+    ctx.fillText(line, cx-30, lineY);
+  });
+
+  // 커서 깜빡임
+  const cursorVisible = Math.sin(t*5) > 0;
+  if(cursorVisible){
+    ctx.fillStyle = '#00ff50';
+    ctx.fillRect(cx-8, bodyY+18, 5, 7);
+  }
+
+  // 얼굴 (화면 위에 반투명 오버레이)
+  // 눈 두 개 (터미널 스타일 — 사각형)
+  const eyeY2 = bodyY + 2;
+  const blinkT = Math.sin(t*1.1);
+  const eyeH = blinkT > 0.9 ? 1 : 5;
+
+  ctx.fillStyle = '#00ff66';
+  ctx.shadowColor = '#00ff66';
+  ctx.shadowBlur = 8;
+  // 왼쪽 눈
+  ctx.beginPath();
+  ctx.rect(cx-14, eyeY2-eyeH/2, 10, eyeH);
+  ctx.fill();
+  // 오른쪽 눈
+  ctx.beginPath();
+  ctx.rect(cx+4, eyeY2-eyeH/2, 10, eyeH);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // 입 (꺾쇠 스타일 "> <")
+  ctx.font = 'bold 11px Share Tech Mono';
+  ctx.fillStyle = '#00ee55';
+  ctx.textAlign = 'center';
+  const mouthShapes = ['> . <', '> _ <', '> ^ <'];
+  const mouthIdx = Math.floor(t*0.8) % mouthShapes.length;
+  ctx.fillText(mouthShapes[mouthIdx], cx, eyeY2+14);
+
+  // 외부 케이스 하단 로고
+  ctx.font = 'bold 8px Share Tech Mono';
+  ctx.fillStyle = '#004422';
+  ctx.textAlign = 'center';
+  ctx.fillText('ASUS', cx, bodyY+40);
+
+  // 측면 LED 스트립
+  for(let i=0;i<4;i++){
+    const ledY = bodyY-20+i*14;
+    const ledAlpha = 0.3 + Math.sin(t*3+i*0.8)*0.3;
+    ctx.beginPath();
+    ctx.rect(cx-40, ledY, 3, 8);
+    ctx.fillStyle = `rgba(0,255,80,${ledAlpha})`;
+    ctx.fill();
+  }
+
+  // 글로우 효과
+  const glowSize = 44 + Math.sin(t*2)*3;
+  const glowGrad = ctx.createRadialGradient(cx, bodyY, 20, cx, bodyY, glowSize);
+  glowGrad.addColorStop(0, 'transparent');
+  glowGrad.addColorStop(1, `rgba(0,255,80,${0.04+Math.sin(t*2)*0.02})`);
+  ctx.beginPath();
+  ctx.arc(cx, bodyY, glowSize, 0, Math.PI*2);
+  ctx.fillStyle = glowGrad;
+  ctx.fill();
+}
+
+/* ─────────────────────────────────────────
+   TP-LINK — 검정 공유기 + 눈알 두 개 + 노란 번개
+───────────────────────────────────────── */
+
+function drawIPTIME(ctx, t) {
+  const cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  const bob = Math.sin(t*2)*3;
+  const blink = (Math.sin(t*1.3) > 0.92);
+
+  // TV 본체 (청색 계열)
+  const bodyY = cy + bob;
+
+  // 바깥 케이스 그라데이션
+  const grad = ctx.createLinearGradient(cx-36, bodyY-30, cx+36, bodyY+30);
+  grad.addColorStop(0, '#7ec8f8');
+  grad.addColorStop(0.5, '#4a9de0');
+  grad.addColorStop(1, '#2a6aaa');
+  ctx.beginPath();
+  rr(ctx,cx-36, bodyY-30, 72, 60, 10);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // TV 테두리 하이라이트
+  ctx.beginPath();
+  rr(ctx,cx-36, bodyY-30, 72, 60, 10);
+  ctx.strokeStyle = '#a8deff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 화면 (어두운 청색)
+  ctx.beginPath();
+  rr(ctx,cx-26, bodyY-22, 52, 40, 6);
+  ctx.fillStyle = '#0a1830';
+  ctx.fill();
+  ctx.strokeStyle = '#2a5080';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 화면 반사광
+  ctx.beginPath();
+  rr(ctx,cx-24, bodyY-20, 22, 10, 3);
+  ctx.fillStyle = 'rgba(168,222,255,0.08)';
+  ctx.fill();
+
+  // 눈 두 개
+  const eyeY = bodyY - 6;
+  if (!blink) {
+    // 왼쪽 눈
+    ctx.beginPath();
+    ctx.arc(cx-10, eyeY, 6, 0, Math.PI*2);
+    ctx.fillStyle = '#c8eeff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx-10, eyeY, 3.5, 0, Math.PI*2);
+    ctx.fillStyle = '#1a3a60';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx-9, eyeY-1.5, 1.2, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fill();
+
+    // 오른쪽 눈
+    ctx.beginPath();
+    ctx.arc(cx+10, eyeY, 6, 0, Math.PI*2);
+    ctx.fillStyle = '#c8eeff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx+10, eyeY, 3.5, 0, Math.PI*2);
+    ctx.fillStyle = '#1a3a60';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx+11, eyeY-1.5, 1.2, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fill();
+  } else {
+    // 눈 깜빡임
+    ctx.beginPath();
+    ctx.moveTo(cx-16, eyeY); ctx.lineTo(cx-4, eyeY);
+    ctx.moveTo(cx+4, eyeY); ctx.lineTo(cx+16, eyeY);
+    ctx.strokeStyle = '#c8eeff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  // 웃는 입
+  const smileAmt = 0.5 + Math.sin(t*1.8)*0.1;
+  ctx.beginPath();
+  ctx.arc(cx, eyeY+10, 8, 0.2*Math.PI, 0.8*Math.PI);
+  ctx.strokeStyle = '#6ab8f0';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // TV 다리
+  ctx.beginPath();
+  rr(ctx,cx-20, bodyY+30, 12, 8, 3);
+  rr(ctx,cx+8, bodyY+30, 12, 8, 3);
+  ctx.fillStyle = '#3a80c0';
+  ctx.fill();
+
+  // 안테나 두 개
+  ctx.beginPath();
+  ctx.moveTo(cx-12, bodyY-30);
+  ctx.lineTo(cx-20, bodyY-50+Math.sin(t*3)*2);
+  ctx.moveTo(cx+12, bodyY-30);
+  ctx.lineTo(cx+20, bodyY-50+Math.sin(t*3+1)*2);
+  ctx.strokeStyle = '#7ec8f8';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // 안테나 끝 점
+  ctx.beginPath();
+  ctx.arc(cx-20, bodyY-50+Math.sin(t*3)*2, 3, 0, Math.PI*2);
+  ctx.arc(cx+20, bodyY-50+Math.sin(t*3+1)*2, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#a8deff';
+  ctx.fill();
+
+  // 전파 신호 (안테나 주변)
+  for(let i=1;i<=2;i++){
+    const r = i*7 + Math.sin(t*4)*1;
+    const alpha = (0.4 - i*0.1) * (0.5 + Math.sin(t*2+i)*0.5);
+    ctx.beginPath();
+    ctx.arc(cx+20, bodyY-50+Math.sin(t*3+1)*2, r, -0.8*Math.PI, 0.2*Math.PI);
+    ctx.strokeStyle = `rgba(106,176,255,${alpha})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // LED 표시등
+  const ledPulse = 0.5 + Math.sin(t*4)*0.5;
+  ctx.beginPath();
+  ctx.arc(cx+28, bodyY+10, 3, 0, Math.PI*2);
+  ctx.fillStyle = `rgba(0,255,136,${ledPulse})`;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx+28, bodyY+10, 5, 0, Math.PI*2);
+  ctx.fillStyle = `rgba(0,255,136,${ledPulse*0.2})`;
+  ctx.fill();
+}
+
+function drawHOTSPOT(ctx, t) {
+  const cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  const pulse = Math.sin(t*3);
+  const bob = Math.sin(t*2.3)*2;
+
+  // 전기 신호 (배경, 몸체 뒤에)
+  for(let i=0; i<6; i++){
+    const angle = (i/6)*Math.PI*2 + t*1.5;
+    const dist = 28 + Math.sin(t*4+i)*4;
+    const ex = cx + Math.cos(angle)*dist;
+    const ey = cy + bob + Math.sin(angle)*dist;
+    const size = 3 + Math.sin(t*5+i*1.3)*2;
+
+    // 전기 선 (몸체에서 뻗어나감)
+    ctx.beginPath();
+    ctx.moveTo(cx, cy+bob);
+    // 지그재그
+    const mid1x = cx + Math.cos(angle)*dist*0.4 + Math.sin(t*8+i)*6;
+    const mid1y = cy + bob + Math.sin(angle)*dist*0.4 + Math.cos(t*8+i)*6;
+    const mid2x = cx + Math.cos(angle)*dist*0.7 - Math.sin(t*8+i)*4;
+    const mid2y = cy + bob + Math.sin(angle)*dist*0.7 - Math.cos(t*8+i)*4;
+    ctx.lineTo(mid1x, mid1y);
+    ctx.lineTo(mid2x, mid2y);
+    ctx.lineTo(ex, ey);
+    const alpha = 0.3 + Math.sin(t*6+i)*0.3;
+    ctx.strokeStyle = `rgba(255,60,80,${alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // 전기 끝 불꽃
+    ctx.beginPath();
+    ctx.arc(ex, ey, size, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,80,100,${alpha+0.2})`;
+    ctx.fill();
+    // 밝은 중심
+    ctx.beginPath();
+    ctx.arc(ex, ey, size*0.4, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,200,200,${alpha+0.3})`;
+    ctx.fill();
+  }
+
+  // 몸체 (불규칙한 원형 — 아메바같은)
+  ctx.beginPath();
+  const pts = 12;
+  for(let i=0;i<pts;i++){
+    const a = (i/pts)*Math.PI*2;
+    const r = 22 + Math.sin(t*2+i*0.8)*4 + Math.sin(t*3.5+i*1.3)*2;
+    const x = cx + Math.cos(a)*r;
+    const y = cy + bob + Math.sin(a)*r;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  const bodyGrad = ctx.createRadialGradient(cx, cy+bob, 0, cx, cy+bob, 24);
+  bodyGrad.addColorStop(0, '#3a0818');
+  bodyGrad.addColorStop(0.6, '#200510');
+  bodyGrad.addColorStop(1, '#100208');
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+  ctx.strokeStyle = `rgba(255,60,80,${0.4+pulse*0.2})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 눈알 (가운데 하나)
+  const eyeR = 14;
+  // 흰자
+  ctx.beginPath();
+  ctx.arc(cx, cy+bob, eyeR, 0, Math.PI*2);
+  ctx.fillStyle = '#f0e8e8';
+  ctx.fill();
+
+  // 홍채
+  const pupilOff = Math.sin(t*1.5)*2;
+  ctx.beginPath();
+  ctx.arc(cx+pupilOff, cy+bob, 9, 0, Math.PI*2);
+  const irisGrad = ctx.createRadialGradient(cx+pupilOff, cy+bob, 0, cx+pupilOff, cy+bob, 9);
+  irisGrad.addColorStop(0, '#cc0020');
+  irisGrad.addColorStop(0.5, '#880010');
+  irisGrad.addColorStop(1, '#440008');
+  ctx.fillStyle = irisGrad;
+  ctx.fill();
+
+  // 동공
+  ctx.beginPath();
+  ctx.arc(cx+pupilOff, cy+bob, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#080008';
+  ctx.fill();
+
+  // 눈 반짝임
+  ctx.beginPath();
+  ctx.arc(cx+pupilOff+3, cy+bob-4, 2.5, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx+pupilOff-2, cy+bob+3, 1.2, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fill();
+
+  // 눈 테두리 혈관 느낌
+  ctx.beginPath();
+  ctx.arc(cx, cy+bob, eyeR, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(200,50,70,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 전기 글로우 오버레이
+  const glow = ctx.createRadialGradient(cx, cy+bob, 15, cx, cy+bob, 40);
+  glow.addColorStop(0, 'transparent');
+  glow.addColorStop(1, `rgba(255,40,60,${0.05+pulse*0.05})`);
+  ctx.beginPath();
+  ctx.arc(cx, cy+bob, 40, 0, Math.PI*2);
+  ctx.fillStyle = glow;
+  ctx.fill();
+}
+
+function drawTPLINK(ctx, t) {
+  const cx=60, cy=64;
+  ctx.clearRect(0,0,120,120);
+
+  const bob = Math.sin(t*2.2)*2.5;
+  const bodyY = cy + bob;
+
+  // ── 번개 방전 (공유기 위) ──
+  function zigzag(startX, startY, endX, endY, seed, alpha) {
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    const steps = 6;
+    for(let i=1; i<steps; i++){
+      const p = i/steps;
+      const mx = startX + (endX-startX)*p + Math.sin(t*12+seed+i*2.3)*5*(1-p);
+      const my = startY + (endY-startY)*p + Math.cos(t*10+seed+i*1.7)*4*(1-p);
+      ctx.lineTo(mx, my);
+    }
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = `rgba(255,230,40,${alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    // 밝은 코어
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    for(let i=1; i<steps; i++){
+      const p = i/steps;
+      const mx = startX + (endX-startX)*p + Math.sin(t*12+seed+i*2.3)*5*(1-p);
+      const my = startY + (endY-startY)*p + Math.cos(t*10+seed+i*1.7)*4*(1-p);
+      ctx.lineTo(mx, my);
+    }
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = `rgba(255,255,180,${alpha*0.6})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // 번개 여러 갈래
+  const flashCycle = Math.sin(t*7);
+  const flashAlpha = 0.5 + flashCycle*0.4;
+  zigzag(cx-8, bodyY-34, cx-14, bodyY-58, 0, flashAlpha);
+  zigzag(cx+8, bodyY-34, cx+14, bodyY-58, 3, flashAlpha*0.85);
+  zigzag(cx, bodyY-34, cx+4, bodyY-62, 6, flashAlpha*0.7);
+
+  // 번개 끝 발광점
+  [[cx-14, bodyY-58],[cx+14, bodyY-58],[cx+4, bodyY-62]].forEach(([ex,ey],i)=>{
+    const r = 3 + Math.sin(t*8+i)*1.5;
+    ctx.beginPath();
+    ctx.arc(ex, ey, r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,240,80,${flashAlpha})`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(ex, ey, r+4, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,220,0,${flashAlpha*0.15})`;
+    ctx.fill();
+  });
+
+  // ── 공유기 본체 (검정) ──
+  // 바디 그라데이션
+  const bodyGrad = ctx.createLinearGradient(cx-36, bodyY-28, cx+36, bodyY+28);
+  bodyGrad.addColorStop(0, '#1a1a1a');
+  bodyGrad.addColorStop(0.4, '#111111');
+  bodyGrad.addColorStop(1, '#080808');
+  ctx.beginPath();
+  rr(ctx,cx-36, bodyY-28, 72, 52, 8);
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+
+  // 테두리 — 노란 미세 글로우
+  ctx.beginPath();
+  rr(ctx,cx-36, bodyY-28, 72, 52, 8);
+  ctx.strokeStyle = `rgba(255,210,30,${0.35+Math.sin(t*3)*0.15})`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 상단 하이라이트 선
+  ctx.beginPath();
+  rr(ctx,cx-34, bodyY-27, 68, 10, [6,6,0,0]);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fill();
+
+  // ── 안테나 3개 ──
+  const antX = [cx-22, cx, cx+22];
+  antX.forEach((ax, i)=>{
+    const sway = Math.sin(t*1.5+i*1.1)*2;
+    ctx.beginPath();
+    ctx.moveTo(ax, bodyY-28);
+    ctx.lineTo(ax+sway, bodyY-50);
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    // 안테나 테두리
+    ctx.beginPath();
+    ctx.moveTo(ax, bodyY-28);
+    ctx.lineTo(ax+sway, bodyY-50);
+    ctx.strokeStyle = 'rgba(80,80,80,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // 안테나 끝 캡
+    ctx.beginPath();
+    ctx.arc(ax+sway, bodyY-50, 3, 0, Math.PI*2);
+    ctx.fillStyle = '#333';
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,210,30,${0.2+Math.sin(t*4+i)*0.15})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // ── 눈 두 개 ──
+  const eyeY = bodyY - 6;
+  const blink = Math.sin(t*1.4) > 0.88;
+
+  [-13, 13].forEach((ox, i)=>{
+    const ex = cx+ox;
+    if(!blink){
+      // 눈 외곽 (노란 링)
+      ctx.beginPath();
+      ctx.arc(ex, eyeY, 9, 0, Math.PI*2);
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255,210,30,${0.6+Math.sin(t*2+i)*0.2})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 홍채
+      const pupilOff = Math.sin(t*1.8+i)*1.5;
+      ctx.beginPath();
+      ctx.arc(ex+pupilOff, eyeY, 5.5, 0, Math.PI*2);
+      const iGrad = ctx.createRadialGradient(ex+pupilOff,eyeY,0,ex+pupilOff,eyeY,5.5);
+      iGrad.addColorStop(0,'#cc9900');
+      iGrad.addColorStop(0.5,'#886600');
+      iGrad.addColorStop(1,'#443300');
+      ctx.fillStyle = iGrad;
+      ctx.fill();
+
+      // 동공
+      ctx.beginPath();
+      ctx.arc(ex+pupilOff, eyeY, 3, 0, Math.PI*2);
+      ctx.fillStyle = '#050505';
+      ctx.fill();
+
+      // 반짝임
+      ctx.beginPath();
+      ctx.arc(ex+pupilOff+2, eyeY-2, 1.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,200,0.8)';
+      ctx.fill();
+    } else {
+      // 깜빡임
+      ctx.beginPath();
+      ctx.moveTo(ex-9, eyeY);
+      ctx.lineTo(ex+9, eyeY);
+      ctx.strokeStyle = 'rgba(255,210,30,0.7)';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  });
+
+  // ── LED 표시등 (하단) ──
+  const leds = ['#ffe033','#ffe033','#ff4444','#00ff88'];
+  leds.forEach((col,i)=>{
+    const lx = cx - 20 + i*14;
+    const ly = bodyY + 16;
+    const pulse = 0.4 + Math.sin(t*3+i*1.5)*0.4;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3, 0, Math.PI*2);
+    ctx.fillStyle = col.replace(')', `,${pulse})`).replace('rgb','rgba').replace('#','rgba(').replace('rgba(','rgba(').replace(/^rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/, (_,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`);
+    // 간단하게 처리
+    ctx.fillStyle = col;
+    ctx.globalAlpha = pulse;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    // 글로우
+    ctx.beginPath();
+    ctx.arc(lx, ly, 6, 0, Math.PI*2);
+    const lg = ctx.createRadialGradient(lx,ly,0,lx,ly,6);
+    lg.addColorStop(0,col+'88');
+    lg.addColorStop(1,'transparent');
+    ctx.fillStyle = lg;
+    ctx.fill();
+  });
+
+  // ── TP-LINK 로고 텍스트 ──
+  ctx.font = 'bold 8px Share Tech Mono, monospace';
+  ctx.fillStyle = 'rgba(255,210,30,0.4)';
+  ctx.textAlign = 'center';
+  ctx.fillText('TP-LINK', cx, bodyY+24);
+
+  // ── 전체 노란 글로우 ──
+  const gGrad = ctx.createRadialGradient(cx, bodyY-40, 5, cx, bodyY, 55);
+  gGrad.addColorStop(0, `rgba(255,220,30,${0.06+flashCycle*0.04})`);
+  gGrad.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(cx, bodyY-10, 65, 0, Math.PI*2);
+  ctx.fillStyle = gGrad;
+  ctx.fill();
+}
+
+function drawNETGEAR(ctx, t) {
+  const cx=60, cy=62;
+  ctx.clearRect(0,0,120,120);
+
+  // 기어 그리기 함수
+  function drawGear(gx, gy, outerR, innerR, teeth, angle, col, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(gx, gy);
+    ctx.rotate(angle);
+
+    // 톱니 경로
+    ctx.beginPath();
+    const toothH = outerR - innerR;
+    const toothW = (Math.PI * 2 / teeth) * 0.4;
+    for(let i=0; i<teeth; i++){
+      const a0 = (i/teeth)*Math.PI*2;
+      const a1 = a0 + toothW*0.5;
+      const a2 = a0 + toothW;
+      const a3 = a0 + (Math.PI*2/teeth) - toothW*0.5;
+      // 이너 -> 아우터 -> 이너
+      ctx.lineTo(Math.cos(a0)*innerR, Math.sin(a0)*innerR);
+      ctx.lineTo(Math.cos(a1)*outerR, Math.sin(a1)*outerR);
+      ctx.lineTo(Math.cos(a2)*outerR, Math.sin(a2)*outerR);
+      ctx.lineTo(Math.cos(a3)*innerR, Math.sin(a3)*innerR);
+    }
+    ctx.closePath();
+
+    // 기어 채우기
+    const gGrad = ctx.createRadialGradient(0,0,0,0,0,outerR);
+    gGrad.addColorStop(0, '#cc5500');
+    gGrad.addColorStop(0.6, '#aa4400');
+    gGrad.addColorStop(1, '#883300');
+    ctx.fillStyle = gGrad;
+    ctx.fill();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 기어 중심 구멍
+    ctx.beginPath();
+    ctx.arc(0, 0, innerR*0.45, 0, Math.PI*2);
+    ctx.fillStyle = '#0a0805';
+    ctx.fill();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 기어 내부 살 (스포크)
+    const spokes = 4;
+    for(let i=0; i<spokes; i++){
+      const sa = (i/spokes)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(sa)*innerR*0.5, Math.sin(sa)*innerR*0.5);
+      ctx.lineTo(Math.cos(sa)*innerR*0.9, Math.sin(sa)*innerR*0.9);
+      ctx.strokeStyle = `rgba(255,140,0,0.4)`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // 눈 그리기 함수 (작은 기어 위에)
+  function drawEye(ex, ey, r, t2) {
+    const blink = Math.sin(t2*1.3) > 0.9;
+    if(!blink){
+      // 흰자
+      ctx.beginPath();
+      ctx.arc(ex, ey, r, 0, Math.PI*2);
+      ctx.fillStyle = '#f5ece0';
+      ctx.fill();
+      // 홍채
+      const pd = Math.sin(t2*1.7)*1;
+      ctx.beginPath();
+      ctx.arc(ex+pd, ey, r*0.6, 0, Math.PI*2);
+      const ig = ctx.createRadialGradient(ex+pd,ey,0,ex+pd,ey,r*0.6);
+      ig.addColorStop(0,'#ff6600');
+      ig.addColorStop(0.5,'#cc4400');
+      ig.addColorStop(1,'#882200');
+      ctx.fillStyle = ig;
+      ctx.fill();
+      // 동공
+      ctx.beginPath();
+      ctx.arc(ex+pd, ey, r*0.28, 0, Math.PI*2);
+      ctx.fillStyle = '#050303';
+      ctx.fill();
+      // 반짝임
+      ctx.beginPath();
+      ctx.arc(ex+pd+r*0.18, ey-r*0.22, r*0.14, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,220,0.85)';
+      ctx.fill();
+      // 눈 테두리
+      ctx.beginPath();
+      ctx.arc(ex, ey, r, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,120,0,0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(ex-r, ey);
+      ctx.lineTo(ex+r, ey);
+      ctx.strokeStyle = 'rgba(255,140,0,0.8)';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+
+  const col = '#ff8c00';
+
+  // 큰 기어 회전 (천천히)
+  const bigAngle = t * 0.6;
+  // 작은 기어들은 반대방향으로 더 빠르게 (기어비)
+  const bigR = 32;
+  const smallR = 16;
+  const gearRatio = bigR / smallR;
+  const smallAngle = -t * 0.6 * gearRatio;
+
+  // 작은 기어 위치 (큰 기어 맞물림 거리)
+  const meshDist = bigR + smallR - 1;
+  const sg1x = cx - meshDist * 0.72;
+  const sg1y = cy - meshDist * 0.55;
+  const sg2x = cx + meshDist * 0.72;
+  const sg2y = cy - meshDist * 0.55;
+
+  // 기어 연결 축 선 (메시 표시)
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(sg1x, sg1y);
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(sg2x, sg2y);
+  ctx.strokeStyle = 'rgba(255,100,0,0.15)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 큰 기어 (뒤에 그려서 작은 기어가 앞에)
+  drawGear(cx, cy, bigR, bigR*0.62, 14, bigAngle, col, 1);
+
+  // 작은 기어 1 (왼쪽 위)
+  drawGear(sg1x, sg1y, smallR, smallR*0.58, 8, smallAngle + 0.3, col, 1);
+
+  // 작은 기어 2 (오른쪽 위)
+  drawGear(sg2x, sg2y, smallR, smallR*0.58, 8, smallAngle - 0.3, col, 1);
+
+  // 눈 (작은 기어 중심에)
+  drawEye(sg1x, sg1y, smallR*0.48, t);
+  drawEye(sg2x, sg2y, smallR*0.48, t + 1.2);
+
+  // 큰 기어 위 표정 (입 — 주황 호)
+  const mouthY = cy + 6;
+  ctx.beginPath();
+  ctx.arc(cx, mouthY, 8, 0.15*Math.PI, 0.85*Math.PI);
+  ctx.strokeStyle = 'rgba(255,160,40,0.7)';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // 전체 글로우
+  const gGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 58);
+  gGrad.addColorStop(0, 'transparent');
+  gGrad.addColorStop(1, `rgba(255,100,0,${0.04+Math.sin(t*2)*0.02})`);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 58, 0, Math.PI*2);
+  ctx.fillStyle = gGrad;
+  ctx.fill();
+
+  // 파티클 (기어 마찰 불꽃)
+  for(let i=0; i<3; i++){
+    const sparkAngle = t*8 + i*2.1;
+    const sparkR = bigR - 2;
+    const sx = cx + Math.cos(sparkAngle)*sparkR;
+    const sy = cy + Math.sin(sparkAngle)*sparkR;
+    const sparkAlpha = 0.3 + Math.sin(t*12+i)*0.3;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,200,50,${sparkAlpha})`;
+    ctx.fill();
+  }
+}
+
+function drawMERCUSYS(ctx, t) {
+  const cx=60, cy=52;
+  ctx.clearRect(0,0,120,120);
+
+  const bob = Math.sin(t*1.9)*3;
+  const padW=54, padH=68, padR=8;
+
+  // ── 아이패드 본체 위치 ──
+  const px = cx;
+  const py = cy + bob;
+
+  // ── 바닥 그림자 (아이패드 아래 타원형) ──
+  const floorY = py + padH/2 + 10;
+  const shadowScaleX = 1 + Math.sin(t*1.9)*0.05; // 뜰수록 퍼짐
+  const shadowAlpha = 0.55 - Math.abs(Math.sin(t*1.9))*0.1;
+
+  // 그림자 타원
+  ctx.save();
+  ctx.translate(cx, floorY);
+  ctx.scale(shadowScaleX, 0.28);
+  ctx.beginPath();
+  ctx.arc(0, 0, padW*0.52, 0, Math.PI*2);
+  const shadowGrad = ctx.createRadialGradient(0,0,0, 0,0, padW*0.52);
+  shadowGrad.addColorStop(0, `rgba(0,220,190,${shadowAlpha})`);
+  shadowGrad.addColorStop(0.5, `rgba(0,180,160,${shadowAlpha*0.7})`);
+  shadowGrad.addColorStop(1, 'rgba(0,150,130,0)');
+  ctx.fillStyle = shadowGrad;
+  ctx.fill();
+  ctx.restore();
+
+  // ── 그림자 안 웃는 얼굴 ──
+  const faceX = cx;
+  const faceY = floorY;
+
+  // 눈 두 개 (타원에 맞게 납작하게)
+  const blinkShadow = Math.sin(t*1.5) > 0.88;
+  if(!blinkShadow){
+    [-9, 9].forEach(ox => {
+      ctx.save();
+      ctx.translate(faceX+ox, faceY);
+      ctx.scale(1, 0.45);
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,50,44,0.9)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0.5, -0.5, 2.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(160,255,235,0.95)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(1.5, -1.5, 1, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fill();
+      ctx.restore();
+    });
+  } else {
+    [-9,9].forEach(ox => {
+      ctx.beginPath();
+      ctx.moveTo(faceX+ox-5, faceY);
+      ctx.lineTo(faceX+ox+5, faceY);
+      ctx.strokeStyle = 'rgba(160,255,235,0.85)';
+      ctx.lineWidth = 1.8;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    });
+  }
+
+  // 웃는 입 (납작하게)
+  ctx.save();
+  ctx.translate(faceX, faceY+3);
+  ctx.scale(1, 0.4);
+  ctx.beginPath();
+  ctx.arc(0, 0, 9, 0.15*Math.PI, 0.85*Math.PI);
+  ctx.strokeStyle = 'rgba(0,50,44,0.9)';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.restore();
+
+  // ── 아이패드 본체 (앞) ──
+
+  // 베젤
+  const bezelGrad = ctx.createLinearGradient(px-padW/2, py-padH/2, px+padW/2, py+padH/2);
+  bezelGrad.addColorStop(0, '#2a2e32');
+  bezelGrad.addColorStop(1, '#181c20');
+  ctx.beginPath();
+  rr(ctx, px - padW/2, py - padH/2, padW, padH, padR);
+  ctx.fillStyle = bezelGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(80,90,100,0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 화면
+  const screenPad = 4;
+  ctx.beginPath();
+  rr(ctx, px-padW/2+screenPad, py-padH/2+screenPad, padW-screenPad*2, padH-screenPad*2, padR-2);
+  ctx.fillStyle = '#0d1518';
+  ctx.fill();
+
+  // 화면 반사광
+  ctx.beginPath();
+  rr(ctx, px-padW/2+screenPad+2, py-padH/2+screenPad+2, (padW-screenPad*2)*0.45, 10, 3);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fill();
+
+  // 화면 안 — 청록 틴트 (그림자 비치는 느낌)
+  const screenGlow = ctx.createRadialGradient(px, py, 5, px, py, 30);
+  screenGlow.addColorStop(0, 'rgba(0,200,180,0.06)');
+  screenGlow.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  rr(ctx, px-padW/2+screenPad, py-padH/2+screenPad, padW-screenPad*2, padH-screenPad*2, padR-2);
+  ctx.fillStyle = screenGlow;
+  ctx.fill();
+
+  // 홈 버튼 (하단)
+  ctx.beginPath();
+  ctx.arc(px, py+padH/2-8, 4, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(80,90,100,0.6)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 카메라 (상단)
+  ctx.beginPath();
+  ctx.arc(px, py-padH/2+6, 2, 0, Math.PI*2);
+  ctx.fillStyle = '#0a0e12';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(80,90,100,0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 베젤 하이라이트
+  ctx.beginPath();
+  ctx.moveTo(px-padW/2+padR, py-padH/2);
+  ctx.lineTo(px+padW/2-padR, py-padH/2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 전체 청록 글로우
+  const glowGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 62);
+  glowGrad.addColorStop(0, 'transparent');
+  glowGrad.addColorStop(1, `rgba(0,200,180,${0.04+Math.sin(t*2)*0.02})`);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 62, 0, Math.PI*2);
+  ctx.fillStyle = glowGrad;
+  ctx.fill();
+}
+
+function drawEFM(ctx, t) {
+  const cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  const bob = Math.sin(t*2.1)*2.5;
+  const by = cy + bob;
+
+  // ── 핀 + 레버 (상단) ──
+  const pinWobble = Math.sin(t*2.8);
+  const pinOut = 3 + pinWobble*2.5;
+  const pinAngle = Math.sin(t*3.2)*0.15;
+
+  ctx.save();
+  ctx.translate(cx+4, by-38);
+  ctx.rotate(pinAngle);
+  // 핀 고리
+  ctx.beginPath();
+  ctx.arc(0, -pinOut-7, 5, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(210,170,255,0.95)';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  // 핀 막대
+  ctx.beginPath();
+  ctx.moveTo(0, -pinOut);
+  ctx.lineTo(0, 3);
+  ctx.strokeStyle = 'rgba(230,190,255,0.95)';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.restore();
+
+  // 레버 (옆으로 튀어나온 금속 클립)
+  ctx.beginPath();
+  ctx.moveTo(cx-12, by-34);
+  ctx.lineTo(cx-18, by-28+Math.sin(t*2.8)*1.5);
+  ctx.lineTo(cx-16, by-22);
+  ctx.strokeStyle = 'rgba(190,130,255,0.85)';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // ── 상단 캡 ──
+  const capGrad = ctx.createLinearGradient(cx-13, by-38, cx+13, by-30);
+  capGrad.addColorStop(0, '#9944cc');
+  capGrad.addColorStop(1, '#5500aa');
+  ctx.beginPath();
+  rr(ctx, cx-13, by-38, 26, 10, [5,5,0,0]);
+  ctx.fillStyle = capGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(180,80,255,0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // ── 몸체 (길쭉한 원통) ──
+  const bodyTop = by-28;
+  const bodyBot = by+30;
+  const bodyW = 24;
+
+  const bodyGrad = ctx.createLinearGradient(cx-bodyW/2, 0, cx+bodyW/2, 0);
+  bodyGrad.addColorStop(0, '#7a22cc');
+  bodyGrad.addColorStop(0.3, '#aa44ee');
+  bodyGrad.addColorStop(0.6, '#8822cc');
+  bodyGrad.addColorStop(1, '#4400aa');
+  ctx.beginPath();
+  rr(ctx, cx-bodyW/2, bodyTop, bodyW, bodyBot-bodyTop, 4);
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+  ctx.strokeStyle = `rgba(180,80,255,${0.5+Math.sin(t*3)*0.15})`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 몸체 하이라이트
+  ctx.beginPath();
+  rr(ctx, cx-bodyW/2+2, bodyTop+3, 5, bodyBot-bodyTop-6, 2);
+  ctx.fillStyle = 'rgba(220,160,255,0.1)';
+  ctx.fill();
+
+  // ── 구멍들 (M84 특징 — 옆면 구멍) ──
+  const holeRows = [
+    { y: by-16, cols: [-7, 0, 7] },
+    { y: by-4,  cols: [-7, 0, 7] },
+    { y: by+8,  cols: [-7, 0, 7] },
+  ];
+  holeRows.forEach(row => {
+    row.cols.forEach(ox => {
+      // 구멍 (어두운 원)
+      ctx.beginPath();
+      ctx.arc(cx+ox, row.y, 3, 0, Math.PI*2);
+      ctx.fillStyle = '#1a0033';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(140,40,220,0.5)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      // 구멍 안 빛 (섬광 새나오는 느낌)
+      const glowAlpha = 0.15 + Math.sin(t*5+ox)*0.1;
+      ctx.beginPath();
+      ctx.arc(cx+ox, row.y, 2, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(200,100,255,${glowAlpha})`;
+      ctx.fill();
+    });
+  });
+
+  // 구분 띠 (섹션 나누는 링)
+  [by-20, by+0, by+18].forEach(ry => {
+    ctx.beginPath();
+    rr(ctx, cx-bodyW/2-1, ry, bodyW+2, 3, 1);
+    ctx.fillStyle = 'rgba(100,20,180,0.7)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(160,60,255,0.4)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  });
+
+  // ── 하단 캡 ──
+  ctx.beginPath();
+  rr(ctx, cx-bodyW/2, bodyBot, bodyW, 8, [0,0,4,4]);
+  ctx.fillStyle = '#4400aa';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(140,40,220,0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // ── 눈 두 개 (몸체 중간) ──
+  const blink = Math.sin(t*1.6) > 0.9;
+  const eyeY = by - 4;
+  [-6, 6].forEach((ox, i) => {
+    if(!blink){
+      ctx.beginPath();
+      ctx.arc(cx+ox, eyeY, 5.5, 0, Math.PI*2);
+      ctx.fillStyle = '#f0e8ff';
+      ctx.fill();
+      const pd = Math.sin(t*1.8+i)*0.8;
+      ctx.beginPath();
+      ctx.arc(cx+ox+pd, eyeY, 3.2, 0, Math.PI*2);
+      const ig = ctx.createRadialGradient(cx+ox+pd,eyeY,0,cx+ox+pd,eyeY,3.2);
+      ig.addColorStop(0,'#ee77ff');
+      ig.addColorStop(0.5,'#aa22dd');
+      ig.addColorStop(1,'#660099');
+      ctx.fillStyle = ig;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx+ox+pd, eyeY, 1.5, 0, Math.PI*2);
+      ctx.fillStyle = '#080010';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx+ox+pd+1.5, eyeY-1.5, 1, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(cx+ox-5, eyeY);
+      ctx.lineTo(cx+ox+5, eyeY);
+      ctx.strokeStyle = 'rgba(220,160,255,0.85)';
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  });
+
+  // ── 뾰족한 이빨 (하단 캡 아래) ──
+  const teethY = bodyBot + 8;
+  [
+    { x: cx-8, w: 5, h: 8 },
+    { x: cx-2, w: 6, h: 11 },
+    { x: cx+4, w: 5, h: 8 },
+  ].forEach(tooth => {
+    ctx.beginPath();
+    ctx.moveTo(tooth.x, teethY);
+    ctx.lineTo(tooth.x + tooth.w/2, teethY + tooth.h);
+    ctx.lineTo(tooth.x + tooth.w, teethY);
+    ctx.closePath();
+    ctx.fillStyle = '#f0e8ff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(160,60,220,0.3)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  });
+
+  // ── 보라 글로우 ──
+  const dangerGlow = (pinOut - 1) / 5;
+  const glowGrad = ctx.createRadialGradient(cx, by, 8, cx, by, 55);
+  glowGrad.addColorStop(0, `rgba(160,50,255,${0.07+dangerGlow*0.1})`);
+  glowGrad.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(cx, by, 55, 0, Math.PI*2);
+  ctx.fillStyle = glowGrad;
+  ctx.fill();
+
+  // 핀 많이 빠지면 섬광 파티클
+  if(pinOut > 4){
+    for(let i=0;i<5;i++){
+      const pa = t*7+i*1.26;
+      const pr = 28+i*5;
+      const ppx = cx + Math.cos(pa)*pr;
+      const ppy = by + Math.sin(pa)*pr*0.7;
+      ctx.beginPath();
+      ctx.arc(ppx, ppy, 1.5, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(230,150,255,${0.4+Math.sin(t*10+i)*0.3})`;
+      ctx.fill();
+    }
+  }
+}
+
+function drawDLINK(ctx, t) {
+  const cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  // 쿵쾅 사이클 — 빠르게 내려갔다 천천히 올라옴
+  const cycle = (t * 1.4) % 1;
+  // 0~0.15: 빠르게 내려감, 0.15~0.35: 바닥 충격, 0.35~1.0: 천천히 올라옴
+  let pressY;
+  if(cycle < 0.15){
+    pressY = cycle / 0.15; // 0→1
+  } else if(cycle < 0.35){
+    pressY = 1;
+  } else {
+    pressY = 1 - (cycle - 0.35) / 0.65; // 1→0
+  }
+  // easing
+  pressY = pressY * pressY * (3 - 2*pressY);
+
+  const pressTravel = 28; // 최대 이동거리
+  const pressOffset = pressY * pressTravel;
+  const isImpact = cycle > 0.12 && cycle < 0.38;
+  const impactShake = isImpact ? (Math.random()-0.5)*2.5 : 0;
+  const shakeX = isImpact ? (Math.random()-0.5)*2 : 0;
+
+  // ── 바닥 플레이트 (충격판) ──
+  const plateY = 85;
+  const plateH = 10;
+
+  // 충격시 바닥 찌그러짐 효과
+  const squish = isImpact ? pressY*3 : 0;
+
+  ctx.beginPath();
+  rr(ctx, cx-34+shakeX, plateY+squish, 68, plateH, 3);
+  const plateGrad = ctx.createLinearGradient(cx-34, plateY, cx+34, plateY+plateH);
+  plateGrad.addColorStop(0, '#606870');
+  plateGrad.addColorStop(0.5, '#909aa0');
+  plateGrad.addColorStop(1, '#505860');
+  ctx.fillStyle = plateGrad;
+  ctx.fill();
+  ctx.strokeStyle = isImpact ? 'rgba(255,255,255,0.3)' : 'rgba(150,160,170,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 바닥 플레이트 볼트
+  [-24, 24].forEach(ox => {
+    ctx.beginPath();
+    ctx.arc(cx+ox+shakeX, plateY+plateH/2+squish, 3, 0, Math.PI*2);
+    ctx.fillStyle = '#404850';
+    ctx.fill();
+    ctx.strokeStyle = '#707880';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // 충격시 바닥 충격파 링
+  if(isImpact && pressY > 0.8){
+    const shockR = (pressY-0.8)*5 * 60;
+    const shockAlpha = (1-(pressY-0.8)*5) * 0.4;
+    ctx.beginPath();
+    ctx.ellipse(cx+shakeX, plateY+plateH+squish, shockR, shockR*0.25, 0, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(180,190,200,${shockAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // ── 기둥 두 개 (좌우 가이드) ──
+  [-28, 28].forEach(ox => {
+    const colGrad = ctx.createLinearGradient(cx+ox-5, 0, cx+ox+5, 0);
+    colGrad.addColorStop(0, '#505860');
+    colGrad.addColorStop(0.4, '#808890');
+    colGrad.addColorStop(1, '#404850');
+    ctx.beginPath();
+    rr(ctx, cx+ox-5, 18, 10, plateY-18, 2);
+    ctx.fillStyle = colGrad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,130,140,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 기둥 홈 (디테일)
+    for(let i=0; i<4; i++){
+      ctx.beginPath();
+      ctx.rect(cx+ox-4, 24+i*14, 8, 2);
+      ctx.fillStyle = 'rgba(40,48,56,0.6)';
+      ctx.fill();
+    }
+  });
+
+  // ── 유압 실린더 (가운데 위) ──
+  // 실린더 바깥 케이스
+  ctx.beginPath();
+  rr(ctx, cx-10, 8, 20, 30, 4);
+  const cylGrad = ctx.createLinearGradient(cx-10,0,cx+10,0);
+  cylGrad.addColorStop(0,'#505860');
+  cylGrad.addColorStop(0.4,'#909aa4');
+  cylGrad.addColorStop(1,'#404850');
+  ctx.fillStyle = cylGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(140,150,160,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 실린더 피스톤 로드 (움직이는 부분)
+  const rodTop = 38;
+  const rodBot = rodTop + 16 + pressOffset;
+  ctx.beginPath();
+  rr(ctx, cx-5, rodTop, 10, rodBot-rodTop, 2);
+  const rodGrad = ctx.createLinearGradient(cx-5,0,cx+5,0);
+  rodGrad.addColorStop(0,'#707880');
+  rodGrad.addColorStop(0.5,'#c0c8d0');
+  rodGrad.addColorStop(1,'#606870');
+  ctx.fillStyle = rodGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(160,170,180,0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // ── 프레스 헤드 (내려오는 본체) ──
+  const headY = 52 + pressOffset + impactShake;
+  const headH = 22;
+
+  // 헤드 그림자
+  if(!isImpact){
+    ctx.beginPath();
+    ctx.ellipse(cx, plateY+2, 30*(1-pressY*0.3), 4, 0, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(0,0,0,${0.15+pressY*0.2})`;
+    ctx.fill();
+  }
+
+  const headGrad = ctx.createLinearGradient(cx-32, headY, cx+32, headY+headH);
+  headGrad.addColorStop(0, '#707880');
+  headGrad.addColorStop(0.3, '#a0a8b0');
+  headGrad.addColorStop(0.7, '#808890');
+  headGrad.addColorStop(1, '#505860');
+  ctx.beginPath();
+  rr(ctx, cx-32+shakeX, headY, 64, headH, 5);
+  ctx.fillStyle = headGrad;
+  ctx.fill();
+  ctx.strokeStyle = isImpact
+    ? 'rgba(220,230,240,0.7)'
+    : 'rgba(150,160,170,0.6)';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // 헤드 볼트 4개
+  [[-22,headH/2],[22,headH/2]].forEach(([ox,oy])=>{
+    ctx.beginPath();
+    ctx.arc(cx+ox+shakeX, headY+oy, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#404850';
+    ctx.fill();
+    ctx.strokeStyle = '#909aa0';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // 볼트 십자
+    ctx.beginPath();
+    ctx.moveTo(cx+ox+shakeX-2, headY+oy);
+    ctx.lineTo(cx+ox+shakeX+2, headY+oy);
+    ctx.moveTo(cx+ox+shakeX, headY+oy-2);
+    ctx.lineTo(cx+ox+shakeX, headY+oy+2);
+    ctx.strokeStyle = '#606870';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  });
+
+  // 헤드 하단 압착면 (줄무늬)
+  for(let i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx-30+shakeX+i*11, headY+headH);
+    ctx.lineTo(cx-24+shakeX+i*11, headY+headH);
+    ctx.strokeStyle = 'rgba(60,70,80,0.7)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // ── 반쯤 뜬 눈 두 개 (헤드 위에 붙음) ──
+  const eyeY = headY - 9 + impactShake;
+  // 반쯤 감긴 정도 — 프레스 내려올수록 더 감김
+  const drowsiness = 0.55 + pressY * 0.15;
+
+  [-13, 13].forEach((ox, i) => {
+    const ex = cx + ox + shakeX;
+    const er = 7;
+
+    // 눈 흰자
+    ctx.beginPath();
+    ctx.ellipse(ex, eyeY, er, er*0.9, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#dde4ec';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(100,110,120,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 홍채
+    const pd = Math.sin(t*0.8+i)*1;
+    ctx.beginPath();
+    ctx.arc(ex+pd, eyeY+1, 4.5, 0, Math.PI*2);
+    const ig = ctx.createRadialGradient(ex+pd,eyeY+1,0,ex+pd,eyeY+1,4.5);
+    ig.addColorStop(0,'#8899aa');
+    ig.addColorStop(0.5,'#556677');
+    ig.addColorStop(1,'#334455');
+    ctx.fillStyle = ig;
+    ctx.fill();
+
+    // 동공
+    ctx.beginPath();
+    ctx.arc(ex+pd, eyeY+1, 2.2, 0, Math.PI*2);
+    ctx.fillStyle = '#0a0e12';
+    ctx.fill();
+
+    // 반짝임
+    ctx.beginPath();
+    ctx.arc(ex+pd+1.5, eyeY-0.5, 1, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fill();
+
+    // 반쯤 감긴 눈꺼풀 (위에서 내려옴)
+    ctx.beginPath();
+    ctx.ellipse(ex, eyeY, er+1, (er+1)*0.95, 0, Math.PI, 0, true); // 위쪽 반원
+    ctx.lineTo(ex+er+1, eyeY);
+    ctx.fillStyle = '#808890';
+    // drowsiness 만큼 내려온 눈꺼풀
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(ex-er-2, eyeY-er-2, (er+2)*2, (er+2)*drowsiness + 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.ellipse(ex, eyeY, er+1, er+1, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#757e88';
+    ctx.fill();
+    ctx.restore();
+
+
+  });
+
+  // ── 상단 프레임 ──
+  ctx.beginPath();
+  rr(ctx, cx-36, 6, 72, 14, [5,5,0,0]);
+  const frameGrad = ctx.createLinearGradient(cx-36,6,cx+36,20);
+  frameGrad.addColorStop(0,'#606870');
+  frameGrad.addColorStop(0.5,'#909aa4');
+  frameGrad.addColorStop(1,'#505860');
+  ctx.fillStyle = frameGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(140,150,160,0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // D-LINK 텍스트 (프레임에)
+  ctx.font = 'bold 7px Share Tech Mono';
+  ctx.fillStyle = 'rgba(180,190,200,0.7)';
+  ctx.textAlign = 'center';
+  ctx.fillText('D-LINK', cx, 16);
+
+  // 충격시 먼지/파편 파티클
+  if(isImpact && pressY > 0.85){
+    for(let i=0;i<6;i++){
+      const pa = (i/6)*Math.PI + Math.PI;
+      const pr = (pressY-0.85)*7 * 30;
+      const ppx = cx + Math.cos(pa)*pr + shakeX;
+      const ppy = plateY + Math.sin(pa)*pr*0.4;
+      ctx.beginPath();
+      ctx.arc(ppx, ppy, 1.5+Math.random()*1.5, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(160,170,180,${(1-(pressY-0.85)*7)*0.6})`;
+      ctx.fill();
+    }
+  }
+
+  // 전체 회색 글로우
+  const gGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 58);
+  gGrad.addColorStop(0, 'transparent');
+  gGrad.addColorStop(1, `rgba(140,150,160,${0.04+pressY*0.04})`);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 58, 0, Math.PI*2);
+  ctx.fillStyle = gGrad;
+  ctx.fill();
+}
+
+function drawLINKSYS(ctx, t) {
+  const cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  const bob = Math.sin(t*1.6)*2;
+
+  const clapCycle = (t * 0.9) % 1;
+  let clapAngle;
+  if(clapCycle < 0.08){
+    clapAngle = 1 - clapCycle/0.08;
+  } else if(clapCycle < 0.18){
+    clapAngle = 0;
+  } else {
+    clapAngle = (clapCycle - 0.18) / 0.82;
+  }
+  const isClap = clapCycle < 0.18;
+  const maxOpenAngle = 0.38;
+  const topAngle = clapAngle * maxOpenAngle;
+
+  const shake = isClap && clapCycle < 0.1 ? (0.1-clapCycle)/0.1 * 2.5 : 0;
+  const shakeX = shake * (Math.random()-0.5)*2;
+  const shakeY = shake * (Math.random()-0.5)*2;
+  const baseY = cy + bob + shakeY;
+
+  // ── 슬레이트 본체 (아래) ──
+  const bodyW = 72, bodyH = 50;
+  const bodyX = cx - bodyW/2 + shakeX;
+  const bodyY = baseY - 4;
+
+  const bodyGrad = ctx.createLinearGradient(bodyX, bodyY, bodyX+bodyW, bodyY+bodyH);
+  bodyGrad.addColorStop(0, '#1c1c1c');
+  bodyGrad.addColorStop(0.4, '#2a2a2a');
+  bodyGrad.addColorStop(1, '#111111');
+  ctx.beginPath();
+  rr(ctx, bodyX, bodyY, bodyW, bodyH, [0,0,6,6]);
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // ── 스크린 ──
+  const scrPad = 6;
+  const scrX = bodyX+scrPad;
+  const scrY = bodyY+scrPad;
+  const scrW = bodyW-scrPad*2;
+  const scrH = bodyH-scrPad*2;
+
+  ctx.beginPath();
+  rr(ctx, scrX, scrY, scrW, scrH, 3);
+  ctx.fillStyle = '#f5f0e8';
+  ctx.fill();
+
+  // 스크린 세로선
+  ctx.beginPath();
+  ctx.moveTo(scrX+8, scrY); ctx.lineTo(scrX+8, scrY+scrH);
+  ctx.moveTo(scrX+scrW-8, scrY); ctx.lineTo(scrX+scrW-8, scrY+scrH);
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // ── 눈알 두 개 (스크린 안) ──
+  const eyeCY = scrY + scrH*0.5;
+  const blinkEye = Math.sin(t*1.4) > 0.9;
+  [-13, 13].forEach((ox, i) => {
+    const ex = cx+ox+shakeX;
+    if(!blinkEye){
+      ctx.beginPath();
+      ctx.arc(ex, eyeCY, 7, 0, Math.PI*2);
+      ctx.fillStyle = '#fff8f0';
+      ctx.fill();
+      const pd = Math.sin(t*1.5+i)*1.2;
+      ctx.beginPath();
+      ctx.arc(ex+pd, eyeCY, 4.2, 0, Math.PI*2);
+      const ig = ctx.createRadialGradient(ex+pd,eyeCY,0,ex+pd,eyeCY,4.2);
+      ig.addColorStop(0,'#444'); ig.addColorStop(0.5,'#222'); ig.addColorStop(1,'#111');
+      ctx.fillStyle = ig; ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ex+pd, eyeCY, 2, 0, Math.PI*2);
+      ctx.fillStyle = '#000'; ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ex+pd+2, eyeCY-2, 1.2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ex, eyeCY, 7, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(ex-7, eyeCY); ctx.lineTo(ex+7, eyeCY);
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    }
+  });
+
+  // ── 본체 윗면 이빨 (아래 턱) ──
+  const jawY = bodyY; // 본체 맨 위 = 아래 턱 위치
+  const btCount = 8;
+  const btW = bodyW / btCount;
+  for(let i=0; i<btCount; i++){
+    const tx = bodyX + i*btW;
+    const th = 4 + (i%2)*4;
+    ctx.beginPath();
+    ctx.moveTo(tx+1, jawY);
+    ctx.lineTo(tx + btW/2, jawY - th); // 위쪽으로 뾰족
+    ctx.lineTo(tx + btW-1, jawY);
+    ctx.closePath();
+    ctx.fillStyle = '#f5f0e8';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 0.5; ctx.stroke();
+  }
+
+  // ── 위 클래퍼 ──
+  ctx.save();
+  ctx.translate(bodyX + shakeX, bodyY + shakeY);
+  ctx.rotate(-topAngle);
+
+  const clipH = 18;
+
+  const clipGrad = ctx.createLinearGradient(0,-clipH,bodyW,0);
+  clipGrad.addColorStop(0,'#1a1a1a');
+  clipGrad.addColorStop(0.5,'#2e2e2e');
+  clipGrad.addColorStop(1,'#111');
+  ctx.beginPath();
+  rr(ctx, 0, -clipH, bodyW, clipH, [4,4,0,0]);
+  ctx.fillStyle = clipGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1.5; ctx.stroke();
+
+  // 흑백 줄무늬
+  ctx.save();
+  ctx.beginPath();
+  rr(ctx, 0, -clipH, bodyW, clipH, [4,4,0,0]);
+  ctx.clip();
+  const stripeW = 10;
+  for(let i=-2; i<10; i++){
+    ctx.beginPath();
+    ctx.moveTo(i*stripeW*2, -clipH);
+    ctx.lineTo(i*stripeW*2+stripeW, -clipH);
+    ctx.lineTo(i*stripeW*2+stripeW+clipH, 0);
+    ctx.lineTo(i*stripeW*2+clipH, 0);
+    ctx.closePath();
+    ctx.fillStyle = i%2===0 ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0)';
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.font = 'bold 7px Share Tech Mono';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.textAlign = 'center';
+  ctx.fillText('LINKSYS', bodyW/2, -5);
+
+  // ── 위 클래퍼 아랫면 이빨 (위 턱) ──
+  const ttCount = 8;
+  const ttW = bodyW / ttCount;
+  for(let i=0; i<ttCount; i++){
+    const tx = i*ttW;
+    const th = 4 + (i%2)*4;
+    ctx.beginPath();
+    ctx.moveTo(tx+1, 0);
+    ctx.lineTo(tx + ttW/2, th); // 아래로 뾰족
+    ctx.lineTo(tx + ttW-1, 0);
+    ctx.closePath();
+    ctx.fillStyle = '#f5f0e8';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 0.5; ctx.stroke();
+  }
+
+  // 힌지
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#333'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1.2; ctx.stroke();
+
+  ctx.restore();
+
+  // ── 탁! + 키득 이펙트 ──
+  if(isClap && clapCycle < 0.15){
+    const popAlpha = (0.15-clapCycle)/0.15;
+    // 파티클
+    for(let i=0;i<5;i++){
+      const pa = (i/5)*Math.PI*2;
+      const pr = (1-popAlpha) * 20;
+      ctx.beginPath();
+      ctx.arc(cx+shakeX + Math.cos(pa)*pr, bodyY+shakeY + Math.sin(pa)*pr*0.4, 2, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${popAlpha*0.5})`;
+      ctx.fill();
+    }
+    // 탁!
+    ctx.font = `bold ${9+popAlpha*3}px Share Tech Mono`;
+    ctx.fillStyle = `rgba(255,255,255,${popAlpha*0.9})`;
+    ctx.textAlign = 'center';
+    ctx.fillText('탁!', cx+26+shakeX, bodyY-6+shakeY);
+    // 키득
+    const giggleAlpha = popAlpha * 0.75;
+    ctx.font = `${8+popAlpha*2}px Share Tech Mono`;
+    ctx.fillStyle = `rgba(200,255,200,${giggleAlpha})`;
+    ctx.fillText('키득ㅋ', cx-20+shakeX, bodyY-14+shakeY);
+  }
+
+  // 글로우
+  const gGrad = ctx.createRadialGradient(cx,cy,10,cx,cy,58);
+  gGrad.addColorStop(0,'transparent');
+  gGrad.addColorStop(1,'rgba(255,255,255,0.03)');
+  ctx.beginPath();
+  ctx.arc(cx,cy,58,0,Math.PI*2);
+  ctx.fillStyle = gGrad; ctx.fill();
+}
+
+function drawUBIQUITI(ctx, t) {
+  var cx=60, cy=62;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.7)*2.5;
+  var by  = cy + bob;
+
+  // ── 안경 브릿지 + 프레임 색
+  var col = '#88ff44';
+  var colD = '#44bb00';
+  var colG = 'rgba(136,255,68,';
+
+  // 안경 중심 브릿지
+  var lCX = cx - 22;  // 왼쪽 렌즈 중심 (눈쪽)
+  var rCX = cx + 22;  // 오른쪽 렌즈 중심 (표적쪽)
+  var lensR = 18;
+
+  // 글로우
+  [lCX, rCX].forEach(function(lx) {
+    var gr = ctx.createRadialGradient(lx, by, 4, lx, by, lensR+8);
+    gr.addColorStop(0, colG+'0.12)');
+    gr.addColorStop(1, colG+'0)');
+    ctx.beginPath();
+    ctx.arc(lx, by, lensR+8, 0, Math.PI*2);
+    ctx.fillStyle = gr;
+    ctx.fill();
+  });
+
+  // ── 렌즈 프레임 두 개 ──
+  [lCX, rCX].forEach(function(lx) {
+    // 렌즈 배경
+    ctx.beginPath();
+    ctx.arc(lx, by, lensR, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(8,20,8,0.92)';
+    ctx.fill();
+    // 프레임
+    ctx.beginPath();
+    ctx.arc(lx, by, lensR, 0, Math.PI*2);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    // 프레임 안쪽 얇은 선
+    ctx.beginPath();
+    ctx.arc(lx, by, lensR-4, 0, Math.PI*2);
+    ctx.strokeStyle = colG+'0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // ── 브릿지 (코 부분) ──
+  ctx.beginPath();
+  ctx.moveTo(lCX + lensR, by - 2);
+  ctx.quadraticCurveTo(cx, by - 8, rCX - lensR, by - 2);
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // ── 안경 다리 ──
+  // 왼쪽 다리
+  ctx.beginPath();
+  ctx.moveTo(lCX - lensR, by);
+  ctx.quadraticCurveTo(lCX - lensR - 8, by - 2, lCX - lensR - 18, by + 4);
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  // 오른쪽 다리
+  ctx.beginPath();
+  ctx.moveTo(rCX + lensR, by);
+  ctx.quadraticCurveTo(rCX + lensR + 8, by - 2, rCX + lensR + 18, by + 4);
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // ── 왼쪽 렌즈: 눈알 ──
+  var blink = Math.sin(t*1.5) > 0.9;
+  if (!blink) {
+    // 흰자
+    ctx.beginPath();
+    ctx.arc(lCX, by, 11, 0, Math.PI*2);
+    ctx.fillStyle = '#e8ffe0';
+    ctx.fill();
+    // 홍채
+    var pd = Math.sin(t*1.8) * 1.5;
+    ctx.beginPath();
+    ctx.arc(lCX+pd, by, 6.5, 0, Math.PI*2);
+    var ig = ctx.createRadialGradient(lCX+pd,by,0,lCX+pd,by,6.5);
+    ig.addColorStop(0, '#aaffaa');
+    ig.addColorStop(0.4, '#44cc44');
+    ig.addColorStop(1, '#116611');
+    ctx.fillStyle = ig;
+    ctx.fill();
+    // 동공
+    ctx.beginPath();
+    ctx.arc(lCX+pd, by, 3, 0, Math.PI*2);
+    ctx.fillStyle = '#050a05';
+    ctx.fill();
+    // 반짝임
+    ctx.beginPath();
+    ctx.arc(lCX+pd+2, by-2, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fill();
+  } else {
+    // 깜빡임
+    ctx.beginPath();
+    ctx.moveTo(lCX-10, by);
+    ctx.lineTo(lCX+10, by);
+    ctx.strokeStyle = colG+'0.8)';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // ── 오른쪽 렌즈: 총 표적 ──
+  // 표적 회전 (천천히)
+  var tgtRot = t * 0.4;
+  var pulse  = 0.5 + Math.sin(t*3)*0.3;
+
+  // 원형 표적 3개
+  [10, 6.5, 3].forEach(function(r, i) {
+    ctx.beginPath();
+    ctx.arc(rCX, by, r, 0, Math.PI*2);
+    ctx.strokeStyle = colG+(0.35 + i*0.2 + pulse*0.1)+')';
+    ctx.lineWidth = i===2 ? 1.5 : 1;
+    ctx.stroke();
+  });
+
+  // 십자선 (회전)
+  ctx.save();
+  ctx.translate(rCX, by);
+  ctx.rotate(tgtRot);
+  var lineAlpha = 0.6 + pulse*0.2;
+  // 십자 4방향
+  [0, Math.PI/2].forEach(function(a) {
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*4, Math.sin(a)*4);
+    ctx.lineTo(Math.cos(a)*13, Math.sin(a)*13);
+    ctx.moveTo(-Math.cos(a)*4, -Math.sin(a)*4);
+    ctx.lineTo(-Math.cos(a)*13, -Math.sin(a)*13);
+    ctx.strokeStyle = colG+lineAlpha+')';
+    ctx.lineWidth = 1.2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  });
+  // 중심점
+  ctx.beginPath();
+  ctx.arc(0, 0, 1.8, 0, Math.PI*2);
+  ctx.fillStyle = col;
+  ctx.fill();
+  ctx.restore();
+
+  // 표적 스캔 라인 (회전하는 섹터)
+  ctx.save();
+  ctx.translate(rCX, by);
+  ctx.rotate(t*1.2);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, lensR-3, -0.15, 0.15);
+  ctx.closePath();
+  ctx.fillStyle = colG+'0.08)';
+  ctx.fill();
+  ctx.restore();
+
+  // ── 전체 연두 글로우 ──
+  var gGrad = ctx.createRadialGradient(cx, by, 10, cx, by, 58);
+  gGrad.addColorStop(0, 'transparent');
+  gGrad.addColorStop(1, colG+(0.03+Math.sin(t*2)*0.02)+')');
+  ctx.beginPath();
+  ctx.arc(cx, by, 58, 0, Math.PI*2);
+  ctx.fillStyle = gGrad;
+  ctx.fill();
+}
+
+function drawHUAWEI(ctx, t) {
+  if(!ctx) return;
+  var cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.5)*1.5;
+  var by  = cy + bob;
+
+  var FW = 62, FH = 94;
+  var fx = cx - FW/2;
+  var fy = by - FH/2;
+  var divY = fy + FH*0.42;
+  var topH = divY - fy;
+  var botH = fy + FH - divY;
+
+  // 문 열림 사이클 — 위칸 (5초 주기, 많이 열림)
+  var tc = (t * 0.2) % 1;
+  var topOpen;
+  if(tc < 0.25) topOpen = tc/0.25;
+  else if(tc < 0.55) topOpen = 1;
+  else topOpen = 1-(tc-0.55)/0.45;
+  topOpen = topOpen*topOpen*(3-2*topOpen);
+
+  // 아래칸 (다른 타이밍)
+  var bc = ((t+2.5) * 0.16) % 1;
+  var botOpen;
+  if(bc < 0.25) botOpen = bc/0.25;
+  else if(bc < 0.55) botOpen = 1;
+  else botOpen = 1-(bc-0.55)/0.45;
+  botOpen = botOpen*botOpen*(3-2*botOpen);
+
+  // ── 그림자 ──
+  ctx.beginPath();
+  ctx.ellipse(cx, fy+FH+5, 22*(1-bob*0.02), 4, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fill();
+
+  // ── 냉장고 본체 배경 ──
+  function drawBox(x,y,w,h,r,fill,stroke){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.8;ctx.stroke();}
+  }
+
+  drawBox(fx, fy, FW, FH, 6, '#f2f2f2', 'rgba(160,160,160,0.7)');
+
+  // 구분선
+  ctx.beginPath();
+  ctx.moveTo(fx+3, divY);
+  ctx.lineTo(fx+FW-3, divY);
+  ctx.strokeStyle = 'rgba(150,150,150,0.6)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 힌지
+  [fy+8, fy+FH-8].forEach(function(hy){
+    ctx.beginPath();
+    ctx.arc(fx+FW-4, hy, 3, 0, Math.PI*2);
+    ctx.fillStyle = '#bbb'; ctx.fill();
+  });
+
+  // ── 위칸 내부 (문 뒤) ──
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(fx+2, fy+2, FW-4, topH-2);
+  ctx.clip();
+
+  // 내부 배경
+  ctx.fillStyle = '#e8f0ff';
+  ctx.fillRect(fx+2, fy+2, FW-4, topH-2);
+  // 냉기 줄
+  for(var i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo(fx+6, fy+16+i*10);
+    ctx.lineTo(fx+FW-6, fy+16+i*10);
+    ctx.strokeStyle = 'rgba(180,200,240,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // ── 눈 두 개 (노란색, topOpen 따라 나타남) ──
+  var eyeAlpha = Math.max(0, (topOpen-0.3)/0.7);
+  if(eyeAlpha > 0){
+    ctx.save();
+    ctx.globalAlpha = eyeAlpha;
+    var eyeY2 = fy + topH*0.32;
+    var blink = Math.sin(t*1.6) > 0.88;
+    [-9,9].forEach(function(ox){
+      var ex = cx+ox;
+      if(!blink){
+        ctx.beginPath(); ctx.arc(ex,eyeY2,6,0,Math.PI*2);
+        ctx.fillStyle='#fffde0'; ctx.fill();
+        var pd = Math.sin(t*1.5)*1;
+        ctx.beginPath(); ctx.arc(ex+pd,eyeY2,3.5,0,Math.PI*2);
+        var ig=ctx.createRadialGradient(ex+pd,eyeY2,0,ex+pd,eyeY2,3.5);
+        ig.addColorStop(0,'#ffe066'); ig.addColorStop(0.5,'#ffcc00'); ig.addColorStop(1,'#cc8800');
+        ctx.fillStyle=ig; ctx.fill();
+        ctx.beginPath(); ctx.arc(ex+pd,eyeY2,1.5,0,Math.PI*2);
+        ctx.fillStyle='#1a0a00'; ctx.fill();
+        ctx.beginPath(); ctx.arc(ex+pd+1.5,eyeY2-1.5,1,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(ex-6,eyeY2); ctx.lineTo(ex+6,eyeY2);
+        ctx.strokeStyle='rgba(255,200,0,0.8)';
+        ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.stroke();
+      }
+    });
+    ctx.restore();
+  }
+
+  // ── 팔 (노란색, topOpen 따라 슉 튀어나옴) ──
+  // 팔이 냉장고 양옆으로 슈욱 나오는 효과
+  var armOut = Math.max(0, (topOpen-0.1)/0.9); // 0→1
+  armOut = armOut*armOut*(3-2*armOut); // ease
+  if(armOut > 0){
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, armOut*1.5);
+    var armY3 = fy + topH*0.6;
+    var armLen = armOut * 28; // 최대 28px 뻗음
+
+    // 왼쪽 팔
+    var lArmX = fx - armLen + 4;
+    // 위팔
+    ctx.beginPath();
+    ctx.moveTo(fx+4, armY3);
+    ctx.lineTo(lArmX+8, armY3-6);
+    ctx.strokeStyle='#ffdd00'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.stroke();
+    // 아래팔
+    ctx.beginPath();
+    ctx.moveTo(lArmX+8, armY3-6);
+    ctx.lineTo(lArmX, armY3+4);
+    ctx.strokeStyle='#ffcc00'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.stroke();
+    // 주먹
+    ctx.beginPath();
+    ctx.arc(lArmX, armY3+4, 5.5, 0, Math.PI*2);
+    ctx.fillStyle='#ffdd00'; ctx.fill();
+    ctx.strokeStyle='#cc9900'; ctx.lineWidth=1; ctx.stroke();
+    // 손가락 3개
+    [[-3,-2],[0,-4],[3,-2]].forEach(function(d){
+      ctx.beginPath();
+      ctx.arc(lArmX+d[0], armY3+4+d[1], 2.5, 0, Math.PI*2);
+      ctx.fillStyle='#ffcc00'; ctx.fill();
+    });
+
+    // 오른쪽 팔
+    var rArmX = fx + FW + armLen - 4;
+    // 위팔
+    ctx.beginPath();
+    ctx.moveTo(fx+FW-4, armY3);
+    ctx.lineTo(rArmX-8, armY3-6);
+    ctx.strokeStyle='#ffdd00'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.stroke();
+    // 아래팔
+    ctx.beginPath();
+    ctx.moveTo(rArmX-8, armY3-6);
+    ctx.lineTo(rArmX, armY3+4);
+    ctx.strokeStyle='#ffcc00'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.stroke();
+    // 주먹
+    ctx.beginPath();
+    ctx.arc(rArmX, armY3+4, 5.5, 0, Math.PI*2);
+    ctx.fillStyle='#ffdd00'; ctx.fill();
+    ctx.strokeStyle='#cc9900'; ctx.lineWidth=1; ctx.stroke();
+    [[-3,-2],[0,-4],[3,-2]].forEach(function(d){
+      ctx.beginPath();
+      ctx.arc(rArmX+d[0], armY3+4+d[1], 2.5, 0, Math.PI*2);
+      ctx.fillStyle='#ffcc00'; ctx.fill();
+    });
+
+    ctx.restore();
+  }
+  ctx.restore(); // 위칸 clip 해제
+
+  // ── 아래칸 내부 (무지개 소용돌이) ──
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(fx+2, divY+2, FW-4, botH-4);
+  ctx.clip();
+
+  ctx.fillStyle = 'rgba(10,5,20,'+botOpen+')';
+  ctx.fillRect(fx+2, divY+2, FW-4, botH-4);
+
+  if(botOpen > 0.05){
+    var swX = cx, swY = divY + botH/2;
+    var swR2 = Math.min(FW/2-6, botH/2-4);
+    var swA = t*2.0;
+    var cols = [
+      [255,0,0],[255,120,0],[255,220,0],
+      [0,220,60],[0,120,255],[100,0,255],[255,0,200]
+    ];
+    var segs2 = 24;
+    for(var ring2=0; ring2<7; ring2++){
+      var r1b = swR2*(ring2/7);
+      var r2b = swR2*((ring2+1.05)/7);
+      for(var s2=0;s2<segs2;s2++){
+        var a1b = swA + (s2/segs2)*Math.PI*2 + ring2*0.5;
+        var a2b = swA + ((s2+1)/segs2)*Math.PI*2 + ring2*0.5;
+        var ci2 = (ring2*3+s2) % cols.length;
+        var c2  = cols[ci2];
+        ctx.beginPath();
+        ctx.moveTo(swX+Math.cos(a1b)*r1b, swY+Math.sin(a1b)*r1b);
+        ctx.arc(swX, swY, r2b, a1b, a2b);
+        ctx.arc(swX, swY, r1b, a2b, a1b, true);
+        ctx.closePath();
+        ctx.fillStyle='rgba('+c2[0]+','+c2[1]+','+c2[2]+','+botOpen+')';
+        ctx.fill();
+      }
+    }
+    // 중심 글로우
+    var cg2=ctx.createRadialGradient(swX,swY,0,swX,swY,swR2*0.35);
+    cg2.addColorStop(0,'rgba(255,255,255,'+botOpen+')');
+    cg2.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.beginPath(); ctx.arc(swX,swY,swR2*0.35,0,Math.PI*2);
+    ctx.fillStyle=cg2; ctx.fill();
+  }
+  ctx.restore();
+
+  // ── 위칸 문 (위로 젖혀짐) ──
+  // 문이 위로 들려올라가는 효과 — ctx.transform으로 위쪽 힌지 기준 회전
+  ctx.save();
+  // 힌지 기준: 문 위쪽 가장자리
+  ctx.translate(fx+2, fy+2);
+  // scaleY로 눌러서 위로 열리는 효과 (1 = 닫힘, 0 = 완전히 열림)
+  var doorScale = 1 - topOpen*0.92;
+  ctx.scale(1, doorScale);
+  drawBox(0, 0, FW-4, topH-2, 4, null, null);
+  var tdg = ctx.createLinearGradient(0,0,FW-4,0);
+  tdg.addColorStop(0,'#e8e8e8');
+  tdg.addColorStop(0.3,'#ffffff');
+  tdg.addColorStop(1,'#eeeeee');
+  ctx.fillStyle=tdg; ctx.fill();
+  ctx.strokeStyle='rgba(150,150,150,0.5)'; ctx.lineWidth=1; ctx.stroke();
+  // 손잡이
+  ctx.beginPath();
+  ctx.moveTo(FW-14, topH*0.3);
+  ctx.lineTo(FW-14, topH*0.7);
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke();
+  ctx.restore();
+
+  // ── 아래칸 문 (아래로 젖혀짐) ──
+  ctx.save();
+  ctx.translate(fx+2, divY+2+botH-4);
+  var botDoorScale = 1 - botOpen*0.92;
+  ctx.scale(1, botDoorScale);
+  ctx.translate(0, -(botH-4));
+  drawBox(0, 0, FW-4, botH-4, 4, null, null);
+  var bdg = ctx.createLinearGradient(0,0,FW-4,0);
+  bdg.addColorStop(0,'#e8e8e8');
+  bdg.addColorStop(0.3,'#ffffff');
+  bdg.addColorStop(1,'#eeeeee');
+  ctx.fillStyle=bdg; ctx.fill();
+  ctx.strokeStyle='rgba(150,150,150,0.5)'; ctx.lineWidth=1; ctx.stroke();
+  // 손잡이
+  ctx.beginPath();
+  ctx.moveTo(FW-14, botH*0.3);
+  ctx.lineTo(FW-14, botH*0.7);
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke();
+  ctx.restore();
+
+  // 냉장고 외곽선 다시 (맨 위에)
+  drawBox(fx, fy, FW, FH, 6, null, 'rgba(140,140,140,0.6)');
+}
+
+function drawIPTIME_FLAT(ctx, t) {
+  var cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*2)*2;
+  var by=cy+bob;
+  var blink=Math.sin(t*1.3)>0.92;
+  // 스탠드
+  ctx.beginPath();ctx.moveTo(cx-2,by+28);ctx.lineTo(cx-2,by+36);
+  ctx.moveTo(cx+2,by+28);ctx.lineTo(cx+2,by+36);
+  ctx.strokeStyle='#222';ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx-16,by+36);ctx.lineTo(cx+16,by+36);
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+  // 본체 (얇은 베젤)
+  var tw=80,th=46,tx=cx-tw/2,ty=by-th/2-4;
+  var bg=ctx.createLinearGradient(tx,ty,tx,ty+th);
+  bg.addColorStop(0,'#1c1c1c');bg.addColorStop(1,'#090909');
+  ctx.beginPath();
+  ctx.moveTo(tx+4,ty);ctx.lineTo(tx+tw-4,ty);ctx.quadraticCurveTo(tx+tw,ty,tx+tw,ty+4);
+  ctx.lineTo(tx+tw,ty+th-4);ctx.quadraticCurveTo(tx+tw,ty+th,tx+tw-4,ty+th);
+  ctx.lineTo(tx+4,ty+th);ctx.quadraticCurveTo(tx,ty+th,tx,ty+th-4);
+  ctx.lineTo(tx,ty+4);ctx.quadraticCurveTo(tx,ty,tx+4,ty);
+  ctx.closePath();ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='#2a2a2a';ctx.lineWidth=1.5;ctx.stroke();
+  // 화면 (베젤 2px)
+  var sp=2;
+  ctx.beginPath();ctx.rect(tx+sp,ty+sp,tw-sp*2,th-sp*2);
+  ctx.fillStyle='#040412';ctx.fill();
+  // 반사
+  ctx.beginPath();ctx.rect(tx+sp,ty+sp,tw-sp*2,8);
+  ctx.fillStyle='rgba(255,255,255,0.03)';ctx.fill();
+  // 눈 — 화면 중앙 상단
+  var ey=ty+sp+18;
+  if(!blink){
+    [-12,12].forEach(function(ox){
+      ctx.beginPath();ctx.arc(cx+ox,ey,6,0,Math.PI*2);ctx.fillStyle='#c8eeff';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox,ey,3.5,0,Math.PI*2);ctx.fillStyle='#1a3a60';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox+1,ey-1.5,1.2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fill();
+    });
+  } else {
+    [-12,12].forEach(function(ox){
+      ctx.beginPath();ctx.moveTo(cx+ox-6,ey);ctx.lineTo(cx+ox+6,ey);
+      ctx.strokeStyle='#c8eeff';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+    });
+  }
+  // 웃는 입 — 눈 아래
+  ctx.beginPath();ctx.arc(cx,ey+12,7,0.18*Math.PI,0.82*Math.PI);
+  ctx.strokeStyle='#6ab8f0';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.stroke();
+  // LED
+  var lp=0.5+Math.sin(t*4)*0.5;
+  ctx.beginPath();ctx.arc(tx+tw-6,ty+th-5,2,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,255,136,'+lp+')';ctx.fill();
+}
+
+function drawHOTSPOT_FLOWER(ctx, t) {
+  var cx=60,cy=60;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*2.3)*2,by=cy+bob;
+  var pulse=Math.sin(t*3);
+
+  // 꽃잎 6개 (주변으로 피어남)
+  for(var i=0;i<6;i++){
+    var angle=(i/6)*Math.PI*2+t*0.5;
+    var dist=24+Math.sin(t*4+i)*3;
+    var px=cx+Math.cos(angle)*dist,py2=by+Math.sin(angle)*dist;
+    var pSize=9+Math.sin(t*3+i*1.1)*2;
+    // 꽃잎 타원
+    ctx.save();ctx.translate(px,py2);ctx.rotate(angle+Math.PI/2);
+    ctx.beginPath();ctx.ellipse(0,0,pSize*0.55,pSize,0,0,Math.PI*2);
+    var pg=ctx.createRadialGradient(0,-pSize*0.3,0,0,0,pSize);
+    pg.addColorStop(0,'rgba(255,180,220,0.9)');
+    pg.addColorStop(0.6,'rgba(255,100,180,0.7)');
+    pg.addColorStop(1,'rgba(200,50,150,0.3)');
+    ctx.fillStyle=pg;ctx.fill();
+    ctx.strokeStyle='rgba(255,120,200,0.5)';ctx.lineWidth=0.8;ctx.stroke();
+    ctx.restore();
+    // 꽃잎 끝 빛
+    ctx.beginPath();ctx.arc(px,py2,2.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,150,220,'+(0.5+Math.sin(t*6+i)*0.4)+')';ctx.fill();
+  }
+
+  // 몸체 (아메바)
+  ctx.beginPath();
+  var pts=12;
+  for(var i=0;i<pts;i++){
+    var a=(i/pts)*Math.PI*2;
+    var r=20+Math.sin(t*2+i*0.8)*3+Math.sin(t*3.5+i*1.3)*2;
+    i===0?ctx.moveTo(cx+Math.cos(a)*r,by+Math.sin(a)*r):ctx.lineTo(cx+Math.cos(a)*r,by+Math.sin(a)*r);
+  }
+  ctx.closePath();
+  var bg=ctx.createRadialGradient(cx,by,0,cx,by,22);
+  bg.addColorStop(0,'#3a0820');bg.addColorStop(0.6,'#220510');bg.addColorStop(1,'#100208');
+  ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(255,100,180,'+(0.4+pulse*0.2)+')';ctx.lineWidth=2;ctx.stroke();
+
+  // 눈알 (가운데)
+  ctx.beginPath();ctx.arc(cx,by,12,0,Math.PI*2);ctx.fillStyle='#f0e0ec';ctx.fill();
+  var pupilX=cx+Math.sin(t*1.5)*2;
+  ctx.beginPath();ctx.arc(pupilX,by,7,0,Math.PI*2);
+  var ig=ctx.createRadialGradient(pupilX,by,0,pupilX,by,7);
+  ig.addColorStop(0,'#ff66cc');ig.addColorStop(0.5,'#cc2288');ig.addColorStop(1,'#660044');
+  ctx.fillStyle=ig;ctx.fill();
+  ctx.beginPath();ctx.arc(pupilX,by,3.5,0,Math.PI*2);ctx.fillStyle='#080008';ctx.fill();
+  ctx.beginPath();ctx.arc(pupilX+2.5,by-3,1.5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,by,12,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,100,180,0.4)';ctx.lineWidth=1.2;ctx.stroke();
+
+  // 꽃 향기 파티클
+  for(var i=0;i<4;i++){
+    var fa=(t*0.8+i*1.57)%(Math.PI*2);
+    var fr=28+i*5;
+    var fa2=0.3+Math.sin(t*4+i)*0.25;
+    ctx.beginPath();ctx.arc(cx+Math.cos(fa)*fr,by+Math.sin(fa)*fr,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,180,230,'+fa2+')';ctx.fill();
+  }
+
+  // 핑크 글로우
+  var g=ctx.createRadialGradient(cx,by,8,cx,by,50);
+  g.addColorStop(0,'transparent');g.addColorStop(1,'rgba(255,80,160,0.06)');
+  ctx.beginPath();ctx.arc(cx,by,50,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawASUS_BSOD(ctx, t) {
+  var cx=60,cy=58;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*1.8)*2,by=cy+bob;
+  var bw=76,bh=72,bx=cx-bw/2,bby=by-bh/2;
+  // 배경
+  ctx.beginPath();
+  ctx.moveTo(bx+5,bby);ctx.lineTo(bx+bw-5,bby);ctx.quadraticCurveTo(bx+bw,bby,bx+bw,bby+5);
+  ctx.lineTo(bx+bw,bby+bh-5);ctx.quadraticCurveTo(bx+bw,bby+bh,bx+bw-5,bby+bh);
+  ctx.lineTo(bx+5,bby+bh);ctx.quadraticCurveTo(bx,bby+bh,bx,bby+bh-5);
+  ctx.lineTo(bx,bby+5);ctx.quadraticCurveTo(bx,bby,bx+5,bby);
+  ctx.closePath();
+  ctx.fillStyle='#0a38cc';ctx.fill();
+  ctx.strokeStyle='#1a50ee';ctx.lineWidth=1.5;ctx.stroke();
+  // 상단 윈도우 로고
+  ctx.font='bold 11px monospace';ctx.fillStyle='#ffffff';ctx.textAlign='center';
+  ctx.fillText(':(', cx, bby+16);
+  ctx.font='6px monospace';
+  ctx.fillText('Your PC ran into a problem',cx,bby+26);
+  // 눈 — 화면 중간
+  var ey=bby+bh*0.52;
+  var blink=Math.sin(t*1.3)>0.9;
+  if(!blink){
+    [-9,9].forEach(function(ox){
+      ctx.beginPath();ctx.arc(cx+ox,ey,6,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox,ey,3.5,0,Math.PI*2);ctx.fillStyle='#0a38cc';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox+1.5,ey-1.5,1.2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+    });
+  } else {
+    [-9,9].forEach(function(ox){
+      ctx.beginPath();ctx.moveTo(cx+ox-6,ey);ctx.lineTo(cx+ox+6,ey);
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.stroke();
+    });
+  }
+  // 하단 에러 코드
+  ctx.font='5px monospace';ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText('STOP: WIFI_FATAL_ERROR',cx,bby+bh-14);
+  // 로딩 점
+  var dotT=(t*2)%1;
+  for(var i=0;i<3;i++){
+    ctx.beginPath();ctx.arc(cx-8+i*8,bby+bh-6,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,'+(i<Math.floor(dotT*4)?0.9:0.3)+')';ctx.fill();
+  }
+  // 반사
+  ctx.beginPath();ctx.rect(bx+2,bby+2,bw-4,8);ctx.fillStyle='rgba(255,255,255,0.04)';ctx.fill();
+}
+
+function drawTPLINK_RADIO(ctx, t) {
+  var cx=60,cy=60;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*1.8)*2,by=cy+bob;
+
+  // 안테나
+  ctx.beginPath();
+  ctx.moveTo(cx-6,by-24);ctx.lineTo(cx-10,by-46+Math.sin(t*2)*2);
+  ctx.moveTo(cx+6,by-24);ctx.lineTo(cx+10,by-46+Math.sin(t*2.3)*2);
+  ctx.strokeStyle='#8B5E3C';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx-10,by-46+Math.sin(t*2)*2,3,0,Math.PI*2);
+  ctx.arc(cx+10,by-46+Math.sin(t*2.3)*2,3,0,Math.PI*2);
+  ctx.fillStyle='#A0522D';ctx.fill();
+
+  // 전자파
+  var fc=0.5+Math.sin(t*5)*0.4;
+  for(var i=1;i<=3;i++){
+    ctx.beginPath();ctx.arc(cx,by-46,i*7+Math.sin(t*4),-0.7*Math.PI,0.3*Math.PI);
+    ctx.strokeStyle='rgba(255,220,80,'+(0.25+fc*0.15-i*0.06)+')';ctx.lineWidth=1.5;ctx.stroke();
+  }
+
+  // 라디오 본체
+  var rw=68,rh=44,rx=cx-rw/2,ry=by-rh/2;
+  var bg=ctx.createLinearGradient(rx,ry,rx+rw,ry+rh);
+  bg.addColorStop(0,'#8B5E3C');bg.addColorStop(0.5,'#A0522D');bg.addColorStop(1,'#6B3A1F');
+  ctx.beginPath();
+  ctx.moveTo(rx+6,ry);ctx.lineTo(rx+rw-6,ry);ctx.quadraticCurveTo(rx+rw,ry,rx+rw,ry+6);
+  ctx.lineTo(rx+rw,ry+rh-6);ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw-6,ry+rh);
+  ctx.lineTo(rx+6,ry+rh);ctx.quadraticCurveTo(rx,ry+rh,rx,ry+rh-6);
+  ctx.lineTo(rx,ry+6);ctx.quadraticCurveTo(rx,ry,rx+6,ry);
+  ctx.closePath();ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='#5C3317';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 스피커 그릴 (왼쪽)
+  for(var i=0;i<4;i++){
+    ctx.beginPath();ctx.moveTo(rx+5,ry+8+i*7);ctx.lineTo(rx+22,ry+8+i*7);
+    ctx.strokeStyle='rgba(60,30,10,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+  }
+  ctx.beginPath();ctx.arc(rx+14,ry+rh/2,10,0,Math.PI*2);
+  ctx.strokeStyle='rgba(60,30,10,0.3)';ctx.lineWidth=1;ctx.stroke();
+
+  // 주파수 바 (상단 중앙)
+  ctx.beginPath();ctx.rect(rx+28,ry+5,rw-52,7);
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fill();
+  var freq=0.3+Math.sin(t*0.3)*0.5;
+  ctx.beginPath();ctx.rect(rx+28,ry+5,(rw-52)*freq,7);
+  ctx.fillStyle='rgba(255,220,80,0.8)';ctx.fill();
+
+  // 눈 두 개 — 스피커 오른쪽 위 (다이얼/퍼센트바 안 겹침)
+  var ey=ry+10;
+  var blink=Math.sin(t*1.4)>0.9;
+  if(!blink){
+    [rx+30,rx+44].forEach(function(ex){
+      ctx.beginPath();ctx.arc(ex,ey,6,0,Math.PI*2);ctx.fillStyle='#FFE4B5';ctx.fill();
+      ctx.beginPath();ctx.arc(ex,ey,3.5,0,Math.PI*2);ctx.fillStyle='#8B4513';ctx.fill();
+      ctx.beginPath();ctx.arc(ex+1.5,ey-1.5,1.2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fill();
+    });
+  } else {
+    [rx+30,rx+44].forEach(function(ex){
+      ctx.beginPath();ctx.moveTo(ex-6,ey);ctx.lineTo(ex+6,ey);
+      ctx.strokeStyle='#FFE4B5';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.stroke();
+    });
+  }
+
+  // 튜닝 다이얼 — 오른쪽 하단
+  ctx.beginPath();ctx.arc(rx+rw-10,ry+rh-10,7,0,Math.PI*2);
+  ctx.fillStyle='#5C3317';ctx.fill();ctx.strokeStyle='#8B5E3C';ctx.lineWidth=1;ctx.stroke();
+  var da=t*1.5;
+  ctx.beginPath();ctx.moveTo(rx+rw-10,ry+rh-10);
+  ctx.lineTo(rx+rw-10+Math.cos(da)*5,ry+rh-10+Math.sin(da)*5);
+  ctx.strokeStyle='#FFE4B5';ctx.lineWidth=1.5;ctx.stroke();
+}
+
+function drawNETGEAR_STEAMPUNK(ctx, t) {
+  var cx=60,cy=62;
+  ctx.clearRect(0,0,120,120);
+  function medievalGear(gx,gy,oR,iR,teeth,angle){
+    ctx.save();ctx.translate(gx,gy);ctx.rotate(angle);
+    var tw=(Math.PI*2/teeth)*0.38;
+    ctx.beginPath();
+    for(var i=0;i<teeth;i++){
+      var a0=(i/teeth)*Math.PI*2,a1=a0+tw*0.4,a2=a0+tw,a3=a0+(Math.PI*2/teeth)-tw*0.4;
+      ctx.lineTo(Math.cos(a0)*iR,Math.sin(a0)*iR);
+      ctx.lineTo(Math.cos(a1)*oR,Math.sin(a1)*oR);
+      ctx.lineTo(Math.cos(a2)*oR,Math.sin(a2)*oR);
+      ctx.lineTo(Math.cos(a3)*iR,Math.sin(a3)*iR);
+    }
+    ctx.closePath();
+    var g=ctx.createRadialGradient(0,0,0,0,0,oR);
+    g.addColorStop(0,'#d4a800');g.addColorStop(0.6,'#8B6200');g.addColorStop(1,'#5C4000');
+    ctx.fillStyle=g;ctx.fill();
+    ctx.strokeStyle='rgba(255,200,50,0.6)';ctx.lineWidth=1.2;ctx.stroke();
+    for(var i=0;i<6;i++){
+      var ra=(i/6)*Math.PI*2;
+      ctx.beginPath();ctx.arc(Math.cos(ra)*iR*0.7,Math.sin(ra)*iR*0.7,1.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(80,200,80,0.8)';ctx.fill();
+    }
+    ctx.beginPath();
+    for(var i=0;i<6;i++){
+      var ha=(i/6)*Math.PI*2;
+      i===0?ctx.moveTo(Math.cos(ha)*iR*0.42,Math.sin(ha)*iR*0.42):ctx.lineTo(Math.cos(ha)*iR*0.42,Math.sin(ha)*iR*0.42);
+    }
+    ctx.closePath();ctx.fillStyle='#1a0a00';ctx.fill();ctx.strokeStyle='rgba(255,200,50,0.4)';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+  }
+  var bigA=t*0.5,smA=-t*0.5*(32/16);
+  var mDist=32+16-1;
+  var sg1x=cx-mDist*0.72,sg1y=cy-mDist*0.55;
+  var sg2x=cx+mDist*0.72,sg2y=cy-mDist*0.55;
+  medievalGear(cx,cy,32,32*0.6,12,bigA);
+  medievalGear(sg1x,sg1y,16,16*0.56,7,smA+0.3);
+  medievalGear(sg2x,sg2y,16,16*0.56,7,smA-0.3);
+  // 증기 파티클
+  for(var i=0;i<3;i++){
+    var sa=t*5+i*2.1,sr=30;
+    ctx.beginPath();ctx.arc(cx+Math.cos(sa)*sr,cy+Math.sin(sa)*sr,1.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(80,200,80,'+(0.3+Math.sin(t*12+i)*0.3)+')';ctx.fill();
+  }
+  // 눈 — 작은 기어 중심
+  var blink=Math.sin(t*1.1)>0.88;
+  [[sg1x,sg1y],[sg2x,sg2y]].forEach(function(pos,i){
+    var ex=pos[0],ey=pos[1];
+    if(!blink){
+      ctx.beginPath();ctx.arc(ex,ey,6.5,0,Math.PI*2);ctx.fillStyle='#FFF8DC';ctx.fill();
+      ctx.beginPath();ctx.arc(ex,ey,3.8,0,Math.PI*2);
+      var ig=ctx.createRadialGradient(ex,ey,0,ex,ey,3.8);
+      ig.addColorStop(0,'#80ff80');ig.addColorStop(0.5,'#40cc40');ig.addColorStop(1,'#006600');
+      ctx.fillStyle=ig;ctx.fill();
+      ctx.beginPath();ctx.arc(ex,ey,1.8,0,Math.PI*2);ctx.fillStyle='#030a03';ctx.fill();
+      ctx.beginPath();ctx.arc(ex+1.2,ey-1.2,0.9,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fill();
+    } else {
+      ctx.beginPath();ctx.moveTo(ex-6,ey);ctx.lineTo(ex+6,ey);
+      ctx.strokeStyle='#FFF8DC';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+    }
+  });
+  // 큰 기어 중심 입
+  ctx.beginPath();ctx.arc(cx,cy+6,7,0.15*Math.PI,0.85*Math.PI);
+  ctx.strokeStyle='rgba(255,180,30,0.7)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+}
+
+function drawMERCUSYS_PC(ctx, t) {
+  var cx=60,cy=50;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*1.9)*3,py=cy+bob;
+  var pw=64,ph=46;
+  // 바닥 그림자
+  var floorY=py+ph/2+16;
+  ctx.save();ctx.translate(cx,floorY);ctx.scale(1+Math.sin(t*1.9)*0.04,0.28);
+  ctx.beginPath();ctx.arc(0,0,pw*0.48,0,Math.PI*2);
+  var sg=ctx.createRadialGradient(0,0,0,0,0,pw*0.48);
+  sg.addColorStop(0,'rgba(0,220,190,0.5)');sg.addColorStop(1,'rgba(0,150,130,0)');
+  ctx.fillStyle=sg;ctx.fill();ctx.restore();
+  // 그림자 얼굴 (납작)
+  var blink2=Math.sin(t*1.5)>0.88;
+  if(!blink2){
+    [-8,8].forEach(function(ox){
+      ctx.save();ctx.translate(cx+ox,floorY);ctx.scale(1,0.42);
+      ctx.beginPath();ctx.arc(0,0,4.5,0,Math.PI*2);ctx.fillStyle='rgba(0,50,44,0.85)';ctx.fill();
+      ctx.beginPath();ctx.arc(0.5,-0.5,2.2,0,Math.PI*2);ctx.fillStyle='rgba(150,255,225,0.9)';ctx.fill();
+      ctx.restore();
+    });
+  }
+  ctx.save();ctx.translate(cx,floorY+2);ctx.scale(1,0.38);
+  ctx.beginPath();ctx.arc(0,0,8,0.18*Math.PI,0.82*Math.PI);
+  ctx.strokeStyle='rgba(0,50,44,0.85)';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+  ctx.restore();
+  // 스탠드
+  ctx.beginPath();ctx.moveTo(cx-3,py+ph/2);ctx.lineTo(cx-3,py+ph/2+10);ctx.lineTo(cx+3,py+ph/2+10);ctx.lineTo(cx+3,py+ph/2);
+  ctx.fillStyle='#1a2a1a';ctx.fill();
+  ctx.beginPath();ctx.moveTo(cx-14,py+ph/2+10);ctx.lineTo(cx+14,py+ph/2+10);ctx.lineTo(cx+10,py+ph/2+14);ctx.lineTo(cx-10,py+ph/2+14);ctx.closePath();
+  ctx.fillStyle='#142014';ctx.fill();
+  // 모니터 본체
+  var mx=cx-pw/2,my=py-ph/2;
+  var mg=ctx.createLinearGradient(mx,my,mx+pw,my+ph);
+  mg.addColorStop(0,'#0d1a0d');mg.addColorStop(1,'#040c04');
+  ctx.beginPath();
+  ctx.moveTo(mx+5,my);ctx.lineTo(mx+pw-5,my);ctx.quadraticCurveTo(mx+pw,my,mx+pw,my+5);
+  ctx.lineTo(mx+pw,my+ph-5);ctx.quadraticCurveTo(mx+pw,my+ph,mx+pw-5,my+ph);
+  ctx.lineTo(mx+5,my+ph);ctx.quadraticCurveTo(mx,my+ph,mx,my+ph-5);
+  ctx.lineTo(mx,my+5);ctx.quadraticCurveTo(mx,my,mx+5,my);
+  ctx.closePath();ctx.fillStyle=mg;ctx.fill();
+  ctx.strokeStyle='#00cc44';ctx.lineWidth=1.5;ctx.stroke();
+  // 화면
+  var sp=4;
+  ctx.beginPath();ctx.rect(mx+sp,my+sp,pw-sp*2,ph-sp*2);ctx.fillStyle='#020a02';ctx.fill();
+  // 코드 텍스트
+  ctx.font='5px monospace';ctx.textAlign='left';
+  var lines=['>_SCAN','PKT_OK','INJECT','EXEC..'];
+  var sc=(t*12)%5;
+  lines.forEach(function(l,i){
+    var ly=my+sp+6+i*7-sc;
+    if(ly<my+sp+2||ly>my+ph-sp) return;
+    ctx.fillStyle='rgba(0,255,80,0.5)';ctx.fillText(l,mx+sp+3,ly);
+  });
+  // 눈 — 화면 하단
+  var ey=my+ph-sp-10;
+  var bl=Math.sin(t*1.1)>0.9,eyeH=bl?1:5;
+  ctx.fillStyle='#00ff66';
+  ctx.shadowColor='#00ff66';ctx.shadowBlur=5;
+  ctx.beginPath();ctx.rect(cx-12,ey-eyeH/2,9,eyeH);ctx.fill();
+  ctx.beginPath();ctx.rect(cx+3,ey-eyeH/2,9,eyeH);ctx.fill();
+  ctx.shadowBlur=0;
+  // 입
+  ctx.font='bold 9px monospace';ctx.fillStyle='#00ee55';ctx.textAlign='center';
+  ctx.fillText(['>_<','>.<','>^<'][Math.floor(t*0.8)%3],cx,ey+10);
+  // LED
+  var lp=0.5+Math.sin(t*4)*0.5;
+  ctx.beginPath();ctx.arc(mx+pw-6,my+ph-5,2,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,255,136,'+lp+')';ctx.fill();
+}
+
+function drawEFM_GRENADE(ctx, t) {
+  var cx=60,cy=62;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*2.1)*2.5,by=cy+bob;
+  // 핀
+  var pw2=Math.sin(t*2.8),po=3+pw2*2.5,pa2=Math.sin(t*3.2)*0.18;
+  ctx.save();ctx.translate(cx+5,by-24);ctx.rotate(pa2);
+  ctx.beginPath();ctx.arc(0,-po-5,4,0,Math.PI*2);
+  ctx.strokeStyle='rgba(180,230,140,0.9)';ctx.lineWidth=2.2;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,-po);ctx.lineTo(0,2);
+  ctx.strokeStyle='rgba(200,245,160,0.95)';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+  ctx.restore();
+  // 레버
+  ctx.beginPath();
+  ctx.moveTo(cx-8,by-20);ctx.lineTo(cx-14,by-14+Math.sin(t*2.8)*1.5);ctx.lineTo(cx-12,by-8);
+  ctx.strokeStyle='rgba(140,200,80,0.85)';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+  // 몸체 (둥근)
+  ctx.beginPath();ctx.arc(cx,by,22,0,Math.PI*2);
+  var bg=ctx.createRadialGradient(cx-6,by-8,2,cx,by,24);
+  bg.addColorStop(0,'#60c040');bg.addColorStop(0.4,'#3d8a20');bg.addColorStop(0.8,'#2a6010');bg.addColorStop(1,'#1a4008');
+  ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(100,200,60,'+(0.5+Math.sin(t*3)*0.2)+')';ctx.lineWidth=1.8;ctx.stroke();
+  // 하이라이트
+  ctx.beginPath();ctx.ellipse(cx-7,by-9,5,9,-0.4,0,Math.PI*2);
+  ctx.fillStyle='rgba(160,255,100,0.1)';ctx.fill();
+  // 격자
+  ctx.save();ctx.globalAlpha=0.3;
+  ctx.beginPath();ctx.arc(cx,by,22,0,Math.PI*2);ctx.clip();
+  for(var i=-3;i<=3;i++){
+    ctx.beginPath();ctx.moveTo(cx+i*8-22,by-22);ctx.lineTo(cx+i*8+22,by+22);
+    ctx.strokeStyle='rgba(20,60,5,0.9)';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-22,by+i*8-22);ctx.lineTo(cx+22,by+i*8+22);ctx.stroke();
+  }
+  ctx.restore();
+  // 눈 두 개 — 몸체 위쪽 중앙
+  var ey=by-7;
+  var blink=Math.sin(t*1.6)>0.9;
+  [-8,8].forEach(function(ox,i){
+    if(!blink){
+      ctx.beginPath();ctx.arc(cx+ox,ey,5,0,Math.PI*2);ctx.fillStyle='#e8ffe0';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox,ey,3,0,Math.PI*2);
+      var ig=ctx.createRadialGradient(cx+ox,ey,0,cx+ox,ey,3);
+      ig.addColorStop(0,'#aaffaa');ig.addColorStop(1,'#116611');
+      ctx.fillStyle=ig;ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox,ey,1.3,0,Math.PI*2);ctx.fillStyle='#050a05';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox+1.2,ey-1.2,0.8,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fill();
+    } else {
+      ctx.beginPath();ctx.moveTo(cx+ox-5,ey);ctx.lineTo(cx+ox+5,ey);
+      ctx.strokeStyle='rgba(160,255,120,0.85)';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+    }
+  });
+  // 이빨 — 몸체 하단
+  var ty=by+14;
+  [{x:cx-8,w:5,h:7},{x:cx-2,w:5,h:10},{x:cx+4,w:5,h:7}].forEach(function(tooth){
+    ctx.beginPath();ctx.moveTo(tooth.x,ty);ctx.lineTo(tooth.x+tooth.w/2,ty+tooth.h);ctx.lineTo(tooth.x+tooth.w,ty);ctx.closePath();
+    ctx.fillStyle='#e8ffe0';ctx.fill();ctx.strokeStyle='rgba(60,140,30,0.3)';ctx.lineWidth=0.8;ctx.stroke();
+  });
+  // 글로우
+  if(po>4){
+    for(var i=0;i<4;i++){
+      var ang=t*7+i*1.57;
+      ctx.beginPath();ctx.arc(cx+Math.cos(ang)*28,by+Math.sin(ang)*22,1.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(120,255,60,'+(0.35+Math.sin(t*10+i)*0.3)+')';ctx.fill();
+    }
+  }
+}
+
+function drawDLINK_RUSTY(ctx, t) {
+  var cx=60,cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  var cycle=(t*1.4)%1;
+  var pressY;
+  if(cycle<0.15) pressY=cycle/0.15;
+  else if(cycle<0.35) pressY=1;
+  else pressY=1-(cycle-0.35)/0.65;
+  pressY=pressY*pressY*(3-2*pressY);
+  var pressTravel=28,pressOffset=pressY*pressTravel;
+  var isImpact=cycle>0.12&&cycle<0.38;
+  var shakeX=isImpact?(Math.random()-0.5)*2.5:0,shakeY2=isImpact?(Math.random()-0.5)*2:0;
+
+  // 경고 줄무늬 (바닥)
+  var stripeY=86;
+  ctx.save();
+  ctx.beginPath();ctx.rect(cx-36,stripeY,72,12);ctx.clip();
+  for(var i=0;i<8;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx-36+i*18,stripeY);ctx.lineTo(cx-36+i*18+12,stripeY);
+    ctx.lineTo(cx-36+i*18+12,stripeY+12);ctx.lineTo(cx-36+i*18,stripeY+12);ctx.closePath();
+    ctx.fillStyle=i%2===0?'#ffcc00':'#111111';ctx.fill();
+  }
+  ctx.restore();
+  ctx.beginPath();ctx.rect(cx-36,stripeY,72,12);
+  ctx.strokeStyle='rgba(100,80,0,0.5)';ctx.lineWidth=1;ctx.stroke();
+
+  // 녹 얼룩 헬퍼
+  function rustSpot(rx,ry,rr){
+    ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);
+    ctx.fillStyle='rgba(140,60,10,0.35)';ctx.fill();
+  }
+
+  // 기둥 두 개
+  [-28,28].forEach(function(ox){
+    var cg=ctx.createLinearGradient(cx+ox-5,0,cx+ox+5,0);
+    cg.addColorStop(0,'#4a3010');cg.addColorStop(0.4,'#7a5020');cg.addColorStop(1,'#3a2008');
+    ctx.beginPath();ctx.rect(cx+ox-5,18,10,stripeY-18);
+    ctx.fillStyle=cg;ctx.fill();
+    ctx.strokeStyle='rgba(80,50,10,0.5)';ctx.lineWidth=1;ctx.stroke();
+    // 경고 줄무늬 기둥
+    for(var i=0;i<4;i++){
+      ctx.beginPath();ctx.rect(cx+ox-5,22+i*14,10,3);
+      ctx.fillStyle=i%2===0?'rgba(255,180,0,0.3)':'rgba(0,0,0,0.3)';ctx.fill();
+    }
+    rustSpot(cx+ox,28,3);rustSpot(cx+ox-2,50,2.5);rustSpot(cx+ox+1,68,2);
+  });
+
+  // 프레스 헤드
+  var headY=52+pressOffset+shakeY2;
+  var headH=22;
+  // 충격 그림자
+  if(!isImpact){
+    ctx.beginPath();ctx.ellipse(cx,stripeY+2,28*(1-pressY*0.3),4,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,'+(0.1+pressY*0.2)+')';ctx.fill();
+  }
+
+  var hg=ctx.createLinearGradient(cx-32,headY,cx+32,headY+headH);
+  hg.addColorStop(0,'#5a3a10');hg.addColorStop(0.3,'#8a5a20');hg.addColorStop(0.7,'#6a4010');hg.addColorStop(1,'#3a2008');
+  ctx.beginPath();
+  ctx.moveTo(cx-32+shakeX,headY+4);ctx.lineTo(cx+32+shakeX,headY+4);
+  ctx.lineTo(cx+32+shakeX,headY+headH);ctx.lineTo(cx-32+shakeX,headY+headH);ctx.closePath();
+  ctx.fillStyle=hg;ctx.fill();
+
+  // 경고 줄무늬 헤드
+  ctx.save();
+  ctx.beginPath();ctx.rect(cx-32+shakeX,headY,64,headH);ctx.clip();
+  for(var i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx-32+shakeX+i*22,headY);ctx.lineTo(cx-32+shakeX+i*22+12,headY);
+    ctx.lineTo(cx-32+shakeX+i*22+12,headY+headH);ctx.lineTo(cx-32+shakeX+i*22,headY+headH);ctx.closePath();
+    ctx.fillStyle=i%2===0?'rgba(255,180,0,0.25)':'rgba(0,0,0,0)';ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.beginPath();ctx.rect(cx-32+shakeX,headY,64,headH);
+  ctx.strokeStyle=isImpact?'rgba(255,200,0,0.7)':'rgba(80,50,10,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 녹 얼룩
+  rustSpot(cx-18+shakeX,headY+5,4);rustSpot(cx+22+shakeX,headY+14,3);rustSpot(cx+shakeX,headY+8,2.5);
+
+  // 실린더
+  ctx.beginPath();ctx.rect(cx-8,18,16,28);
+  var scy=ctx.createLinearGradient(cx-8,0,cx+8,0);
+  scy.addColorStop(0,'#4a3010');scy.addColorStop(0.5,'#7a5020');scy.addColorStop(1,'#3a2008');
+  ctx.fillStyle=scy;ctx.fill();
+  ctx.strokeStyle='rgba(80,50,10,0.5)';ctx.lineWidth=1;ctx.stroke();
+  // 피스톤 로드
+  ctx.beginPath();ctx.rect(cx-4,46,8,8+pressOffset);
+  ctx.fillStyle='#6a4a18';ctx.fill();
+
+  // 눈 두 개 — 헤드 위에 고정 위치
+  var eyeY2=headY-8;
+  var blink=Math.sin(t*1.4)>0.88;
+  [-12,12].forEach(function(ox,i){
+    var ex=cx+ox+shakeX;
+    if(!blink){
+      ctx.beginPath();ctx.arc(ex,eyeY2,7,0,Math.PI*2);ctx.fillStyle='#dde0c8';ctx.fill();
+      var pd=Math.sin(t*0.8+i)*1;
+      ctx.beginPath();ctx.arc(ex+pd,eyeY2,4,0,Math.PI*2);
+      var ig=ctx.createRadialGradient(ex+pd,eyeY2,0,ex+pd,eyeY2,4);
+      ig.addColorStop(0,'#ffcc00');ig.addColorStop(0.5,'#996600');ig.addColorStop(1,'#443300');
+      ctx.fillStyle=ig;ctx.fill();
+      ctx.beginPath();ctx.arc(ex+pd,eyeY2,2,0,Math.PI*2);ctx.fillStyle='#0a0a00';ctx.fill();
+      ctx.beginPath();ctx.arc(ex+pd+1.5,eyeY2-1.5,1,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.7)';ctx.fill();
+      ctx.beginPath();ctx.arc(ex,eyeY2,7,0,Math.PI*2);
+      ctx.strokeStyle='rgba(120,90,0,0.4)';ctx.lineWidth=1;ctx.stroke();
+    } else {
+      ctx.beginPath();ctx.moveTo(ex-7,eyeY2);ctx.lineTo(ex+7,eyeY2);
+      ctx.strokeStyle='rgba(200,160,0,0.7)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+    }
+  });
+
+  // 상단 프레임
+  var fg=ctx.createLinearGradient(cx-36,6,cx+36,18);
+  fg.addColorStop(0,'#5a3a10');fg.addColorStop(0.5,'#8a5a20');fg.addColorStop(1,'#4a3010');
+  ctx.beginPath();ctx.rect(cx-36,6,72,14);ctx.fillStyle=fg;ctx.fill();
+  ctx.strokeStyle='rgba(80,50,10,0.5)';ctx.lineWidth=1;ctx.stroke();
+  rustSpot(cx-20,10,2.5);rustSpot(cx+24,12,2);
+  ctx.font='bold 7px monospace';ctx.fillStyle='rgba(255,180,0,0.5)';ctx.textAlign='center';
+  ctx.fillText('D-LINK',cx,16);
+
+  // 충격 파티클
+  if(isImpact&&pressY>0.85){
+    var pa=(0.15-(cycle>0.35?0:cycle-0.12))/0.15;
+    for(var i=0;i<6;i++){
+      var a2=(i/6)*Math.PI+Math.PI;
+      var pr2=(1-pa)*20;
+      ctx.beginPath();ctx.arc(cx+Math.cos(a2)*pr2+shakeX,stripeY+Math.sin(a2)*pr2*0.4,2,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,130,0,'+(pa*0.6)+')';ctx.fill();
+    }
+  }
+
+  // 상단 경고 프레임
+  ctx.beginPath();ctx.rect(cx-36,6,72,14);
+  ctx.strokeStyle='rgba(100,70,0,0.4)';ctx.lineWidth=0.8;ctx.stroke();
+}
+
+function drawLINKSYS_PROJECTOR(ctx, t) {
+  var cx=60,cy=58;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*1.6)*1.5,by=cy+bob;
+
+  // 클랙 사이클
+  var cc=(t*0.9)%1;
+  var clapA;
+  if(cc<0.08) clapA=1-cc/0.08;
+  else if(cc<0.18) clapA=0;
+  else clapA=(cc-0.18)/0.82;
+  var isClap=cc<0.18;
+  var shake=isClap&&cc<0.1?(0.1-cc)/0.1*2.5:0;
+  var shX=(Math.random()-0.5)*shake*1.5;
+
+  // 삼각대 (3다리)
+  var tripodY=105;
+  [[cx-2,cx-28],[cx,cx],[cx+2,cx+28]].forEach(function(pts){
+    ctx.beginPath();ctx.moveTo(pts[0],by+30);ctx.lineTo(pts[1],tripodY);
+    ctx.strokeStyle='#2a1a08';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+    ctx.strokeStyle='rgba(80,50,10,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+  });
+  // 삼각대 가로 연결
+  ctx.beginPath();ctx.moveTo(cx-16,by+52);ctx.lineTo(cx+16,by+52);
+  ctx.strokeStyle='#2a1a08';ctx.lineWidth=2;ctx.stroke();
+
+  // 영사기 본체
+  var bw=58,bh=32,bx=cx-bw/2+shX,bby2=by-bh/2+4;
+  var bg=ctx.createLinearGradient(bx,bby2,bx+bw,bby2+bh);
+  bg.addColorStop(0,'#3a1a08');bg.addColorStop(0.5,'#5a2a0a');bg.addColorStop(1,'#2a1006');
+  ctx.beginPath();
+  ctx.moveTo(bx+5,bby2);ctx.lineTo(bx+bw-5,bby2);ctx.quadraticCurveTo(bx+bw,bby2,bx+bw,bby2+5);
+  ctx.lineTo(bx+bw,bby2+bh-5);ctx.quadraticCurveTo(bx+bw,bby2+bh,bx+bw-5,bby2+bh);
+  ctx.lineTo(bx+5,bby2+bh);ctx.quadraticCurveTo(bx,bby2+bh,bx,bby2+bh-5);
+  ctx.lineTo(bx,bby2+5);ctx.quadraticCurveTo(bx,bby2,bx+5,bby2);
+  ctx.closePath();ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(180,120,40,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 릴 2개 (위에) — 눈알 들어있음
+  var rilR=13;
+  var ril1x=cx-12+shX,ril1y=bby2-rilR+2;
+  var ril2x=cx+16+shX,ril2y=bby2-rilR+2;
+  [ril1x,ril2x].forEach(function(rx,ri){
+    var ry=ri===0?ril1y:ril2y;
+    var rilA=t*(ri===0?1.2:-1.0);
+    // 릴 외곽
+    ctx.beginPath();ctx.arc(rx,ry,rilR,0,Math.PI*2);
+    var rg=ctx.createRadialGradient(rx,ry,2,rx,ry,rilR);
+    rg.addColorStop(0,'#5a3a10');rg.addColorStop(0.6,'#7a5018');rg.addColorStop(1,'#3a1a06');
+    ctx.fillStyle=rg;ctx.fill();
+    ctx.strokeStyle='rgba(200,150,50,0.6)';ctx.lineWidth=2;ctx.stroke();
+    // 릴 살 (스포크)
+    for(var s=0;s<6;s++){
+      var sa=rilA+(s/6)*Math.PI*2;
+      ctx.beginPath();ctx.moveTo(rx+Math.cos(sa)*3,ry+Math.sin(sa)*3);
+      ctx.lineTo(rx+Math.cos(sa)*(rilR-2),ry+Math.sin(sa)*(rilR-2));
+      ctx.strokeStyle='rgba(180,120,40,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+    }
+    // 릴 구멍들 (6개)
+    for(var h=0;h<6;h++){
+      var ha=rilA+(h/6)*Math.PI*2;
+      var hx=rx+Math.cos(ha)*7,hy2=ry+Math.sin(ha)*7;
+      ctx.beginPath();ctx.arc(hx,hy2,2.5,0,Math.PI*2);
+      ctx.fillStyle='#1a0a02';ctx.fill();
+    }
+    // 눈알 (중심)
+    var blink=Math.sin(t*1.4+ri*1.2)>0.9;
+    if(!blink){
+      ctx.beginPath();ctx.arc(rx,ry,5.5,0,Math.PI*2);ctx.fillStyle='#f5eedd';ctx.fill();
+      var pd2=Math.sin(t*1.5+ri)*1;
+      ctx.beginPath();ctx.arc(rx+pd2,ry,3.2,0,Math.PI*2);
+      var ig=ctx.createRadialGradient(rx+pd2,ry,0,rx+pd2,ry,3.2);
+      ig.addColorStop(0,'#ee77ff');ig.addColorStop(1,'#550077');
+      ctx.fillStyle=ig;ctx.fill();
+      ctx.beginPath();ctx.arc(rx+pd2,ry,1.5,0,Math.PI*2);ctx.fillStyle='#05000a';ctx.fill();
+      ctx.beginPath();ctx.arc(rx+pd2+1.5,ry-1.5,0.9,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fill();
+    } else {
+      ctx.beginPath();ctx.moveTo(rx-5,ry);ctx.lineTo(rx+5,ry);
+      ctx.strokeStyle='rgba(220,160,255,0.8)';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+    }
+  });
+  // 릴 연결 축
+  ctx.beginPath();ctx.moveTo(ril1x+rilR,ril1y+2);ctx.lineTo(ril2x-rilR,ril2y+2);
+  ctx.strokeStyle='rgba(150,100,30,0.4)';ctx.lineWidth=2;ctx.stroke();
+
+  // 경통 (왼쪽으로 튀어나옴) — 클랙 때 움직임
+  var lensOff=clapA*4; // 클랙 때 살짝 앞으로
+  var lensX=bx-18-lensOff,lensY=by+6;
+  // 경통 몸체
+  ctx.beginPath();ctx.rect(lensX,lensY-6,18+lensOff,12);
+  ctx.fillStyle='#2a1006';ctx.fill();
+  ctx.strokeStyle='rgba(150,100,30,0.4)';ctx.lineWidth=1;ctx.stroke();
+  // 경통 앞 렌즈
+  ctx.beginPath();ctx.arc(lensX,lensY,8,0,Math.PI*2);
+  var lg=ctx.createRadialGradient(lensX,lensY,1,lensX,lensY,8);
+  lg.addColorStop(0,'rgba(200,180,100,0.6)');lg.addColorStop(0.5,'#1a0a02');lg.addColorStop(1,'#0a0501');
+  ctx.fillStyle=lg;ctx.fill();
+  ctx.strokeStyle='rgba(200,150,50,0.7)';ctx.lineWidth=2;ctx.stroke();
+  // 빛 발사
+  ctx.save();ctx.globalAlpha=0.07+Math.sin(t*3)*0.02;
+  ctx.beginPath();ctx.moveTo(lensX,lensY);ctx.lineTo(lensX-40,lensY-22);ctx.lineTo(lensX-40,lensY+22);ctx.closePath();
+  ctx.fillStyle='rgba(255,240,160,1)';ctx.fill();ctx.restore();
+  // 이빨 (경통 위아래)
+  var teeth2=[{h:6},{h:9},{h:6},{h:7}];
+  teeth2.forEach(function(tooth,i){
+    var tx2=lensX-2+i*5.5;
+    // 위 이빨
+    ctx.beginPath();ctx.moveTo(tx2,lensY-6);ctx.lineTo(tx2+2.5,lensY-6-tooth.h);ctx.lineTo(tx2+5,lensY-6);ctx.closePath();
+    ctx.fillStyle='#f0e8d0';ctx.fill();ctx.strokeStyle='rgba(100,70,20,0.3)';ctx.lineWidth=0.7;ctx.stroke();
+    // 아래 이빨
+    ctx.beginPath();ctx.moveTo(tx2,lensY+6);ctx.lineTo(tx2+2.5,lensY+6+tooth.h);ctx.lineTo(tx2+5,lensY+6);ctx.closePath();
+    ctx.fillStyle='#f0e8d0';ctx.fill();ctx.strokeStyle='rgba(100,70,20,0.3)';ctx.lineWidth=0.7;ctx.stroke();
+  });
+
+  // 키득 이펙트
+  if(isClap&&cc<0.15){
+    var pa=(0.15-cc)/0.15;
+    ctx.font=(8+pa*3)+'px monospace';ctx.fillStyle='rgba(200,255,200,'+pa*0.8+')';
+    ctx.textAlign='center';ctx.fillText('키득ㅋ',cx+22+shX,bby2-8);
+    // 파티클
+    for(var i=0;i<4;i++){
+      var pa2b=(i/4)*Math.PI*2;var pr2b=(1-pa)*16;
+      ctx.beginPath();ctx.arc(cx+shX+Math.cos(pa2b)*pr2b,by+Math.sin(pa2b)*pr2b*0.4,1.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,'+(pa*0.4)+')';ctx.fill();
+    }
+  }
+}
+
+function drawUBIQUITI_CYBER(ctx, t) {
+  var cx=60,cy=62;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*1.7)*2.5,by=cy+bob;
+  var lCX=cx-22,rCX=cx+22,lR=18;
+  var glitch=Math.sin(t*7)>0.8;
+  var glitch2=Math.sin(t*11)>0.88;
+
+  // 글리치 배경
+  if(glitch){
+    ctx.save();ctx.globalAlpha=0.15;
+    var gy=by-6+Math.floor(Math.random()*12)-6;
+    ctx.fillStyle='#ff44cc';ctx.fillRect(cx-lR*2.5,gy,lR*5,3);
+    ctx.fillStyle='#44aaff';ctx.fillRect(cx-lR*2.5,gy+8,lR*5,2);
+    ctx.restore();
+  }
+
+  // 글로우
+  [[lCX,'#4488ff'],[rCX,'#ff44cc']].forEach(function(item){
+    var lx=item[0],col=item[1];
+    var gr=ctx.createRadialGradient(lx,by,4,lx,by,lR+12);
+    gr.addColorStop(0,col.replace('#','rgba(').replace(/(..)(..)(..)$/,function(m,r,g,b){return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+',0.18)';}));
+    gr.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath();ctx.arc(lx,by,lR+12,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+  });
+
+  // 렌즈 두 개
+  [[lCX,'#0055ff','#4488ff'],[rCX,'#cc0088','#ff44cc']].forEach(function(item,li){
+    var lx=item[0],dark=item[1],bright=item[2];
+    ctx.beginPath();ctx.arc(lx,by,lR,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,5,20,0.92)';ctx.fill();
+    // HUD 격자
+    ctx.save();ctx.globalAlpha=0.1;
+    for(var i=-2;i<=2;i++){
+      ctx.beginPath();ctx.moveTo(lx-lR,by+i*6);ctx.lineTo(lx+lR,by+i*6);
+      ctx.moveTo(lx+i*6,by-lR);ctx.lineTo(lx+i*6,by+lR);
+      ctx.strokeStyle=bright;ctx.lineWidth=0.5;ctx.stroke();
+    }
+    ctx.restore();
+    // 프레임
+    ctx.beginPath();ctx.arc(lx,by,lR,0,Math.PI*2);
+    ctx.strokeStyle=bright;ctx.lineWidth=2.5;ctx.stroke();
+    // 글리치 프레임
+    if(glitch2){
+      ctx.save();ctx.globalAlpha=0.6;
+      ctx.beginPath();ctx.arc(lx+(Math.random()-0.5)*4,by,lR,0,Math.PI*2);
+      ctx.strokeStyle=li===0?'#ff44cc':'#4488ff';ctx.lineWidth=1;ctx.stroke();
+      ctx.restore();
+    }
+    // 내부 데이터 링
+    for(var r2=lR-5;r2>4;r2-=5){
+      ctx.beginPath();ctx.arc(lx,by,r2,0,Math.PI*2);
+      ctx.strokeStyle=bright.replace('#','rgba(').replace(/(..)(..)(..)$/,function(m,r,g,b){
+        return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+',0.12)';});
+      ctx.lineWidth=0.8;ctx.stroke();
+    }
+  });
+
+  // 브릿지 + 다리
+  ctx.beginPath();ctx.moveTo(lCX+lR,by-2);ctx.quadraticCurveTo(cx,by-8,rCX-lR,by-2);
+  var bridgeG=ctx.createLinearGradient(lCX+lR,by,rCX-lR,by);
+  bridgeG.addColorStop(0,'#4488ff');bridgeG.addColorStop(1,'#ff44cc');
+  ctx.strokeStyle=bridgeG;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  [[lCX-lR,'#4488ff'],[rCX+lR,'#ff44cc']].forEach(function(item){
+    var lx=item[0],col=item[1];
+    ctx.beginPath();ctx.moveTo(lx,by);ctx.quadraticCurveTo(lx+(lx<cx?-8:8),by-2,lx+(lx<cx?-18:18),by+4);
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  });
+
+  // 왼쪽 — 사이버 눈 (파랑)
+  var blink=Math.sin(t*1.5)>0.9;
+  if(!blink){
+    ctx.beginPath();ctx.arc(lCX,by,11,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,220,255,0.9)';ctx.fill();
+    var pd=Math.sin(t*1.8)*1.5;
+    ctx.beginPath();ctx.arc(lCX+pd,by,6.5,0,Math.PI*2);
+    var ig=ctx.createRadialGradient(lCX+pd,by,0,lCX+pd,by,6.5);
+    ig.addColorStop(0,'#ffffff');ig.addColorStop(0.3,'#88ccff');ig.addColorStop(1,'#0044aa');
+    ctx.fillStyle=ig;ctx.fill();
+    // 픽셀 동공
+    ctx.fillStyle='#000510';ctx.fillRect(lCX+pd-2,by-2,4,4);
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fillRect(lCX+pd+1,by-2,1.5,1.5);
+    // 스캔라인
+    ctx.beginPath();ctx.moveTo(lCX-10,by+Math.sin(t*8)*3);ctx.lineTo(lCX+10,by+Math.sin(t*8)*3);
+    ctx.strokeStyle='rgba(100,200,255,0.3)';ctx.lineWidth=1;ctx.stroke();
+  } else {
+    ctx.beginPath();ctx.moveTo(lCX-10,by);ctx.lineTo(lCX+10,by);
+    ctx.strokeStyle='rgba(100,200,255,0.8)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  }
+
+  // 오른쪽 — 핑크 표적
+  var tR=t*0.5,pulse2=0.5+Math.sin(t*3)*0.3;
+  [10,6.5,3].forEach(function(r3,i){
+    ctx.beginPath();ctx.arc(rCX,by,r3,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,68,200,'+(0.35+i*0.2+pulse2*0.1)+')';ctx.lineWidth=i===2?1.5:1;ctx.stroke();
+  });
+  ctx.save();ctx.translate(rCX,by);ctx.rotate(tR);
+  [0,Math.PI/2].forEach(function(a){
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*4,Math.sin(a)*4);ctx.lineTo(Math.cos(a)*13,Math.sin(a)*13);
+    ctx.moveTo(-Math.cos(a)*4,-Math.sin(a)*4);ctx.lineTo(-Math.cos(a)*13,-Math.sin(a)*13);
+    ctx.strokeStyle='rgba(255,68,200,'+(0.6+pulse2*0.2)+')';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.stroke();
+  });
+  ctx.beginPath();ctx.arc(0,0,2,0,Math.PI*2);ctx.fillStyle='#ff44cc';ctx.fill();
+  ctx.restore();
+  // 핑크 스캔 섹터
+  ctx.save();ctx.translate(rCX,by);ctx.rotate(t*1.5);
+  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,lR-3,-0.18,0.18);ctx.closePath();
+  ctx.fillStyle='rgba(255,68,200,0.1)';ctx.fill();ctx.restore();
+
+  // 글로우 + 글리치 효과
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,58);
+  g.addColorStop(0,'transparent');g.addColorStop(0.5,'rgba(68,136,255,0.04)');g.addColorStop(1,'rgba(255,68,200,0.04)');
+  ctx.beginPath();ctx.arc(cx,by,58,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawHUAWEI_DRAWER(ctx, t) {
+  if(!ctx) return;
+  var cx=60,cy=60;
+  ctx.clearRect(0,0,120,120);
+  var bob=Math.sin(t*1.5)*1.5,by=cy+bob;
+  var FW=62,FH=90,fx=cx-FW/2,fy=by-FH/2;
+  var dH=FH/3;
+
+  var tc=(t*0.2)%1,d1=tc<0.25?tc/0.25:tc<0.55?1:1-(tc-0.55)/0.45;d1=d1*d1*(3-2*d1);
+  var tc2=((t+2)*0.16)%1,d2=tc2<0.25?tc2/0.25:tc2<0.55?1:1-(tc2-0.55)/0.45;d2=d2*d2*(3-2*d2);
+  var tc3=((t+4)*0.13)%1,d3=tc3<0.25?tc3/0.25:tc3<0.55?1:1-(tc3-0.55)/0.45;d3=d3*d3*(3-2*d3);
+
+  // 본체
+  var bg=ctx.createLinearGradient(fx,fy,fx+FW,fy+FH);
+  bg.addColorStop(0,'#f5f0e8');bg.addColorStop(0.5,'#ffffff');bg.addColorStop(1,'#e8e0d0');
+  ctx.beginPath();
+  ctx.moveTo(fx+6,fy);ctx.lineTo(fx+FW-6,fy);ctx.quadraticCurveTo(fx+FW,fy,fx+FW,fy+6);
+  ctx.lineTo(fx+FW,fy+FH-6);ctx.quadraticCurveTo(fx+FW,fy+FH,fx+FW-6,fy+FH);
+  ctx.lineTo(fx+6,fy+FH);ctx.quadraticCurveTo(fx,fy+FH,fx,fy+FH-6);
+  ctx.lineTo(fx,fy+6);ctx.quadraticCurveTo(fx,fy,fx+6,fy);
+  ctx.closePath();ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(180,160,120,0.7)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 서랍 구분선
+  [1,2].forEach(function(i){
+    ctx.beginPath();ctx.moveTo(fx+3,fy+dH*i);ctx.lineTo(fx+FW-3,fy+dH*i);
+    ctx.strokeStyle='rgba(160,140,100,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+  });
+
+  [{y:fy,open:d1},{y:fy+dH,open:d2},{y:fy+dH*2,open:d3}].forEach(function(dr,di){
+    if(dr.open>0.05){
+      ctx.save();ctx.beginPath();ctx.rect(fx+2,dr.y+2,FW-4,dH-2);ctx.clip();
+      ctx.fillStyle='rgba(220,210,180,'+dr.open+')';ctx.fillRect(fx+2,dr.y+2,FW-4,dH-2);
+      if(di===0){
+        var al=Math.max(0,(dr.open-0.3)/0.7);
+        if(al>0){
+          ctx.globalAlpha=al;
+          var ey2=dr.y+dH*0.42;
+          [-8,8].forEach(function(ox){
+            ctx.beginPath();ctx.arc(cx+ox,ey2,5,0,Math.PI*2);ctx.fillStyle='#fffde0';ctx.fill();
+            ctx.beginPath();ctx.arc(cx+ox,ey2,2.8,0,Math.PI*2);
+            var ig=ctx.createRadialGradient(cx+ox,ey2,0,cx+ox,ey2,2.8);
+            ig.addColorStop(0,'#ffe066');ig.addColorStop(1,'#cc8800');
+            ctx.fillStyle=ig;ctx.fill();
+            ctx.beginPath();ctx.arc(cx+ox,ey2,1.2,0,Math.PI*2);ctx.fillStyle='#1a0a00';ctx.fill();
+          });
+          var armL=Math.max(0,(dr.open-0.1)/0.9);armL=armL*armL*(3-2*armL)*20;
+          var ay=dr.y+dH*0.72;
+          ctx.beginPath();ctx.moveTo(fx+4,ay);ctx.lineTo(fx-armL+4,ay-3);
+          ctx.strokeStyle='#ffdd00';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
+          ctx.beginPath();ctx.arc(fx-armL+3,ay,4,0,Math.PI*2);ctx.fillStyle='#ffdd00';ctx.fill();
+          ctx.beginPath();ctx.moveTo(fx+FW-4,ay);ctx.lineTo(fx+FW+armL-4,ay-3);
+          ctx.strokeStyle='#ffdd00';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
+          ctx.beginPath();ctx.arc(fx+FW+armL-3,ay,4,0,Math.PI*2);ctx.fillStyle='#ffdd00';ctx.fill();
+          ctx.globalAlpha=1;
+        }
+      } else if(di===1){
+        var sw=cx,swY=dr.y+dH/2,swR=Math.min(FW/2-6,dH/2-4),swA=t*2;
+        var cols=[[255,0,0],[255,120,0],[255,220,0],[0,220,60],[0,120,255],[100,0,255],[255,0,200]];
+        for(var ring=0;ring<7;ring++){
+          for(var s=0;s<20;s++){
+            var a1=swA+(s/20)*Math.PI*2+ring*0.5,a2=swA+((s+1)/20)*Math.PI*2+ring*0.5;
+            var r1=swR*(ring/7),r2=swR*((ring+1.05)/7);
+            var c=cols[(ring*3+s)%cols.length];
+            ctx.beginPath();ctx.moveTo(sw+Math.cos(a1)*r1,swY+Math.sin(a1)*r1);
+            ctx.arc(sw,swY,r2,a1,a2);ctx.arc(sw,swY,r1,a2,a1,true);ctx.closePath();
+            ctx.fillStyle='rgba('+c[0]+','+c[1]+','+c[2]+','+dr.open+')';ctx.fill();
+          }
+        }
+      } else {
+        ctx.globalAlpha=dr.open;
+        for(var i=0;i<8;i++){
+          var sa=t*3+i*0.8,sr2=7+Math.sin(t*5+i)*3;
+          ctx.beginPath();ctx.arc(cx+Math.cos(sa)*sr2,dr.y+dH/2+Math.sin(sa)*sr2*0.6,1.5,0,Math.PI*2);
+          ctx.fillStyle='rgba(255,220,100,'+(0.4+Math.sin(t*8+i)*0.4)+')';ctx.fill();
+        }
+        ctx.globalAlpha=1;
+      }
+      ctx.restore();
+    }
+    // 서랍 문 (앞으로 당김)
+    var pull=dr.open*16;
+    ctx.save();ctx.beginPath();ctx.rect(fx+2,dr.y+2,FW-4,dH-2);ctx.clip();
+    var dg=ctx.createLinearGradient(fx,dr.y,fx+FW,dr.y);
+    dg.addColorStop(0,'#eeeeee');dg.addColorStop(0.3,'#ffffff');dg.addColorStop(1,'#dddddd');
+    ctx.beginPath();ctx.rect(fx+2,dr.y+2+pull,FW-4,dH-4);ctx.fillStyle=dg;ctx.fill();
+    ctx.strokeStyle='rgba(160,140,100,0.4)';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,dr.y+dH/2+pull,5,0,Math.PI*2);
+    ctx.fillStyle='#c0a860';ctx.fill();ctx.strokeStyle='#8B7030';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+  });
+
+  // 다리
+  [-18,18].forEach(function(ox){
+    ctx.beginPath();ctx.rect(cx+ox-4,fy+FH,8,7);ctx.fillStyle='#c8b880';ctx.fill();
+  });
+  ctx.beginPath();
+  ctx.moveTo(fx+6,fy);ctx.lineTo(fx+FW-6,fy);ctx.quadraticCurveTo(fx+FW,fy,fx+FW,fy+6);
+  ctx.lineTo(fx+FW,fy+FH-6);ctx.quadraticCurveTo(fx+FW,fy+FH,fx+FW-6,fy+FH);
+  ctx.lineTo(fx+6,fy+FH);ctx.quadraticCurveTo(fx,fy+FH,fx,fy+FH-6);
+  ctx.lineTo(fx,fy+6);ctx.quadraticCurveTo(fx,fy,cx-FW/2+6,fy);
+  ctx.closePath();ctx.strokeStyle='rgba(140,120,80,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+}
+
+function drawJUNK(ctx, t) {
+  var cx=60, cy=62;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.8)*2;
+  var by = cy + bob;
+
+  // ── 태엽 (뒤에, 먼저 그림) ──
+  var springX = cx+18, springY = by-10;
+  var springAngle = t * 1.2;
+
+  // 태엽 기둥
+  ctx.beginPath();
+  ctx.moveTo(springX, by-2);
+  ctx.lineTo(springX, by-28);
+  ctx.strokeStyle='#666';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+  ctx.strokeStyle='#888';ctx.lineWidth=2;ctx.stroke();
+
+  // 태엽 코일
+  ctx.save();
+  ctx.translate(springX, by-28);
+  ctx.rotate(springAngle);
+  for(var i=0;i<3;i++){
+    var r=6+i*3;
+    var alpha=0.8-i*0.2;
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.strokeStyle='rgba(180,140,40,'+alpha+')';
+    ctx.lineWidth=2.5-i*0.5;
+    ctx.stroke();
+  }
+  // 태엽 날개
+  for(var i=0;i<4;i++){
+    var a=(i/4)*Math.PI*2+springAngle;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*5,Math.sin(a)*5);
+    ctx.lineTo(Math.cos(a)*13,Math.sin(a)*13);
+    ctx.lineTo(Math.cos(a+0.3)*13,Math.sin(a+0.3)*13);
+    ctx.closePath();
+    ctx.fillStyle='rgba(200,160,40,0.8)';ctx.fill();
+    ctx.strokeStyle='rgba(140,100,20,0.6)';ctx.lineWidth=0.8;ctx.stroke();
+  }
+  // 중심 나사
+  ctx.beginPath();ctx.arc(0,0,3.5,0,Math.PI*2);
+  ctx.fillStyle='#aaa';ctx.fill();
+  ctx.strokeStyle='#666';ctx.lineWidth=1;ctx.stroke();
+  ctx.restore();
+
+  // ── 몸체 (울퉁불퉁 고철) ──
+  // 불규칙한 덩어리 형태
+  ctx.beginPath();
+  var pts=[
+    [cx-26,by-8],[cx-22,by-20],[cx-14,by-26],[cx-4,by-28],
+    [cx+8,by-24],[cx+18,by-18],[cx+20,by-6],[cx+18,by+8],
+    [cx+12,by+18],[cx+2,by+22],[cx-10,by+20],[cx-20,by+14],
+    [cx-26,by+4]
+  ];
+  // 약간 흔들림
+  ctx.moveTo(pts[0][0]+Math.sin(t*3)*1.5, pts[0][1]+Math.cos(t*2.5)*1);
+  for(var i=1;i<pts.length;i++){
+    var nx=pts[i][0]+Math.sin(t*3+i*0.5)*1.5;
+    var ny=pts[i][1]+Math.cos(t*2.5+i*0.4)*1;
+    ctx.lineTo(nx, ny);
+  }
+  ctx.closePath();
+
+  // 회색+노랑 그라데이션
+  var bg=ctx.createRadialGradient(cx-4,by-6,2,cx,by,28);
+  bg.addColorStop(0,'#d4c84a');
+  bg.addColorStop(0.3,'#a89830');
+  bg.addColorStop(0.55,'#787878');
+  bg.addColorStop(0.8,'#525252');
+  bg.addColorStop(1,'#383838');
+  ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(60,50,20,0.8)';ctx.lineWidth=2;ctx.stroke();
+
+  // 몸체 질감 — 녹/스크래치
+  ctx.save();
+  ctx.beginPath();
+  var pts2=[
+    [cx-26,by-8],[cx-22,by-20],[cx-14,by-26],[cx-4,by-28],
+    [cx+8,by-24],[cx+18,by-18],[cx+20,by-6],[cx+18,by+8],
+    [cx+12,by+18],[cx+2,by+22],[cx-10,by+20],[cx-20,by+14],
+    [cx-26,by+4]
+  ];
+  ctx.moveTo(pts2[0][0],pts2[0][1]);
+  for(var i=1;i<pts2.length;i++) ctx.lineTo(pts2[i][0],pts2[i][1]);
+  ctx.closePath();ctx.clip();
+
+  // 노랑 패치들
+  [[cx-14,by-18,8],[cx+10,by+10,6],[cx-8,by+14,5],[cx+6,by-18,4]].forEach(function(p){
+    ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,Math.PI*2);
+    ctx.fillStyle='rgba(220,180,30,0.35)';ctx.fill();
+  });
+  // 스크래치
+  [[cx-18,by-10,cx-8,by+2],[cx+4,by-20,cx+14,by-8],[cx-10,by+6,cx+4,by+18]].forEach(function(l){
+    ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);
+    ctx.strokeStyle='rgba(30,20,0,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+  });
+  // 볼트
+  [[cx-16,by-14],[cx+12,by-10],[cx-6,by+16],[cx+10,by+8]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],3,0,Math.PI*2);
+    ctx.fillStyle='#555';ctx.fill();
+    ctx.strokeStyle='#333';ctx.lineWidth=0.8;ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(b[0]-2,b[1]);ctx.lineTo(b[0]+2,b[1]);
+    ctx.moveTo(b[0],b[1]-2);ctx.lineTo(b[0],b[1]+2);
+    ctx.strokeStyle='#222';ctx.lineWidth=0.8;ctx.stroke();
+  });
+  ctx.restore();
+
+  // ── 앵그리버드 눈 두 개 ──
+  var eyeY = by - 8;
+  var browAngle = 0.35; // 찡그린 각도
+
+  [-10, 10].forEach(function(ox, i){
+    var ex = cx+ox;
+    var flip = i===0 ? 1 : -1;
+
+    // 눈 흰자
+    ctx.beginPath();ctx.arc(ex,eyeY,9,0,Math.PI*2);
+    ctx.fillStyle='#f8f0e0';ctx.fill();
+    ctx.strokeStyle='rgba(60,30,10,0.5)';ctx.lineWidth=1;ctx.stroke();
+
+    // 홍채 (빨간)
+    var pd=Math.sin(t*1.2+i)*1.2;
+    ctx.beginPath();ctx.arc(ex+pd,eyeY+1,5.5,0,Math.PI*2);
+    var ig=ctx.createRadialGradient(ex+pd,eyeY+1,0,ex+pd,eyeY+1,5.5);
+    ig.addColorStop(0,'#ff4444');
+    ig.addColorStop(0.4,'#cc1111');
+    ig.addColorStop(1,'#880000');
+    ctx.fillStyle=ig;ctx.fill();
+
+    // 동공
+    ctx.beginPath();ctx.arc(ex+pd,eyeY+1,2.8,0,Math.PI*2);
+    ctx.fillStyle='#0a0000';ctx.fill();
+
+    // 반짝임
+    ctx.beginPath();ctx.arc(ex+pd+2,eyeY-1,1.3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+
+
+  });
+
+  // ── 입 (찡그린) ──
+  ctx.beginPath();
+  ctx.moveTo(cx-8, by+6);
+  ctx.quadraticCurveTo(cx, by+2, cx+8, by+6);
+  ctx.strokeStyle='#1a0a00';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  // 아랫니
+  [[cx-4,by+6],[cx,by+5],[cx+4,by+6]].forEach(function(t2){
+    ctx.beginPath();ctx.rect(t2[0]-2,t2[1],4,4);
+    ctx.fillStyle='#e8ddc8';ctx.fill();
+  });
+
+  // ── 글로우 ──
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,55);
+  g.addColorStop(0,'transparent');
+  g.addColorStop(1,'rgba(200,160,30,0.05)');
+  ctx.beginPath();ctx.arc(cx,by,55,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawSPEED(ctx, t) {
+  var cx=60, cy=64;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*8)*1.5; // 빠르게 덜컹
+  var by = cy + bob;
+
+  // ── 연기 파티클 (뒤에서 나옴) ──
+  for(var i=0;i<5;i++){
+    var age = (t*1.5 + i*0.4) % 1;
+    var sx = cx + 22 + age*18;
+    var sy = by - 8 - age*12;
+    var sr = 4 + age*8;
+    var sa = (1-age)*0.35;
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,180,180,'+sa+')';ctx.fill();
+  }
+
+  // ── 바퀴 2개 ──
+  var wheelR = 14;
+  var wheelY = by + 16;
+  [-22, 22].forEach(function(ox, wi){
+    var wx = cx + ox;
+    var wheelAngle = -t * 4; // 앞으로 굴러가는 방향
+
+    // 타이어 외곽
+    ctx.beginPath();ctx.arc(wx, wheelY, wheelR, 0, Math.PI*2);
+    ctx.fillStyle='#1a1a1a';ctx.fill();
+    ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.stroke();
+
+    // 타이어 트레드
+    for(var j=0;j<8;j++){
+      var ta = wheelAngle + (j/8)*Math.PI*2;
+      ctx.beginPath();
+      ctx.arc(wx, wheelY, wheelR-1, ta, ta+0.25);
+      ctx.strokeStyle='#444';ctx.lineWidth=3;ctx.stroke();
+    }
+
+    // 휠 (금속)
+    ctx.beginPath();ctx.arc(wx, wheelY, wheelR-4, 0, Math.PI*2);
+    var wg = ctx.createRadialGradient(wx,wheelY,0,wx,wheelY,wheelR-4);
+    wg.addColorStop(0,'#888');wg.addColorStop(0.6,'#555');wg.addColorStop(1,'#333');
+    ctx.fillStyle=wg;ctx.fill();
+    ctx.strokeStyle='#666';ctx.lineWidth=1;ctx.stroke();
+
+    // 스포크 3개
+    for(var j=0;j<3;j++){
+      var sa2 = wheelAngle + (j/3)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(wx+Math.cos(sa2)*2, wheelY+Math.sin(sa2)*2);
+      ctx.lineTo(wx+Math.cos(sa2)*(wheelR-5), wheelY+Math.sin(sa2)*(wheelR-5));
+      ctx.strokeStyle='#777';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+    }
+
+    // 휠 중심
+    ctx.beginPath();ctx.arc(wx, wheelY, 3, 0, Math.PI*2);
+    ctx.fillStyle='#aaa';ctx.fill();
+    ctx.strokeStyle='#666';ctx.lineWidth=1;ctx.stroke();
+
+    // 속도감 선 (바퀴 옆)
+    if(wi===0){
+      for(var j=0;j<3;j++){
+        var lx = wx - wheelR - 4 - j*6;
+        var ly = wheelY - 4 + j*4;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);ctx.lineTo(lx-8-j*2, ly);
+        ctx.strokeStyle='rgba(150,150,150,'+(0.5-j*0.15)+')';
+        ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+      }
+    }
+  });
+
+  // ── 차축 ──
+  ctx.beginPath();
+  ctx.moveTo(cx-22, wheelY);ctx.lineTo(cx+22, wheelY);
+  ctx.strokeStyle='#555';ctx.lineWidth=3;ctx.stroke();
+
+  // ── 고철 판 몸체 ──
+  var pw=54, ph=32;
+  var px=cx-pw/2, pby=by-ph/2-4;
+
+  // 판 그라데이션 (긁힌 금속)
+  var bg=ctx.createLinearGradient(px,pby,px+pw,pby+ph);
+  bg.addColorStop(0,'#6a6a6a');
+  bg.addColorStop(0.3,'#858585');
+  bg.addColorStop(0.6,'#5a5a5a');
+  bg.addColorStop(1,'#404040');
+  ctx.beginPath();
+  ctx.moveTo(px+4,pby);ctx.lineTo(px+pw-4,pby);
+  ctx.quadraticCurveTo(px+pw,pby,px+pw,pby+4);
+  ctx.lineTo(px+pw,pby+ph-4);ctx.quadraticCurveTo(px+pw,pby+ph,px+pw-4,pby+ph);
+  ctx.lineTo(px+4,pby+ph);ctx.quadraticCurveTo(px,pby+ph,px,pby+ph-4);
+  ctx.lineTo(px,pby+4);ctx.quadraticCurveTo(px,pby,px+4,pby);
+  ctx.closePath();
+  ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.stroke();
+
+  // 판 스크래치/질감
+  [[px+6,pby+8,px+20,pby+18],[px+28,pby+6,px+44,pby+20],
+   [px+10,pby+22,px+18,pby+28],[px+36,pby+18,px+50,pby+26]].forEach(function(l){
+    ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);
+    ctx.strokeStyle='rgba(30,30,30,0.4)';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // 노랑 경고 선 (옆면)
+  ctx.beginPath();ctx.rect(px,pby+ph-8,pw,4);
+  var yg=ctx.createLinearGradient(px,0,px+pw,0);
+  for(var i=0;i<6;i++){
+    yg.addColorStop(i/6, i%2===0?'rgba(220,180,0,0.5)':'rgba(0,0,0,0.3)');
+    yg.addColorStop((i+1)/6, i%2===0?'rgba(220,180,0,0.5)':'rgba(0,0,0,0.3)');
+  }
+  ctx.fillStyle=yg;ctx.fill();
+
+  // 볼트
+  [[px+6,pby+6],[px+pw-6,pby+6],[px+6,pby+ph-6],[px+pw-6,pby+ph-6]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],3,0,Math.PI*2);
+    ctx.fillStyle='#666';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(b[0]-2,b[1]);ctx.lineTo(b[0]+2,b[1]);
+    ctx.moveTo(b[0],b[1]-2);ctx.lineTo(b[0],b[1]+2);
+    ctx.strokeStyle='#222';ctx.lineWidth=0.8;ctx.stroke();
+  });
+
+  // ── 배기구 (연기 출발점) ──
+  ctx.beginPath();ctx.rect(cx+18,pby-4,8,8);
+  var exG=ctx.createLinearGradient(0,pby-4,0,pby+4);
+  exG.addColorStop(0,'#555');exG.addColorStop(1,'#333');
+  ctx.fillStyle=exG;ctx.fill();
+  ctx.strokeStyle='#222';ctx.lineWidth=1;ctx.stroke();
+  // 배기구 구멍
+  ctx.beginPath();ctx.arc(cx+22,pby,3,0,Math.PI*2);
+  ctx.fillStyle='#111';ctx.fill();
+
+  // ── 고글 ──
+  var goggleY = pby + ph*0.38;
+
+  // 고글 스트랩
+  ctx.beginPath();
+  ctx.moveTo(px, goggleY);
+  ctx.lineTo(px+pw, goggleY);
+  ctx.strokeStyle='rgba(100,60,20,0.6)';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
+
+  // 고글 렌즈 2개 (갈색)
+  [-10, 10].forEach(function(ox){
+    var gx=cx+ox, gy=goggleY;
+
+    // 렌즈 외곽 (고무 테두리)
+    ctx.beginPath();ctx.arc(gx,gy,10,0,Math.PI*2);
+    ctx.fillStyle='#3a1a05';ctx.fill();
+    ctx.strokeStyle='#5a2a08';ctx.lineWidth=2;ctx.stroke();
+
+    // 렌즈 유리 (갈색)
+    ctx.beginPath();ctx.arc(gx,gy,8,0,Math.PI*2);
+    var lg=ctx.createRadialGradient(gx-2,gy-2,0,gx,gy,8);
+    lg.addColorStop(0,'rgba(180,110,40,0.85)');
+    lg.addColorStop(0.5,'rgba(120,70,20,0.9)');
+    lg.addColorStop(1,'rgba(60,30,5,0.95)');
+    ctx.fillStyle=lg;ctx.fill();
+
+    // 렌즈 반사
+    ctx.beginPath();ctx.ellipse(gx-2,gy-3,3,2,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,200,100,0.25)';ctx.fill();
+
+    // 렌즈 테두리 금속
+    ctx.beginPath();ctx.arc(gx,gy,10,0,Math.PI*2);
+    ctx.strokeStyle='rgba(160,100,30,0.8)';ctx.lineWidth=1.5;ctx.stroke();
+  });
+
+  // 고글 가운데 연결
+  ctx.beginPath();ctx.moveTo(cx-2,goggleY);ctx.lineTo(cx+2,goggleY);
+  ctx.strokeStyle='#5a2a08';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+
+  // 글로우
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,55);
+  g.addColorStop(0,'transparent');g.addColorStop(1,'rgba(100,100,80,0.04)');
+  ctx.beginPath();ctx.arc(cx,by,55,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawROULETTE(ctx, t) {
+  var cx=60, cy=66;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.5)*2;
+  var by = cy + bob;
+  var wheelR = 32;
+
+  // ── 룰렛 바퀴 ──
+  var sections = 12;
+  var colors = ['#111111','#cccccc','#555555','#ffffff','#222222','#aaaaaa',
+                '#333333','#dddddd','#444444','#bbbbbb','#1a1a1a','#999999'];
+
+  // 섹션 그리기
+  for(var i=0;i<sections;i++){
+    var a1 = (i/sections)*Math.PI*2 - Math.PI/2;
+    var a2 = ((i+1)/sections)*Math.PI*2 - Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(cx, by);
+    ctx.arc(cx, by, wheelR, a1, a2);
+    ctx.closePath();
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // 바퀴 테두리 금속 링
+  ctx.beginPath();ctx.arc(cx, by, wheelR, 0, Math.PI*2);
+  ctx.strokeStyle = '#aaaaaa';ctx.lineWidth = 3;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx, by, wheelR-3, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';ctx.lineWidth = 1;ctx.stroke();
+
+  // 섹션 번호 점
+  for(var i=0;i<sections;i++){
+    var a = (i/sections)*Math.PI*2 - Math.PI/2 + Math.PI/sections;
+    var dx = cx + Math.cos(a)*(wheelR-8);
+    var dy = by + Math.sin(a)*(wheelR-8);
+    ctx.beginPath();ctx.arc(dx, dy, 2, 0, Math.PI*2);
+    ctx.fillStyle = colors[i]==='#ffffff'||colors[i]==='#cccccc'||colors[i]==='#dddddd'?'#333':'#ccc';
+    ctx.fill();
+  }
+
+  // ── 가운데 화살표 (계속 회전) ──
+  var arrowAngle = t * 2.5;
+  ctx.save();
+  ctx.translate(cx, by);
+  ctx.rotate(arrowAngle);
+
+  // 화살표 몸통
+  ctx.beginPath();
+  ctx.moveTo(0, -wheelR+8);
+  ctx.lineTo(4, 4);
+  ctx.lineTo(0, 2);
+  ctx.lineTo(-4, 4);
+  ctx.closePath();
+  ctx.fillStyle='#ff2222';ctx.fill();
+  ctx.strokeStyle='#880000';ctx.lineWidth=1;ctx.stroke();
+
+  // 반대쪽 짧은 부분
+  ctx.beginPath();
+  ctx.moveTo(0, wheelR-8);
+  ctx.lineTo(3, -2);
+  ctx.lineTo(0, -1);
+  ctx.lineTo(-3, -2);
+  ctx.closePath();
+  ctx.fillStyle='#555';ctx.fill();
+
+  ctx.restore();
+
+  // 중심 원 (핀)
+  ctx.beginPath();ctx.arc(cx, by, 5, 0, Math.PI*2);
+  var cg=ctx.createRadialGradient(cx,by,0,cx,by,5);
+  cg.addColorStop(0,'#eee');cg.addColorStop(1,'#888');
+  ctx.fillStyle=cg;ctx.fill();
+  ctx.strokeStyle='#444';ctx.lineWidth=1.5;ctx.stroke();
+
+  // ── 눈알 (바퀴 위에) ──
+  var eyeY = by - wheelR - 14;
+
+  // 눈 줄기 (바퀴 위로 달려있는 느낌)
+  ctx.beginPath();
+  ctx.moveTo(cx, by - wheelR);
+  ctx.lineTo(cx, eyeY + 10);
+  ctx.strokeStyle='#666';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+
+  // 흰자
+  ctx.beginPath();ctx.arc(cx, eyeY, 11, 0, Math.PI*2);
+  ctx.fillStyle='#f0f0f0';ctx.fill();
+  ctx.strokeStyle='#888';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 홍채
+  var pupilX = cx + Math.sin(t*1.2)*3;
+  var pupilY = eyeY + Math.cos(t*0.8)*2;
+  ctx.beginPath();ctx.arc(pupilX, pupilY, 6.5, 0, Math.PI*2);
+  var ig=ctx.createRadialGradient(pupilX,pupilY,0,pupilX,pupilY,6.5);
+  ig.addColorStop(0,'#888');ig.addColorStop(0.4,'#555');ig.addColorStop(1,'#222');
+  ctx.fillStyle=ig;ctx.fill();
+
+  // 동공
+  ctx.beginPath();ctx.arc(pupilX, pupilY, 3, 0, Math.PI*2);
+  ctx.fillStyle='#050505';ctx.fill();
+
+  // 반짝임
+  ctx.beginPath();ctx.arc(pupilX+2, pupilY-2, 1.5, 0, Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+
+  // 눈 테두리
+  ctx.beginPath();ctx.arc(cx, eyeY, 11, 0, Math.PI*2);
+  ctx.strokeStyle='rgba(100,100,100,0.5)';ctx.lineWidth=1;ctx.stroke();
+
+  // 글로우
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,52);
+  g.addColorStop(0,'transparent');g.addColorStop(1,'rgba(150,150,150,0.04)');
+  ctx.beginPath();ctx.arc(cx,by,52,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawBOX(ctx, t) {
+  var cx=60, cy=62;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.4)*1.5;
+  var by = cy + bob;
+
+  var bw=58, bh=50;
+  var bx=cx-bw/2, bby=by-bh/2;
+
+  // 열림 사이클 — 3초마다 툭 열렸다 닫힘
+  var cycle=(t*0.38)%1;
+  var openAmt;
+  if(cycle<0.15) openAmt=cycle/0.15;
+  else if(cycle<0.35) openAmt=1;
+  else openAmt=1-(cycle-0.35)/0.65;
+  openAmt=openAmt*openAmt*(3-2*openAmt);
+
+  var lidH = 18; // 뚜껑 높이
+  var lidLift = openAmt * 28; // 최대 들림
+
+  // ── 상자 본체 (아래) ──
+  var bodyY = bby + lidH;
+  var bodyH = bh - lidH;
+
+  // 상자 안 (열리면 보임)
+  if(openAmt > 0.05){
+    ctx.beginPath();
+    ctx.rect(bx+2, bodyY, bw-4, bodyH-2);
+    ctx.fillStyle='#050505';
+    ctx.fill();
+
+    // 검은 몸체 튀어나옴
+    var bodyOut = openAmt;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(bx+2, bodyY, bw-4, bodyH-2);
+    ctx.clip();
+
+    // 검은 덩어리
+    var blobY = bodyY + bodyH - 10 - bodyOut*(bodyH*0.7);
+    var blobH = bodyH*0.65*bodyOut;
+
+    // 몸체 그라데이션
+    var bg2=ctx.createRadialGradient(cx,blobY,0,cx,blobY+blobH*0.3,bw*0.5);
+    bg2.addColorStop(0,'#1a1a1a');
+    bg2.addColorStop(0.5,'#0d0d0d');
+    bg2.addColorStop(1,'#050505');
+
+    ctx.beginPath();
+    ctx.moveTo(bx+4, bodyY+bodyH-2);
+    ctx.lineTo(bx+4, blobY+6);
+    ctx.quadraticCurveTo(bx+4, blobY, bx+14, blobY);
+    ctx.lineTo(bx+bw-14, blobY);
+    ctx.quadraticCurveTo(bx+bw-4, blobY, bx+bw-4, blobY+6);
+    ctx.lineTo(bx+bw-4, bodyY+bodyH-2);
+    ctx.closePath();
+    ctx.fillStyle=bg2;
+    ctx.fill();
+
+    // 몸체 표면 텍스처
+    ctx.globalAlpha=0.4*bodyOut;
+    for(var i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.moveTo(bx+10+i*14, blobY+4);
+      ctx.lineTo(bx+16+i*14, blobY+bodyH*0.4);
+      ctx.strokeStyle='rgba(40,40,40,0.8)';
+      ctx.lineWidth=2;ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+
+    ctx.restore();
+  }
+
+  // 상자 하단 본체
+  var bodyGrad=ctx.createLinearGradient(bx,bodyY,bx+bw,bodyY+bodyH);
+  bodyGrad.addColorStop(0,'#5a5a5a');
+  bodyGrad.addColorStop(0.4,'#707070');
+  bodyGrad.addColorStop(1,'#3a3a3a');
+  ctx.beginPath();
+  ctx.moveTo(bx, bodyY);
+  ctx.lineTo(bx+bw, bodyY);
+  ctx.lineTo(bx+bw, bodyY+bodyH-4);
+  ctx.quadraticCurveTo(bx+bw, bodyY+bodyH, bx+bw-4, bodyY+bodyH);
+  ctx.lineTo(bx+4, bodyY+bodyH);
+  ctx.quadraticCurveTo(bx, bodyY+bodyH, bx, bodyY+bodyH-4);
+  ctx.closePath();
+  ctx.fillStyle=bodyGrad;ctx.fill();
+  ctx.strokeStyle='#2a2a2a';ctx.lineWidth=2;ctx.stroke();
+
+  // 경첩 (뒤쪽)
+  [bx+8, bx+bw-8].forEach(function(hx){
+    ctx.beginPath();ctx.rect(hx-4, bodyY-3, 8, 6);
+    ctx.fillStyle='#888';ctx.fill();
+    ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // 상자 하단 볼트/디테일
+  [[bx+8,bodyY+bodyH-8],[bx+bw-8,bodyY+bodyH-8]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],3.5,0,Math.PI*2);
+    ctx.fillStyle='#666';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(b[0]-2,b[1]);ctx.lineTo(b[0]+2,b[1]);
+    ctx.moveTo(b[0],b[1]-2);ctx.lineTo(b[0],b[1]+2);
+    ctx.strokeStyle='#222';ctx.lineWidth=0.8;ctx.stroke();
+  });
+
+  // 상자 앞면 잠금장치
+  ctx.beginPath();ctx.rect(cx-6,bodyY+6,12,10);
+  ctx.fillStyle='#555';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,bodyY+13,3,0,Math.PI*2);
+  ctx.fillStyle='#777';ctx.fill();
+
+  // ── 눈 (틈새에서 노려봄) ──
+  var eyeY = bodyY - 3;
+  var eyeGap = 4 + openAmt*14; // 열릴수록 눈 잘 보임
+  var eyeAlpha = 0.4 + openAmt*0.6;
+  var eyeGlow = 0.3 + Math.sin(t*4)*0.2 + openAmt*0.5;
+
+  // 눈빛 글로우
+  if(eyeGlow > 0.2){
+    var glow=ctx.createRadialGradient(cx,eyeY,0,cx,eyeY,20);
+    glow.addColorStop(0,'rgba(255,0,0,'+(eyeGlow*0.3)+')');
+    glow.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(cx,eyeY,20,0,Math.PI*2);
+    ctx.fillStyle=glow;ctx.fill();
+  }
+
+  // 눈 클립 (틈새만 보이게)
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(bx+2, eyeY-eyeGap/2, bw-4, eyeGap);
+  ctx.clip();
+
+  [-12, 12].forEach(function(ox, i){
+    var ex = cx+ox;
+    var pd = Math.sin(t*0.8+i)*1.5;
+
+    // 눈 흰자 (없음 — 씨뻘건 눈)
+    ctx.beginPath();ctx.arc(ex+pd, eyeY, 7, 0, Math.PI*2);
+    var ig=ctx.createRadialGradient(ex+pd,eyeY,0,ex+pd,eyeY,7);
+    ig.addColorStop(0,'#ff0000');
+    ig.addColorStop(0.4,'#cc0000');
+    ig.addColorStop(0.7,'#880000');
+    ig.addColorStop(1,'#440000');
+    ctx.fillStyle=ig;ctx.fill();
+
+    // 동공 (세로로 긴 — 노려보는 느낌)
+    ctx.beginPath();
+    ctx.ellipse(ex+pd, eyeY, 2, 4.5, 0, 0, Math.PI*2);
+    ctx.fillStyle='#0a0000';ctx.fill();
+
+    // 눈빛 반짝임
+    ctx.beginPath();ctx.arc(ex+pd+2, eyeY-2, 1.5, 0, Math.PI*2);
+    ctx.fillStyle='rgba(255,100,100,0.7)';ctx.fill();
+  });
+  ctx.restore();
+
+  // ── 뚜껑 (들림) ──
+  ctx.save();
+  // 뚜껑 위로 들림
+  ctx.translate(bx, bby - lidLift);
+
+  var lidGrad=ctx.createLinearGradient(0,0,bw,lidH);
+  lidGrad.addColorStop(0,'#686868');
+  lidGrad.addColorStop(0.4,'#808080');
+  lidGrad.addColorStop(1,'#484848');
+  ctx.beginPath();
+  ctx.moveTo(4, 0);ctx.lineTo(bw-4, 0);
+  ctx.quadraticCurveTo(bw, 0, bw, 4);
+  ctx.lineTo(bw, lidH);
+  ctx.lineTo(0, lidH);
+  ctx.lineTo(0, 4);
+  ctx.quadraticCurveTo(0, 0, 4, 0);
+  ctx.closePath();
+  ctx.fillStyle=lidGrad;ctx.fill();
+  ctx.strokeStyle='#2a2a2a';ctx.lineWidth=2;ctx.stroke();
+
+  // 뚜껑 디테일
+  ctx.beginPath();ctx.moveTo(6, lidH*0.5);ctx.lineTo(bw-6, lidH*0.5);
+  ctx.strokeStyle='rgba(40,40,40,0.4)';ctx.lineWidth=1;ctx.stroke();
+
+  // 뚜껑 볼트
+  [[8,lidH*0.35],[bw-8,lidH*0.35]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],2.5,0,Math.PI*2);
+    ctx.fillStyle='#777';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=0.8;ctx.stroke();
+  });
+
+  // 스크래치
+  [[10,4,20,12],[bw-20,4,bw-10,14],[bw*0.4,2,bw*0.5,lidH-2]].forEach(function(l){
+    ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);
+    ctx.strokeStyle='rgba(30,30,30,0.45)';ctx.lineWidth=1;ctx.stroke();
+  });
+  ctx.restore();
+
+  // 열릴 때 충격 파티클
+  if(openAmt > 0.7 && openAmt < 0.95){
+    for(var i=0;i<4;i++){
+      var pa=(i/4)*Math.PI*2;
+      var pr=8+openAmt*12;
+      ctx.beginPath();ctx.arc(cx+Math.cos(pa)*pr, bby-lidLift+Math.sin(pa)*pr*0.4, 2, 0, Math.PI*2);
+      ctx.fillStyle='rgba(200,100,0,'+(0.5*(1-openAmt))+')';ctx.fill();
+    }
+  }
+
+  // 전체 글로우
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,52);
+  g.addColorStop(0,'transparent');
+  g.addColorStop(1,'rgba(80,20,0,0.05)');
+  ctx.beginPath();ctx.arc(cx,by,52,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawGLOVE(ctx, t) {
+  var cx=60, cy=58;
+  ctx.clearRect(0,0,120,120);
+
+  // 날아다니는 움직임 (위아래 + 좌우 흔들)
+  var bobY = Math.sin(t*2.2)*6;
+  var bobX = Math.sin(t*1.4)*4;
+  var tilt = Math.sin(t*1.8)*0.18; // 살짝 기울기
+
+  var gx = cx + bobX;
+  var gy = cy + bobY;
+
+  ctx.save();
+  ctx.translate(gx, gy);
+  ctx.rotate(tilt);
+
+  // ── 손목 커프 ──
+  var cuffW=34, cuffH=16;
+  var cuffGrad=ctx.createLinearGradient(-cuffW/2,20,cuffW/2,20+cuffH);
+  cuffGrad.addColorStop(0,'#6a6a6a');
+  cuffGrad.addColorStop(0.5,'#888');
+  cuffGrad.addColorStop(1,'#4a4a4a');
+  ctx.beginPath();
+  ctx.moveTo(-cuffW/2+3,20);ctx.lineTo(cuffW/2-3,20);
+  ctx.quadraticCurveTo(cuffW/2,20,cuffW/2,23);
+  ctx.lineTo(cuffW/2,20+cuffH-3);
+  ctx.quadraticCurveTo(cuffW/2,20+cuffH,cuffW/2-3,20+cuffH);
+  ctx.lineTo(-cuffW/2+3,20+cuffH);
+  ctx.quadraticCurveTo(-cuffW/2,20+cuffH,-cuffW/2,20+cuffH-3);
+  ctx.lineTo(-cuffW/2,23);
+  ctx.quadraticCurveTo(-cuffW/2,20,-cuffW/2+3,20);
+  ctx.closePath();
+  ctx.fillStyle=cuffGrad;ctx.fill();
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 커프 줄무늬
+  ctx.beginPath();ctx.moveTo(-cuffW/2+2,26);ctx.lineTo(cuffW/2-2,26);
+  ctx.strokeStyle='rgba(40,40,40,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-cuffW/2+2,30);ctx.lineTo(cuffW/2-2,30);
+  ctx.strokeStyle='rgba(80,80,80,0.3)';ctx.lineWidth=1;ctx.stroke();
+
+  // ── 손바닥 ──
+  var palmGrad=ctx.createRadialGradient(-4,-2,2,0,4,28);
+  palmGrad.addColorStop(0,'#909090');
+  palmGrad.addColorStop(0.5,'#787878');
+  palmGrad.addColorStop(1,'#555');
+  ctx.beginPath();
+  ctx.moveTo(-18,20);
+  ctx.lineTo(-20,-2);
+  ctx.quadraticCurveTo(-20,-10,-12,-12);
+  ctx.lineTo(14,-12);
+  ctx.quadraticCurveTo(20,-12,20,-2);
+  ctx.lineTo(18,20);
+  ctx.closePath();
+  ctx.fillStyle=palmGrad;ctx.fill();
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 손바닥 주름
+  ctx.beginPath();ctx.moveTo(-10,8);ctx.quadraticCurveTo(0,4,10,8);
+  ctx.strokeStyle='rgba(40,40,40,0.4)';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-8,14);ctx.quadraticCurveTo(0,11,8,14);
+  ctx.strokeStyle='rgba(40,40,40,0.3)';ctx.lineWidth=1;ctx.stroke();
+
+  // ── 엄지손가락 ──
+  var thumbAngle = Math.sin(t*2.2)*0.08 - 0.3;
+  ctx.save();
+  ctx.translate(-20, 2);
+  ctx.rotate(thumbAngle);
+  var tg=ctx.createLinearGradient(-8,0,8,18);
+  tg.addColorStop(0,'#888');tg.addColorStop(1,'#555');
+  ctx.beginPath();
+  ctx.moveTo(-6,0);ctx.lineTo(6,0);
+  ctx.quadraticCurveTo(8,0,8,4);
+  ctx.lineTo(7,16);
+  ctx.quadraticCurveTo(6,20,0,20);
+  ctx.quadraticCurveTo(-6,20,-7,16);
+  ctx.lineTo(-8,4);
+  ctx.quadraticCurveTo(-8,0,-6,0);
+  ctx.closePath();
+  ctx.fillStyle=tg;ctx.fill();
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;ctx.stroke();
+  // 손가락 마디
+  ctx.beginPath();ctx.moveTo(-7,8);ctx.lineTo(7,8);
+  ctx.strokeStyle='rgba(40,40,40,0.4)';ctx.lineWidth=1;ctx.stroke();
+  ctx.restore();
+
+  // ── 손가락 4개 ──
+  var fingerData=[
+    {x:-12,w:10,h:26,bend:Math.sin(t*2.2)*0.06},
+    {x:-2, w:10,h:30,bend:Math.sin(t*2.2+0.3)*0.06},
+    {x:8,  w:10,h:28,bend:Math.sin(t*2.2+0.6)*0.06},
+    {x:18, w:9, h:22,bend:Math.sin(t*2.2+0.9)*0.06},
+  ];
+
+  fingerData.forEach(function(f){
+    ctx.save();
+    ctx.translate(f.x+f.w/2, -12);
+    ctx.rotate(f.bend);
+    var fg=ctx.createLinearGradient(-f.w/2,0,f.w/2,f.h);
+    fg.addColorStop(0,'#909090');fg.addColorStop(0.5,'#787878');fg.addColorStop(1,'#555');
+    ctx.beginPath();
+    ctx.moveTo(-f.w/2+2,0);ctx.lineTo(f.w/2-2,0);
+    ctx.quadraticCurveTo(f.w/2,0,f.w/2,3);
+    ctx.lineTo(f.w/2,f.h-4);
+    ctx.quadraticCurveTo(f.w/2,f.h,f.w/2-3,f.h);
+    ctx.lineTo(-f.w/2+3,f.h);
+    ctx.quadraticCurveTo(-f.w/2,f.h,-f.w/2,f.h-4);
+    ctx.lineTo(-f.w/2,3);
+    ctx.quadraticCurveTo(-f.w/2,0,-f.w/2+2,0);
+    ctx.closePath();
+    ctx.fillStyle=fg;ctx.fill();
+    ctx.strokeStyle='#333';ctx.lineWidth=1.5;ctx.stroke();
+    // 손가락 마디 2개
+    [f.h*0.35, f.h*0.65].forEach(function(my){
+      ctx.beginPath();ctx.moveTo(-f.w/2+1,my);ctx.lineTo(f.w/2-1,my);
+      ctx.strokeStyle='rgba(40,40,40,0.4)';ctx.lineWidth=1;ctx.stroke();
+    });
+    ctx.restore();
+  });
+
+  // 손등 하이라이트
+  ctx.beginPath();ctx.ellipse(0,-4,12,6,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(200,200,200,0.08)';ctx.fill();
+
+  ctx.restore();
+
+  // 속도감 선 (날아다니는 느낌)
+  var speedAlpha = Math.abs(Math.sin(t*2.2))*0.4;
+  for(var i=0;i<3;i++){
+    var lx = gx - 20 - i*10 + bobX*2;
+    var ly = gy + 5 + i*5 + bobY*0.5;
+    var lw = 12 - i*3;
+    ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx-lw,ly);
+    ctx.strokeStyle='rgba(150,150,150,'+(speedAlpha-i*0.1)+')';
+    ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+  }
+}
+
+function drawUNGLOVE(ctx, t) {
+  var cx=60, cy=58;
+  ctx.clearRect(0,0,120,120);
+
+  // 뒤집어진 장갑 — 더 느리고 불안정하게 부유
+  var bobY = Math.sin(t*1.8)*7;
+  var bobX = Math.sin(t*1.1)*5;
+  var tilt = Math.sin(t*1.4)*0.22 + Math.PI; // 뒤집힌 상태 (π 회전)
+
+  var gx = cx + bobX;
+  var gy = cy + bobY;
+
+  // 보라+파랑+검정 그라데이션 팔레트
+  function bodyGrad(ctx, x1,y1,x2,y2){
+    var g=ctx.createLinearGradient(x1,y1,x2,y2);
+    g.addColorStop(0,'#1a0033');
+    g.addColorStop(0.3,'#2a0066');
+    g.addColorStop(0.55,'#0a1a88');
+    g.addColorStop(0.8,'#1a00aa');
+    g.addColorStop(1,'#050008');
+    return g;
+  }
+
+  ctx.save();
+  ctx.translate(gx, gy);
+  ctx.rotate(tilt);
+
+  // ── 손목 커프 (뒤집혀서 위에 위치) ──
+  var cuffW=34, cuffH=16;
+  var cuffG=ctx.createLinearGradient(-cuffW/2,20,cuffW/2,20+cuffH);
+  cuffG.addColorStop(0,'#220044');cuffG.addColorStop(0.5,'#330066');cuffG.addColorStop(1,'#110022');
+  ctx.beginPath();
+  ctx.moveTo(-cuffW/2+3,20);ctx.lineTo(cuffW/2-3,20);
+  ctx.quadraticCurveTo(cuffW/2,20,cuffW/2,23);
+  ctx.lineTo(cuffW/2,20+cuffH-3);
+  ctx.quadraticCurveTo(cuffW/2,20+cuffH,cuffW/2-3,20+cuffH);
+  ctx.lineTo(-cuffW/2+3,20+cuffH);
+  ctx.quadraticCurveTo(-cuffW/2,20+cuffH,-cuffW/2,20+cuffH-3);
+  ctx.lineTo(-cuffW/2,23);
+  ctx.quadraticCurveTo(-cuffW/2,20,-cuffW/2+3,20);
+  ctx.closePath();
+  ctx.fillStyle=cuffG;ctx.fill();
+  ctx.strokeStyle='#110022';ctx.lineWidth=1.5;ctx.stroke();
+  // 커프 줄무늬
+  ctx.beginPath();ctx.moveTo(-cuffW/2+2,26);ctx.lineTo(cuffW/2-2,26);
+  ctx.strokeStyle='rgba(100,0,200,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-cuffW/2+2,30);ctx.lineTo(cuffW/2-2,30);
+  ctx.strokeStyle='rgba(50,0,150,0.3)';ctx.lineWidth=1;ctx.stroke();
+
+  // ── 손바닥 ──
+  ctx.beginPath();
+  ctx.moveTo(-18,20);
+  ctx.lineTo(-20,-2);
+  ctx.quadraticCurveTo(-20,-10,-12,-12);
+  ctx.lineTo(14,-12);
+  ctx.quadraticCurveTo(20,-12,20,-2);
+  ctx.lineTo(18,20);
+  ctx.closePath();
+  ctx.fillStyle=bodyGrad(ctx,-18,-12,18,20);ctx.fill();
+  ctx.strokeStyle='#110022';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 손바닥 주름 (보라빛)
+  ctx.beginPath();ctx.moveTo(-10,8);ctx.quadraticCurveTo(0,4,10,8);
+  ctx.strokeStyle='rgba(150,0,255,0.3)';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-8,14);ctx.quadraticCurveTo(0,11,8,14);
+  ctx.strokeStyle='rgba(100,0,200,0.25)';ctx.lineWidth=1;ctx.stroke();
+
+  // ── 엄지 ──
+  var thumbAngle=Math.sin(t*1.8)*0.08-0.3;
+  ctx.save();ctx.translate(-20,2);ctx.rotate(thumbAngle);
+  ctx.beginPath();
+  ctx.moveTo(-6,0);ctx.lineTo(6,0);ctx.quadraticCurveTo(8,0,8,4);
+  ctx.lineTo(7,16);ctx.quadraticCurveTo(6,20,0,20);
+  ctx.quadraticCurveTo(-6,20,-7,16);ctx.lineTo(-8,4);
+  ctx.quadraticCurveTo(-8,0,-6,0);ctx.closePath();
+  ctx.fillStyle=bodyGrad(ctx,-8,0,8,20);ctx.fill();
+  ctx.strokeStyle='#110022';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-7,8);ctx.lineTo(7,8);
+  ctx.strokeStyle='rgba(100,0,200,0.3)';ctx.lineWidth=1;ctx.stroke();
+  ctx.restore();
+
+  // ── 손가락 4개 ──
+  var fingerData=[
+    {x:-12,w:10,h:26,bend:Math.sin(t*1.8)*0.06},
+    {x:-2, w:10,h:30,bend:Math.sin(t*1.8+0.3)*0.06},
+    {x:8,  w:10,h:28,bend:Math.sin(t*1.8+0.6)*0.06},
+    {x:18, w:9, h:22,bend:Math.sin(t*1.8+0.9)*0.06},
+  ];
+  fingerData.forEach(function(f){
+    ctx.save();ctx.translate(f.x+f.w/2,-12);ctx.rotate(f.bend);
+    ctx.beginPath();
+    ctx.moveTo(-f.w/2+2,0);ctx.lineTo(f.w/2-2,0);
+    ctx.quadraticCurveTo(f.w/2,0,f.w/2,3);
+    ctx.lineTo(f.w/2,f.h-4);ctx.quadraticCurveTo(f.w/2,f.h,f.w/2-3,f.h);
+    ctx.lineTo(-f.w/2+3,f.h);ctx.quadraticCurveTo(-f.w/2,f.h,-f.w/2,f.h-4);
+    ctx.lineTo(-f.w/2,3);ctx.quadraticCurveTo(-f.w/2,0,-f.w/2+2,0);
+    ctx.closePath();
+    ctx.fillStyle=bodyGrad(ctx,-f.w/2,0,f.w/2,f.h);ctx.fill();
+    ctx.strokeStyle='#110022';ctx.lineWidth=1.5;ctx.stroke();
+    [f.h*0.35,f.h*0.65].forEach(function(my){
+      ctx.beginPath();ctx.moveTo(-f.w/2+1,my);ctx.lineTo(f.w/2-1,my);
+      ctx.strokeStyle='rgba(100,0,200,0.25)';ctx.lineWidth=1;ctx.stroke();
+    });
+    ctx.restore();
+  });
+
+  // ── 하얀 눈 (손등 가운데) ──
+  var eyeX=0, eyeY=2;
+  var pulse=0.8+Math.sin(t*3)*0.2;
+
+  // 눈 글로우
+  var eg=ctx.createRadialGradient(eyeX,eyeY,0,eyeX,eyeY,18);
+  eg.addColorStop(0,'rgba(255,255,255,0.15)');
+  eg.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(eyeX,eyeY,18,0,Math.PI*2);ctx.fillStyle=eg;ctx.fill();
+
+  // 흰자
+  ctx.beginPath();ctx.arc(eyeX,eyeY,10,0,Math.PI*2);
+  ctx.fillStyle='rgba(240,240,255,0.95)';ctx.fill();
+  ctx.strokeStyle='rgba(150,100,255,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 홍채 (하얀 계열)
+  var pd=Math.sin(t*1.2)*2;
+  ctx.beginPath();ctx.arc(eyeX+pd,eyeY,6,0,Math.PI*2);
+  var ig=ctx.createRadialGradient(eyeX+pd,eyeY,0,eyeX+pd,eyeY,6);
+  ig.addColorStop(0,'#ffffff');
+  ig.addColorStop(0.4,'#ddddff');
+  ig.addColorStop(0.8,'#aaaadd');
+  ig.addColorStop(1,'#7777aa');
+  ctx.fillStyle=ig;ctx.fill();
+
+  // 동공 (연보라)
+  ctx.beginPath();ctx.arc(eyeX+pd,eyeY,2.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(80,40,120,0.8)';ctx.fill();
+
+  // 반짝임
+  ctx.beginPath();ctx.arc(eyeX+pd+2.5,eyeY-2.5,1.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+  ctx.beginPath();ctx.arc(eyeX+pd-1.5,eyeY+1.5,0.8,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fill();
+
+  ctx.restore();
+
+  // 보라 글로우 + 파티클
+  var gGrad=ctx.createRadialGradient(gx,gy,8,gx,gy,52);
+  gGrad.addColorStop(0,'rgba(80,0,180,0.08)');
+  gGrad.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(gx,gy,52,0,Math.PI*2);ctx.fillStyle=gGrad;ctx.fill();
+
+  // 마법 파티클
+  for(var i=0;i<4;i++){
+    var pa=(t*1.5+i*1.57)%(Math.PI*2);
+    var pr=28+Math.sin(t*3+i)*6;
+    var px2=gx+Math.cos(pa)*pr, py2=gy+Math.sin(pa)*pr;
+    var pa2=0.3+Math.sin(t*5+i)*0.25;
+    ctx.beginPath();ctx.arc(px2,py2,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,100,255,'+pa2+')';ctx.fill();
+  }
+
+  // 속도 선
+  var speedA=Math.abs(Math.sin(t*1.8))*0.35;
+  for(var i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo(gx-18-i*9+bobX*2, gy+4+i*5+bobY*0.5);
+    ctx.lineTo(gx-26-i*9+bobX*2, gy+4+i*5+bobY*0.5);
+    ctx.strokeStyle='rgba(120,60,220,'+(speedA-i*0.08)+')';
+    ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+  }
+}
+
+function drawJUNKV2(ctx, t) {
+  var cx=60, cy=60;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.8)*2;
+  var by = cy + bob;
+
+  // ── 태엽 3개 (뒤에) ──
+  var springAngles = [t*1.2, t*0.9+1, t*1.5+2.5];
+  var springPos = [
+    {x:cx+16, y:by-8},
+    {x:cx+4,  y:by-22},
+    {x:cx+26, y:by-20},
+  ];
+
+  springPos.forEach(function(sp, si){
+    var sa = springAngles[si];
+    // 기둥
+    ctx.beginPath();
+    ctx.moveTo(sp.x, by-2);ctx.lineTo(sp.x, sp.y);
+    ctx.strokeStyle='#555';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+    // 코일
+    ctx.save();ctx.translate(sp.x, sp.y);ctx.rotate(sa);
+    for(var i=0;i<3;i++){
+      var r=5+i*2.5;
+      ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.strokeStyle='rgba(180,100,220,'+(0.8-i*0.2)+')';
+      ctx.lineWidth=2-i*0.3;ctx.stroke();
+    }
+    // 날개
+    for(var i=0;i<4;i++){
+      var a=(i/4)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*4,Math.sin(a)*4);
+      ctx.lineTo(Math.cos(a)*11,Math.sin(a)*11);
+      ctx.lineTo(Math.cos(a+0.3)*11,Math.sin(a+0.3)*11);
+      ctx.closePath();
+      ctx.fillStyle='rgba(180,80,255,0.75)';ctx.fill();
+      ctx.strokeStyle='rgba(100,40,160,0.5)';ctx.lineWidth=0.8;ctx.stroke();
+    }
+    // 나사
+    ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);
+    ctx.fillStyle='#999';ctx.fill();ctx.strokeStyle='#555';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+  });
+
+  // ── 큰 팔 (왼쪽) ──
+  var armSwing = Math.sin(t*2)*0.15;
+  ctx.save();
+  ctx.translate(cx-20, by-4);
+  ctx.rotate(armSwing);
+
+  // 위팔
+  var armG=ctx.createLinearGradient(-6,0,6,28);
+  armG.addColorStop(0,'#7a5aaa');armG.addColorStop(0.5,'#9a7acc');armG.addColorStop(1,'#5a3a88');
+  ctx.beginPath();
+  ctx.moveTo(-7,0);ctx.lineTo(7,0);ctx.quadraticCurveTo(9,0,9,4);
+  ctx.lineTo(9,28);ctx.lineTo(-9,28);ctx.lineTo(-9,4);
+  ctx.quadraticCurveTo(-9,0,-7,0);ctx.closePath();
+  ctx.fillStyle=armG;ctx.fill();ctx.strokeStyle='#3a1a66';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 팔꿈치 관절
+  ctx.beginPath();ctx.arc(0,28,7,0,Math.PI*2);
+  ctx.fillStyle='#6a4a99';ctx.fill();ctx.strokeStyle='#3a1a66';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(0,28,3,0,Math.PI*2);
+  ctx.fillStyle='#aaa';ctx.fill();
+
+  // 아래팔
+  var forearmSwing = Math.sin(t*2+0.5)*0.2;
+  ctx.save();ctx.translate(0,28);ctx.rotate(forearmSwing);
+  var fg2=ctx.createLinearGradient(-6,0,6,24);
+  fg2.addColorStop(0,'#6a4a99');fg2.addColorStop(1,'#4a2a77');
+  ctx.beginPath();
+  ctx.moveTo(-6,0);ctx.lineTo(6,0);ctx.quadraticCurveTo(8,0,8,4);
+  ctx.lineTo(7,24);ctx.quadraticCurveTo(6,28,0,28);
+  ctx.quadraticCurveTo(-6,28,-7,24);ctx.lineTo(-8,4);
+  ctx.quadraticCurveTo(-8,0,-6,0);ctx.closePath();
+  ctx.fillStyle=fg2;ctx.fill();ctx.strokeStyle='#3a1a66';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 주먹
+  ctx.beginPath();ctx.arc(0,30,9,0,Math.PI*2);
+  ctx.fillStyle='#7a5aaa';ctx.fill();ctx.strokeStyle='#3a1a66';ctx.lineWidth=2;ctx.stroke();
+  // 너클
+  [-5,0,5].forEach(function(kx){
+    ctx.beginPath();ctx.arc(kx,27,2.5,0,Math.PI*2);
+    ctx.fillStyle='#9a7acc';ctx.fill();ctx.strokeStyle='#3a1a66';ctx.lineWidth=1;ctx.stroke();
+  });
+  ctx.restore();
+  ctx.restore();
+
+  // ── 몸체 ──
+  ctx.beginPath();
+  var pts=[
+    [cx-22,by-8],[cx-18,by-20],[cx-10,by-26],[cx-2,by-28],
+    [cx+8,by-24],[cx+18,by-18],[cx+22,by-6],[cx+20,by+8],
+    [cx+14,by+18],[cx+4,by+22],[cx-8,by+20],[cx-18,by+14],[cx-22,by+4]
+  ];
+  ctx.moveTo(pts[0][0]+Math.sin(t*3)*1.5, pts[0][1]+Math.cos(t*2.5));
+  for(var i=1;i<pts.length;i++){
+    ctx.lineTo(pts[i][0]+Math.sin(t*3+i*0.5)*1.5, pts[i][1]+Math.cos(t*2.5+i*0.4));
+  }
+  ctx.closePath();
+
+  // 회색+노랑+보라 그라데이션
+  var bg=ctx.createRadialGradient(cx-4,by-6,2,cx,by,28);
+  bg.addColorStop(0,'#c87acc');   // 보라빛
+  bg.addColorStop(0.2,'#9a5a99');
+  bg.addColorStop(0.4,'#8a6a30'); // 노랑
+  bg.addColorStop(0.65,'#686868'); // 회색
+  bg.addColorStop(1,'#383838');
+  ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(60,20,80,0.8)';ctx.lineWidth=2;ctx.stroke();
+
+  // 질감
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0],pts[0][1]);
+  for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+  ctx.closePath();ctx.clip();
+
+  // 보라 패치
+  [[cx-12,by-16,7],[cx+8,by+8,5],[cx-6,by+12,4]].forEach(function(p){
+    ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,Math.PI*2);
+    ctx.fillStyle='rgba(160,60,220,0.3)';ctx.fill();
+  });
+  // 노랑 패치
+  [[cx+10,by+10,5],[cx-8,by+14,4]].forEach(function(p){
+    ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,Math.PI*2);
+    ctx.fillStyle='rgba(220,180,30,0.3)';ctx.fill();
+  });
+  // 스크래치
+  [[cx-16,by-10,cx-6,by+2],[cx+4,by-20,cx+14,by-8],[cx-8,by+6,cx+4,by+18]].forEach(function(l){
+    ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);
+    ctx.strokeStyle='rgba(30,0,40,0.45)';ctx.lineWidth=1.5;ctx.stroke();
+  });
+  // 볼트
+  [[cx-16,by-14],[cx+12,by-10],[cx-6,by+16],[cx+10,by+8]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],3,0,Math.PI*2);
+    ctx.fillStyle='#666';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=0.8;ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(b[0]-2,b[1]);ctx.lineTo(b[0]+2,b[1]);
+    ctx.moveTo(b[0],b[1]-2);ctx.lineTo(b[0],b[1]+2);
+    ctx.strokeStyle='#222';ctx.lineWidth=0.8;ctx.stroke();
+  });
+  ctx.restore();
+
+  // ── 앵그리버드 눈 (빨간) ──
+  var eyeY = by - 8;
+  [-10, 10].forEach(function(ox, i){
+    var ex = cx+ox;
+    // 흰자
+    ctx.beginPath();ctx.arc(ex,eyeY,9,0,Math.PI*2);
+    ctx.fillStyle='#f8f0e0';ctx.fill();
+    ctx.strokeStyle='rgba(60,0,80,0.4)';ctx.lineWidth=1;ctx.stroke();
+    // 홍채
+    var pd=Math.sin(t*1.2+i)*1.2;
+    ctx.beginPath();ctx.arc(ex+pd,eyeY+1,5.5,0,Math.PI*2);
+    var ig=ctx.createRadialGradient(ex+pd,eyeY+1,0,ex+pd,eyeY+1,5.5);
+    ig.addColorStop(0,'#ff4444');ig.addColorStop(0.4,'#cc1111');ig.addColorStop(1,'#880000');
+    ctx.fillStyle=ig;ctx.fill();
+    // 동공
+    ctx.beginPath();ctx.arc(ex+pd,eyeY+1,2.8,0,Math.PI*2);ctx.fillStyle='#0a0000';ctx.fill();
+    // 반짝임
+    ctx.beginPath();ctx.arc(ex+pd+2,eyeY-1,1.3,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+  });
+
+  // ── 입 ──
+  ctx.beginPath();
+  ctx.moveTo(cx-8,by+6);ctx.quadraticCurveTo(cx,by+2,cx+8,by+6);
+  ctx.strokeStyle='#1a0020';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  [[cx-4,by+6],[cx,by+5],[cx+4,by+6]].forEach(function(t2){
+    ctx.beginPath();ctx.rect(t2[0]-2,t2[1],4,4);ctx.fillStyle='#e8ddc8';ctx.fill();
+  });
+
+  // 글로우
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,58);
+  g.addColorStop(0,'transparent');g.addColorStop(1,'rgba(120,40,200,0.06)');
+  ctx.beginPath();ctx.arc(cx,by,58,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawULTRASPEED(ctx, t) {
+  var cx=60, cy=62;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*10)*1.2;
+  var by = cy + bob;
+
+  // ── 연기 (더 많이) ──
+  for(var i=0;i<7;i++){
+    var age=(t*2+i*0.3)%1;
+    var sx=cx+28+age*22, sy=by-10-age*16;
+    var sr=3+age*10, sa=(1-age)*0.3;
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,140,200,'+sa+')';ctx.fill();
+  }
+
+  // ── 바퀴 4개 ──
+  var wheelR=12;
+  var wheelY=by+18;
+  var wheelXs=[-26,-10,10,26];
+  wheelXs.forEach(function(ox,wi){
+    var wx=cx+ox;
+    var wa=-t*5;
+    // 타이어
+    ctx.beginPath();ctx.arc(wx,wheelY,wheelR,0,Math.PI*2);
+    ctx.fillStyle='#111';ctx.fill();
+    ctx.strokeStyle='#4a2a66';ctx.lineWidth=2.5;ctx.stroke();
+    // 트레드
+    for(var j=0;j<8;j++){
+      var ta=wa+(j/8)*Math.PI*2;
+      ctx.beginPath();ctx.arc(wx,wheelY,wheelR-1,ta,ta+0.22);
+      ctx.strokeStyle='rgba(80,40,120,0.6)';ctx.lineWidth=3;ctx.stroke();
+    }
+    // 휠
+    ctx.beginPath();ctx.arc(wx,wheelY,wheelR-4,0,Math.PI*2);
+    var wg=ctx.createRadialGradient(wx,wheelY,0,wx,wheelY,wheelR-4);
+    wg.addColorStop(0,'#7a5a99');wg.addColorStop(0.6,'#4a2a77');wg.addColorStop(1,'#2a1044');
+    ctx.fillStyle=wg;ctx.fill();ctx.strokeStyle='#3a1a66';ctx.lineWidth=1;ctx.stroke();
+    // 스포크
+    for(var j=0;j<3;j++){
+      var sa2=wa+(j/3)*Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(wx+Math.cos(sa2)*2,wheelY+Math.sin(sa2)*2);
+      ctx.lineTo(wx+Math.cos(sa2)*(wheelR-5),wheelY+Math.sin(sa2)*(wheelR-5));
+      ctx.strokeStyle='#6a4a88';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+    }
+    ctx.beginPath();ctx.arc(wx,wheelY,3,0,Math.PI*2);
+    ctx.fillStyle='#aaa';ctx.fill();
+  });
+
+  // 차축 앞뒤
+  ctx.beginPath();
+  ctx.moveTo(cx-26,wheelY);ctx.lineTo(cx+26,wheelY);
+  ctx.strokeStyle='#4a2a66';ctx.lineWidth=3;ctx.stroke();
+
+  // ── 탱크 포신 (앞으로 튀어나옴) ──
+  ctx.beginPath();
+  ctx.moveTo(cx+28,by-8);ctx.lineTo(cx+48,by-8);
+  ctx.lineTo(cx+48,by-2);ctx.lineTo(cx+28,by-2);ctx.closePath();
+  var cannonG=ctx.createLinearGradient(cx+28,by-8,cx+28,by-2);
+  cannonG.addColorStop(0,'#6a4a88');cannonG.addColorStop(1,'#3a1a55');
+  ctx.fillStyle=cannonG;ctx.fill();
+  ctx.strokeStyle='#2a0a44';ctx.lineWidth=1.2;ctx.stroke();
+  // 포신 끝 링
+  ctx.beginPath();ctx.rect(cx+45,by-10,5,8);
+  ctx.fillStyle='#4a2a66';ctx.fill();ctx.strokeStyle='#2a0a44';ctx.lineWidth=1;ctx.stroke();
+
+  // ── 탱크 본체 ──
+  var tw=58,th=34;
+  var tx=cx-tw/2,tby=by-th/2-2;
+
+  // 본체 상단 돌출 (포탑)
+  var turretW=28,turretH=14;
+  var turretX=cx-turretW/2,turretY=tby-turretH+2;
+  var tg2=ctx.createLinearGradient(turretX,turretY,turretX+turretW,turretY+turretH);
+  tg2.addColorStop(0,'#6a4a88');tg2.addColorStop(0.5,'#8a6aaa');tg2.addColorStop(1,'#4a2a66');
+  ctx.beginPath();
+  ctx.moveTo(turretX+4,turretY);ctx.lineTo(turretX+turretW-4,turretY);
+  ctx.quadraticCurveTo(turretX+turretW,turretY,turretX+turretW,turretY+4);
+  ctx.lineTo(turretX+turretW,turretY+turretH);
+  ctx.lineTo(turretX,turretY+turretH);
+  ctx.lineTo(turretX,turretY+4);
+  ctx.quadraticCurveTo(turretX,turretY,turretX+4,turretY);
+  ctx.closePath();
+  ctx.fillStyle=tg2;ctx.fill();ctx.strokeStyle='#2a0a44';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 본체
+  var bg=ctx.createLinearGradient(tx,tby,tx+tw,tby+th);
+  bg.addColorStop(0,'#7a5a99');bg.addColorStop(0.4,'#9a7abb');bg.addColorStop(1,'#4a2a77');
+  ctx.beginPath();
+  ctx.moveTo(tx+4,tby);ctx.lineTo(tx+tw-4,tby);
+  ctx.quadraticCurveTo(tx+tw,tby,tx+tw,tby+4);
+  ctx.lineTo(tx+tw,tby+th-4);ctx.quadraticCurveTo(tx+tw,tby+th,tx+tw-4,tby+th);
+  ctx.lineTo(tx+4,tby+th);ctx.quadraticCurveTo(tx,tby+th,tx,tby+th-4);
+  ctx.lineTo(tx,tby+4);ctx.quadraticCurveTo(tx,tby,tx+4,tby);
+  ctx.closePath();
+  ctx.fillStyle=bg;ctx.fill();ctx.strokeStyle='#2a0a44';ctx.lineWidth=2;ctx.stroke();
+
+  // 본체 스크래치/디테일
+  [[tx+8,tby+8,tx+18,tby+20],[tx+30,tby+6,tx+44,tby+22]].forEach(function(l){
+    ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);
+    ctx.strokeStyle='rgba(20,0,40,0.4)';ctx.lineWidth=1.2;ctx.stroke();
+  });
+  // 경고 줄무늬
+  ctx.beginPath();ctx.rect(tx,tby+th-7,tw,4);
+  var yg=ctx.createLinearGradient(tx,0,tx+tw,0);
+  for(var i=0;i<7;i++){
+    yg.addColorStop(i/7,i%2===0?'rgba(180,100,255,0.4)':'rgba(0,0,0,0.3)');
+    yg.addColorStop((i+1)/7,i%2===0?'rgba(180,100,255,0.4)':'rgba(0,0,0,0.3)');
+  }
+  ctx.fillStyle=yg;ctx.fill();
+  // 볼트
+  [[tx+6,tby+6],[tx+tw-6,tby+6],[tx+6,tby+th-6],[tx+tw-6,tby+th-6]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],3,0,Math.PI*2);
+    ctx.fillStyle='#555';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=0.8;ctx.stroke();
+  });
+
+  // ── 배기구 ──
+  ctx.beginPath();ctx.rect(cx+20,tby-4,8,6);
+  ctx.fillStyle='#3a1a55';ctx.fill();ctx.strokeStyle='#1a0033';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+24,tby-1,2.5,0,Math.PI*2);ctx.fillStyle='#111';ctx.fill();
+
+  // ── 깨진 고글 ──
+  var goggleY=tby+th*0.38;
+  // 스트랩
+  ctx.beginPath();ctx.moveTo(tx,goggleY);ctx.lineTo(tx+tw,goggleY);
+  ctx.strokeStyle='rgba(80,40,100,0.6)';ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();
+
+  [-10,10].forEach(function(ox,gi){
+    var gx2=cx+ox,gy2=goggleY;
+    // 테두리
+    ctx.beginPath();ctx.arc(gx2,gy2,10,0,Math.PI*2);
+    ctx.fillStyle='#2a0a44';ctx.fill();ctx.strokeStyle='#4a2a66';ctx.lineWidth=2;ctx.stroke();
+    // 렌즈
+    ctx.beginPath();ctx.arc(gx2,gy2,8,0,Math.PI*2);
+    var lg=ctx.createRadialGradient(gx2-2,gy2-2,0,gx2,gy2,8);
+    lg.addColorStop(0,'rgba(140,80,200,0.85)');
+    lg.addColorStop(0.5,'rgba(80,30,140,0.9)');
+    lg.addColorStop(1,'rgba(30,0,60,0.95)');
+    ctx.fillStyle=lg;ctx.fill();
+
+    // 렌즈 반사
+    ctx.beginPath();ctx.ellipse(gx2-2,gy2-3,3,2,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(200,150,255,0.2)';ctx.fill();
+
+    // 깨진 금 (크랙)
+    ctx.save();ctx.beginPath();ctx.arc(gx2,gy2,8,0,Math.PI*2);ctx.clip();
+    // 메인 크랙
+    ctx.beginPath();
+    ctx.moveTo(gx2-3,gy2-8);
+    ctx.lineTo(gx2+1,gy2-2);
+    ctx.lineTo(gx2+5,gy2+3);
+    ctx.lineTo(gx2+2,gy2+8);
+    ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+    // 보조 크랙
+    ctx.beginPath();
+    ctx.moveTo(gx2+1,gy2-2);ctx.lineTo(gx2-4,gy2+2);
+    ctx.strokeStyle='rgba(255,255,255,0.45)';ctx.lineWidth=0.8;ctx.stroke();
+    if(gi===1){
+      ctx.beginPath();
+      ctx.moveTo(gx2-5,gy2-3);ctx.lineTo(gx2-1,gy2+1);ctx.lineTo(gx2-6,gy2+5);
+      ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.8;ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.beginPath();ctx.arc(gx2,gy2,10,0,Math.PI*2);
+    ctx.strokeStyle='rgba(120,60,180,0.7)';ctx.lineWidth=1.5;ctx.stroke();
+  });
+  // 고글 중앙 연결
+  ctx.beginPath();ctx.moveTo(cx-2,goggleY);ctx.lineTo(cx+2,goggleY);
+  ctx.strokeStyle='#4a2a66';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+
+  // 글로우
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,56);
+  g.addColorStop(0,'transparent');g.addColorStop(1,'rgba(100,40,180,0.06)');
+  ctx.beginPath();ctx.arc(cx,by,56,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawWHEEL(ctx, t) {
+  var cx=60, cy=64;
+  ctx.clearRect(0,0,120,120);
+
+  var bob = Math.sin(t*1.5)*2;
+  var by = cy + bob;
+  var wheelR = 28;
+
+  // ── 파편 조각들 (룰렛이 부서진) ──
+  var fragments = [
+    {angle:0.3,  dist:36, rot:t*1.1,  w:14, h:8,  col:'#111'},
+    {angle:1.1,  dist:38, rot:-t*0.9, w:10, h:7,  col:'#cccccc'},
+    {angle:1.9,  dist:34, rot:t*1.3,  w:12, h:6,  col:'#555'},
+    {angle:2.7,  dist:40, rot:-t*1.0, w:9,  h:8,  col:'#fff'},
+    {angle:3.6,  dist:35, rot:t*0.8,  w:11, h:7,  col:'#333'},
+    {angle:4.4,  dist:38, rot:-t*1.2, w:10, h:6,  col:'#aaa'},
+    {angle:5.2,  dist:36, rot:t*1.4,  w:8,  h:9,  col:'#222'},
+    {angle:6.0,  dist:37, rot:-t*0.7, w:13, h:6,  col:'#ddd'},
+  ];
+
+  fragments.forEach(function(f){
+    var fx = cx + Math.cos(f.angle + t*0.3)*f.dist;
+    var fy = by + Math.sin(f.angle + t*0.3)*f.dist*0.85;
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(f.rot);
+    // 파편 모양 (불규칙한 사각형)
+    ctx.beginPath();
+    ctx.moveTo(-f.w/2, -f.h/2);
+    ctx.lineTo(f.w/2+2, -f.h/2+1);
+    ctx.lineTo(f.w/2, f.h/2);
+    ctx.lineTo(-f.w/2-1, f.h/2-1);
+    ctx.closePath();
+    ctx.fillStyle=f.col;ctx.fill();
+    ctx.strokeStyle='rgba(80,0,120,0.5)';ctx.lineWidth=1;ctx.stroke();
+    // 파편 번호 점
+    ctx.beginPath();ctx.arc(0,0,1.5,0,Math.PI*2);
+    ctx.fillStyle=f.col==='#fff'||f.col==='#ddd'||f.col==='#cccccc'?'#333':'#ccc';
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // ── 중심 링 (부서진 바퀴 중심부) ──
+  ctx.beginPath();ctx.arc(cx,by,wheelR,0,Math.PI*2);
+  ctx.strokeStyle='rgba(120,0,200,0.3)';ctx.lineWidth=2;ctx.stroke();
+
+  // 중심 금속판 (남아있는 부분)
+  ctx.beginPath();ctx.arc(cx,by,16,0,Math.PI*2);
+  var cg=ctx.createRadialGradient(cx,by,0,cx,by,16);
+  cg.addColorStop(0,'#2a0044');cg.addColorStop(0.6,'#1a0033');cg.addColorStop(1,'#0a0018');
+  ctx.fillStyle=cg;ctx.fill();
+  ctx.strokeStyle='rgba(150,50,255,0.6)';ctx.lineWidth=2;ctx.stroke();
+
+  // 부서진 테두리 조각들
+  for(var i=0;i<8;i++){
+    var a1=(i/8)*Math.PI*2;
+    var a2=a1+0.25;
+    var skip = (i===2||i===5); // 일부 구간 없음 (파편으로 날아감)
+    if(!skip){
+      ctx.beginPath();ctx.arc(cx,by,wheelR,a1,a2);
+      ctx.strokeStyle='rgba(100,0,180,0.7)';ctx.lineWidth=3;ctx.stroke();
+    }
+  }
+
+  // ── 거대 화살표 (보라, 천천히 회전) ──
+  var arrowAngle = t * 1.8;
+  ctx.save();
+  ctx.translate(cx, by);
+  ctx.rotate(arrowAngle);
+
+  // 화살표 몸통 (굵고 김)
+  var arrowLen = wheelR - 4;
+  ctx.beginPath();
+  ctx.moveTo(0, -arrowLen);
+  ctx.lineTo(7, 2);
+  ctx.lineTo(3, 0);
+  ctx.lineTo(3, arrowLen*0.5);
+  ctx.lineTo(-3, arrowLen*0.5);
+  ctx.lineTo(-3, 0);
+  ctx.lineTo(-7, 2);
+  ctx.closePath();
+  var ag=ctx.createLinearGradient(0,-arrowLen,0,arrowLen*0.5);
+  ag.addColorStop(0,'#cc44ff');
+  ag.addColorStop(0.4,'#9900dd');
+  ag.addColorStop(1,'#5500aa');
+  ctx.fillStyle=ag;ctx.fill();
+  ctx.strokeStyle='#330066';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 화살표 글로우
+  ctx.save();ctx.globalAlpha=0.3;
+  ctx.beginPath();
+  ctx.moveTo(0,-arrowLen);ctx.lineTo(10,4);ctx.lineTo(-10,4);ctx.closePath();
+  ctx.fillStyle='#cc44ff';ctx.fill();
+  ctx.restore();
+
+  // 반대쪽 꼬리
+  ctx.beginPath();
+  ctx.moveTo(0,arrowLen*0.5);
+  ctx.lineTo(4,arrowLen*0.8);
+  ctx.lineTo(0,arrowLen*0.7);
+  ctx.lineTo(-4,arrowLen*0.8);
+  ctx.closePath();
+  ctx.fillStyle='#6600aa';ctx.fill();
+
+  ctx.restore();
+
+  // 중심 핀
+  ctx.beginPath();ctx.arc(cx,by,6,0,Math.PI*2);
+  var pg=ctx.createRadialGradient(cx,by,0,cx,by,6);
+  pg.addColorStop(0,'#dd88ff');pg.addColorStop(1,'#6600aa');
+  ctx.fillStyle=pg;ctx.fill();
+  ctx.strokeStyle='#330066';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 눈알 (중심 위)
+  var eyeY=by-wheelR-14;
+  ctx.beginPath();ctx.moveTo(cx,by-wheelR);ctx.lineTo(cx,eyeY+10);
+  ctx.strokeStyle='#4a0088';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+
+  ctx.beginPath();ctx.arc(cx,eyeY,11,0,Math.PI*2);
+  ctx.fillStyle='#f0e8ff';ctx.fill();ctx.strokeStyle='rgba(120,0,200,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+
+  var pupilX=cx+Math.sin(t*1.2)*3;
+  var pupilY=eyeY+Math.cos(t*0.8)*2;
+  ctx.beginPath();ctx.arc(pupilX,pupilY,6.5,0,Math.PI*2);
+  var ig=ctx.createRadialGradient(pupilX,pupilY,0,pupilX,pupilY,6.5);
+  ig.addColorStop(0,'#cc44ff');ig.addColorStop(0.4,'#8800cc');ig.addColorStop(1,'#330055');
+  ctx.fillStyle=ig;ctx.fill();
+  ctx.beginPath();ctx.arc(pupilX,pupilY,3,0,Math.PI*2);ctx.fillStyle='#050005';ctx.fill();
+  ctx.beginPath();ctx.arc(pupilX+2,pupilY-2,1.5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();
+
+  // 보라 글로우
+  var g=ctx.createRadialGradient(cx,by,8,cx,by,55);
+  g.addColorStop(0,'rgba(120,0,200,0.1)');g.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(cx,by,55,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+
+  // 파편 글로우 파티클
+  for(var i=0;i<3;i++){
+    var pa=(t*2.5+i*2.1)%(Math.PI*2);
+    var pr=wheelR+8;
+    ctx.beginPath();ctx.arc(cx+Math.cos(pa)*pr,by+Math.sin(pa)*pr,2,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,60,255,'+(0.3+Math.sin(t*5+i)*0.25)+')';ctx.fill();
+  }
+}
+
+function drawTOYBOX(ctx, t) {
+  var cx=60, cy=72;
+  ctx.clearRect(0,0,120,120);
+
+  var bob=Math.sin(t*1.4)*1.5;
+  var by=cy+bob;
+
+  // 스프링 튀어나오기 사이클 (3초)
+  var cycle=(t*0.38)%1;
+  var op=cycle<0.12?cycle/0.12:cycle<0.35?1:1-(cycle-0.35)/0.65;
+  op=op*op*(3-2*op);
+
+  // 스프링 높이 (튀어나온 정도)
+  var springH=op*26;
+
+  // ── 상자 본체 ──
+  var bw=52, bh=32;
+  var bx=cx-bw/2;
+  var bby=by-bh/2;
+
+  // 상자 그라데이션
+  var bg=ctx.createLinearGradient(bx,bby,bx+bw,bby+bh);
+  bg.addColorStop(0,'#7a3aaa');bg.addColorStop(0.5,'#9a55cc');bg.addColorStop(1,'#5a1a88');
+  ctx.beginPath();
+  ctx.moveTo(bx+5,bby);ctx.lineTo(bx+bw-5,bby);
+  ctx.quadraticCurveTo(bx+bw,bby,bx+bw,bby+5);
+  ctx.lineTo(bx+bw,bby+bh-5);ctx.quadraticCurveTo(bx+bw,bby+bh,bx+bw-5,bby+bh);
+  ctx.lineTo(bx+5,bby+bh);ctx.quadraticCurveTo(bx,bby+bh,bx,bby+bh-5);
+  ctx.lineTo(bx,bby+5);ctx.quadraticCurveTo(bx,bby,bx+5,bby);
+  ctx.closePath();
+  ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='#2a0a44';ctx.lineWidth=2;ctx.stroke();
+
+  // 상자 별 장식
+  ctx.save();ctx.translate(cx,bby+bh/2);
+  ctx.beginPath();
+  for(var j=0;j<5;j++){
+    var a=(j/5)*Math.PI*2-Math.PI/2,a2=a+Math.PI/5;
+    j===0?ctx.moveTo(Math.cos(a)*7,Math.sin(a)*7):ctx.lineTo(Math.cos(a)*7,Math.sin(a)*7);
+    ctx.lineTo(Math.cos(a2)*3.5,Math.sin(a2)*3.5);
+  }
+  ctx.closePath();ctx.fillStyle='rgba(255,215,255,0.5)';ctx.fill();
+  ctx.restore();
+
+  // 상자 볼트
+  [[bx+7,bby+7],[bx+bw-7,bby+7],[bx+7,bby+bh-7],[bx+bw-7,bby+bh-7]].forEach(function(b){
+    ctx.beginPath();ctx.arc(b[0],b[1],3,0,Math.PI*2);
+    ctx.fillStyle='#bb88ee';ctx.fill();ctx.strokeStyle='#2a0a44';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // 상자 구멍 (스프링 나오는 곳)
+  ctx.beginPath();ctx.arc(cx,bby,10,Math.PI,0);
+  ctx.fillStyle='#1a0033';ctx.fill();
+  ctx.strokeStyle='#2a0a44';ctx.lineWidth=1.5;ctx.stroke();
+
+  // ── 스프링 ──
+  if(op>0.02){
+    var springX=cx;
+    var springTop=bby-springH;
+    var springBot=bby;
+    var coils=6;
+    var coilW=12;
+
+    // 스프링 코일
+    ctx.beginPath();
+    var steps=coils*8;
+    for(var i=0;i<=steps;i++){
+      var p=i/steps;
+      var sy=springBot+(springTop-springBot)*p;
+      var sx=springX+Math.sin(p*coils*Math.PI*2)*coilW*(1-p*0.3);
+      i===0?ctx.moveTo(sx,sy):ctx.lineTo(sx,sy);
+    }
+    // 스프링 압축 느낌 (튀어나올수록 코일 간격 넓어짐)
+    var springG=ctx.createLinearGradient(springX-coilW,springTop,springX+coilW,springBot);
+    springG.addColorStop(0,'#ddbbff');springG.addColorStop(0.5,'#aa77ee');springG.addColorStop(1,'#7744bb');
+    ctx.strokeStyle=springG;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+
+    // ── 하얀 몸통 (스프링 위에) ──
+    var tw=30,th=28;
+    var tx=cx-tw/2;
+    var ty=springTop-th;
+
+    // 몸통 흔들림 (스프링 끝에서 살짝 진동)
+    var wobble=op>0.8?Math.sin(t*18)*2*(1-op)*3:0;
+    tx+=wobble;
+
+    var wg=ctx.createLinearGradient(tx,ty,tx+tw,ty+th);
+    wg.addColorStop(0,'#ffffff');wg.addColorStop(0.5,'#f4eeff');wg.addColorStop(1,'#e0d0ff');
+    ctx.beginPath();
+    ctx.moveTo(tx+4,ty);ctx.lineTo(tx+tw-4,ty);
+    ctx.quadraticCurveTo(tx+tw,ty,tx+tw,ty+4);
+    ctx.lineTo(tx+tw,ty+th-4);ctx.quadraticCurveTo(tx+tw,ty+th,tx+tw-4,ty+th);
+    ctx.lineTo(tx+4,ty+th);ctx.quadraticCurveTo(tx,ty+th,tx,ty+th-4);
+    ctx.lineTo(tx,ty+4);ctx.quadraticCurveTo(tx,ty,tx+4,ty);
+    ctx.closePath();
+    ctx.fillStyle=wg;ctx.fill();
+    ctx.strokeStyle='rgba(180,140,255,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+
+    // 몸통 가로선
+    [0.35,0.65].forEach(function(r){
+      ctx.beginPath();
+      ctx.moveTo(tx+5,ty+th*r);ctx.lineTo(tx+tw-5,ty+th*r);
+      ctx.strokeStyle='rgba(160,120,240,0.25)';ctx.lineWidth=1;ctx.stroke();
+    });
+
+    // 검은 눈
+    var ey=ty+th*0.32;
+    ctx.globalAlpha=Math.min(1,op*3);
+    [-6,6].forEach(function(ox){
+      ctx.beginPath();ctx.arc(cx+ox+wobble,ey,4.5,0,Math.PI*2);
+      ctx.fillStyle='#080808';ctx.fill();
+      ctx.beginPath();ctx.ellipse(cx+ox+wobble,ey,1.3,3.2,0,0,Math.PI*2);
+      ctx.fillStyle='#000';ctx.fill();
+      ctx.beginPath();ctx.arc(cx+ox+wobble+1.2,ey-1.2,0.9,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fill();
+    });
+    ctx.globalAlpha=1;
+
+    // 팔
+    var aOut=Math.max(0,(op-0.4)/0.6);aOut=aOut*aOut*(3-2*aOut);
+    var aLen=aOut*20;
+    var aY=ty+th*0.5;
+    ctx.save();
+    ctx.globalAlpha=Math.min(1,aOut*2);
+    // 왼팔
+    ctx.beginPath();ctx.moveTo(tx,aY);ctx.lineTo(tx-aLen,aY+3);
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
+    ctx.beginPath();ctx.arc(tx-aLen,aY+3,5,0,Math.PI*2);
+    ctx.fillStyle='#ffffff';ctx.fill();
+    // 오른팔
+    ctx.beginPath();ctx.moveTo(tx+tw,aY);ctx.lineTo(tx+tw+aLen,aY+3);
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
+    ctx.beginPath();ctx.arc(tx+tw+aLen,aY+3,5,0,Math.PI*2);
+    ctx.fillStyle='#ffffff';ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.restore();
+
+    // 튀어나올 때 파티클
+    if(op>0.7&&op<0.92){
+      for(var j=0;j<4;j++){
+        var pa=(j/4)*Math.PI*2,pr=(op-0.7)*40;
+        ctx.beginPath();ctx.arc(cx+Math.cos(pa)*pr,bby-springH*0.5+Math.sin(pa)*pr*0.4,2,0,Math.PI*2);
+        ctx.fillStyle='rgba(200,130,255,'+(0.6*(1-(op-0.7)/0.22))+')';ctx.fill();
+      }
+    }
+  }
+
+  // 보라 글로우
+  var g=ctx.createRadialGradient(cx,by,10,cx,by,52);
+  g.addColorStop(0,'rgba(120,40,200,0.07)');g.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(cx,by,52,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function drawSHAME(ctx, t) {
+  var cx=60, cy=58;
+  ctx.clearRect(0,0,120,120);
+
+  // 글리치 사이클 — 4초마다 폭발적 글리치
+  var gCycle=(t*0.28)%1;
+  var bigGlitch=gCycle<0.18;
+  var glitchIntensity=bigGlitch?Math.sin(gCycle/0.18*Math.PI):0;
+
+  // 떠있는 bob (글리치 중엔 흔들림)
+  var bob=Math.sin(t*1.6)*3 + (bigGlitch?(Math.random()-0.5)*6*glitchIntensity:0);
+  var by=cy+bob;
+
+  // ── 글리치 배경 레이어 ──
+  if(bigGlitch && glitchIntensity>0.1){
+    for(var g=0;g<8;g++){
+      var gy=Math.random()*120;
+      var gh=2+Math.random()*8;
+      var gx=(Math.random()-0.5)*30*glitchIntensity;
+      ctx.save();
+      ctx.globalAlpha=0.3*glitchIntensity;
+      ctx.fillStyle=g%2===0?'#cc00ff':'#4400aa';
+      ctx.fillRect(gx,gy,120,gh);
+      ctx.restore();
+    }
+    // RGB 분리 효과
+    ctx.save();
+    ctx.globalAlpha=0.15*glitchIntensity;
+    ctx.fillStyle='#ff00ff';
+    ctx.fillRect(-4+Math.random()*8,0,120,120);
+    ctx.fillStyle='#00ffff';
+    ctx.fillRect(4-Math.random()*8,0,120,120);
+    ctx.restore();
+  }
+
+  // ── 컴퓨터 모니터 본체 ──
+  var mw=72, mh=52;
+  var mx=cx-mw/2, my=by-mh/2;
+
+  // 글리치 중 위치 흔들림
+  var gShiftX=bigGlitch?(Math.random()-0.5)*4*glitchIntensity:0;
+  var gShiftY=bigGlitch?(Math.random()-0.5)*3*glitchIntensity:0;
+
+  // 모니터 베젤 (검정)
+  var bezelG=ctx.createLinearGradient(mx,my,mx+mw,my+mh);
+  bezelG.addColorStop(0,'#1a1a1a');bezelG.addColorStop(0.5,'#0d0d0d');bezelG.addColorStop(1,'#050505');
+  ctx.beginPath();
+  ctx.moveTo(mx+gShiftX+5,my+gShiftY);ctx.lineTo(mx+mw+gShiftX-5,my+gShiftY);
+  ctx.quadraticCurveTo(mx+mw+gShiftX,my+gShiftY,mx+mw+gShiftX,my+gShiftY+5);
+  ctx.lineTo(mx+mw+gShiftX,my+mh+gShiftY-5);
+  ctx.quadraticCurveTo(mx+mw+gShiftX,my+mh+gShiftY,mx+mw+gShiftX-5,my+mh+gShiftY);
+  ctx.lineTo(mx+gShiftX+5,my+mh+gShiftY);
+  ctx.quadraticCurveTo(mx+gShiftX,my+mh+gShiftY,mx+gShiftX,my+mh+gShiftY-5);
+  ctx.lineTo(mx+gShiftX,my+gShiftY+5);
+  ctx.quadraticCurveTo(mx+gShiftX,my+gShiftY,mx+gShiftX+5,my+gShiftY);
+  ctx.closePath();
+  ctx.fillStyle=bezelG;ctx.fill();
+  ctx.strokeStyle=bigGlitch?'rgba(180,0,255,'+(0.4+glitchIntensity*0.6)+')':'rgba(40,0,60,0.8)';
+  ctx.lineWidth=1.8;ctx.stroke();
+
+  // 스크린 영역
+  var sp=4;
+  var sx=mx+sp+gShiftX, sy=my+sp+gShiftY, sw=mw-sp*2, sh=mh-sp*2;
+  ctx.beginPath();ctx.rect(sx,sy,sw,sh);
+  ctx.fillStyle='#030008';ctx.fill();
+
+  // 스크린 스캔라인
+  for(var i=0;i<sh;i+=3){
+    ctx.beginPath();ctx.moveTo(sx,sy+i);ctx.lineTo(sx+sw,sy+i);
+    ctx.strokeStyle='rgba(60,0,80,0.15)';ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // ── 보라색 사악한 웃음 ──
+  var faceCX=sx+sw/2, faceCY=sy+sh/2;
+
+  // 글리치 중 얼굴도 흔들림
+  var fgx=bigGlitch?(Math.random()-0.5)*5*glitchIntensity:0;
+  var fgy=bigGlitch?(Math.random()-0.5)*4*glitchIntensity:0;
+
+  // 눈 두 개 (사악하게 가늘게 뜬)
+  var eyeY=faceCY-8+fgy;
+  var eyePulse=0.7+Math.sin(t*3)*0.3;
+  [-10,10].forEach(function(ox,i){
+    var ex=faceCX+ox+fgx;
+    // 눈 글로우
+    var eg=ctx.createRadialGradient(ex,eyeY,0,ex,eyeY,10);
+    eg.addColorStop(0,'rgba(180,0,255,0.3)');eg.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(ex,eyeY,10,0,Math.PI*2);ctx.fillStyle=eg;ctx.fill();
+
+    // 눈 (가늘고 사악한 — 세모 형태)
+    ctx.beginPath();
+    if(i===0){
+      // 왼쪽 눈 — 안쪽이 치켜올라감
+      ctx.moveTo(ex-7,eyeY+3);ctx.lineTo(ex,eyeY-4);ctx.lineTo(ex+7,eyeY+3);
+    } else {
+      // 오른쪽 눈
+      ctx.moveTo(ex-7,eyeY+3);ctx.lineTo(ex,eyeY-4);ctx.lineTo(ex+7,eyeY+3);
+    }
+    ctx.closePath();
+    var eyeG=ctx.createLinearGradient(ex-7,eyeY-4,ex+7,eyeY+3);
+    eyeG.addColorStop(0,'#ee00ff');eyeG.addColorStop(1,'#8800cc');
+    ctx.fillStyle=eyeG;ctx.fill();
+
+    // 눈 반짝임
+    ctx.beginPath();ctx.arc(ex+(i===0?-2:2),eyeY-1,1.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,200,255,0.7)';ctx.fill();
+  });
+
+  // 사악한 웃음 (크고 휜 입)
+  var mouthY=faceCY+6+fgy;
+  var mouthW=18+Math.sin(t*2)*2;
+
+  // 입 글로우
+  var mg=ctx.createRadialGradient(faceCX+fgx,mouthY,0,faceCX+fgx,mouthY,22);
+  mg.addColorStop(0,'rgba(160,0,255,0.2)');mg.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(faceCX+fgx,mouthY,22,0,Math.PI*2);ctx.fillStyle=mg;ctx.fill();
+
+  // 입 (크게 벌린 사악한 미소)
+  ctx.beginPath();
+  ctx.moveTo(faceCX+fgx-mouthW,mouthY-4);
+  ctx.quadraticCurveTo(faceCX+fgx-mouthW+4,mouthY+2,faceCX+fgx-mouthW+6,mouthY);
+  ctx.quadraticCurveTo(faceCX+fgx,mouthY+14,faceCX+fgx+mouthW-6,mouthY);
+  ctx.quadraticCurveTo(faceCX+fgx+mouthW-4,mouthY+2,faceCX+fgx+mouthW,mouthY-4);
+  ctx.strokeStyle='#cc00ff';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+
+  // 이빨 (위 아래)
+  var teethColors=['#dd88ff','#ffffff','#dd88ff'];
+  for(var i=0;i<3;i++){
+    var tx2=faceCX+fgx-8+i*8;
+    // 위 이빨
+    ctx.beginPath();ctx.moveTo(tx2-3,mouthY-1);ctx.lineTo(tx2,mouthY+5);ctx.lineTo(tx2+3,mouthY-1);
+    ctx.closePath();ctx.fillStyle=teethColors[i];ctx.fill();
+    // 아래 이빨
+    ctx.beginPath();ctx.moveTo(tx2-2.5,mouthY+9);ctx.lineTo(tx2,mouthY+4);ctx.lineTo(tx2+2.5,mouthY+9);
+    ctx.closePath();ctx.fillStyle=teethColors[i];ctx.fill();
+  }
+
+  // ── 소형 글리치 라인 (상시) ──
+  for(var i=0;i<2;i++){
+    var ly=sy+Math.random()*sh;
+    var la=0.05+Math.random()*0.1;
+    ctx.beginPath();ctx.moveTo(sx,ly);ctx.lineTo(sx+sw,ly);
+    ctx.strokeStyle='rgba(180,0,255,'+la+')';ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // ── 대형 글리치 (주기적) ──
+  if(bigGlitch && glitchIntensity>0.3){
+    // 화면 조각 글리치 (색 블록으로 대체)
+    for(var i=0;i<4;i++){
+      var sliceY=sy+Math.random()*sh;
+      var sliceH=2+Math.random()*6;
+      var sliceX=sx+(Math.random()-0.5)*16*glitchIntensity;
+      ctx.save();
+      ctx.globalAlpha=0.25*glitchIntensity;
+      ctx.fillStyle=i%2===0?'#cc00ff':'#220044';
+      ctx.fillRect(sliceX,sliceY,sw,sliceH);
+      ctx.restore();
+    }
+    // 보라 플래시
+    ctx.save();
+    ctx.globalAlpha=0.15*glitchIntensity;
+    ctx.fillStyle='#aa00ff';
+    ctx.fillRect(sx,sy,sw,sh);
+    ctx.restore();
+    // 외부 글리치 바
+    for(var i=0;i<4;i++){
+      var gy2=Math.random()*120;
+      ctx.save();ctx.globalAlpha=0.25*glitchIntensity;
+      ctx.fillStyle='#cc00ff';
+      ctx.fillRect(0,gy2,120,1+Math.random()*4);
+      ctx.restore();
+    }
+  }
+
+  // 스크린 반사
+  ctx.beginPath();ctx.rect(sx,sy,sw*0.4,8);
+  ctx.fillStyle='rgba(255,255,255,0.03)';ctx.fill();
+
+  // ── 스탠드 ──
+  ctx.beginPath();
+  ctx.moveTo(cx+gShiftX-3,my+mh+gShiftY);ctx.lineTo(cx+gShiftX-3,my+mh+gShiftY+8);
+  ctx.lineTo(cx+gShiftX+3,my+mh+gShiftY+8);ctx.lineTo(cx+gShiftX+3,my+mh+gShiftY);
+  ctx.fillStyle='#111';ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx+gShiftX-14,my+mh+gShiftY+8);ctx.lineTo(cx+gShiftX+14,my+mh+gShiftY+8);
+  ctx.lineTo(cx+gShiftX+10,my+mh+gShiftY+12);ctx.lineTo(cx+gShiftX-10,my+mh+gShiftY+12);
+  ctx.closePath();ctx.fillStyle='#0d0d0d';ctx.fill();
+
+  // 전원 LED (글리치 중 깜빡)
+  var ledAlpha=bigGlitch?Math.random():0.6+Math.sin(t*3)*0.3;
+  ctx.beginPath();ctx.arc(mx+mw+gShiftX-8,my+mh+gShiftY-6,2.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(180,0,255,'+ledAlpha+')';ctx.fill();
+  ctx.shadowColor='#cc00ff';ctx.shadowBlur=6;ctx.fill();ctx.shadowBlur=0;
+
+  // 전체 보라 글로우
+  var glowR=bigGlitch?55+glitchIntensity*15:48;
+  var glowA=bigGlitch?0.06+glitchIntensity*0.12:0.04;
+  var gg=ctx.createRadialGradient(cx,by,8,cx,by,glowR);
+  gg.addColorStop(0,'rgba(140,0,255,'+glowA*2+')');
+  gg.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(cx,by,glowR,0,Math.PI*2);ctx.fillStyle=gg;ctx.fill();
+
+  // 글리치 중 외곽 보라 테두리 플래시
+  if(bigGlitch && glitchIntensity>0.5){
+    ctx.beginPath();ctx.rect(0,0,120,120);
+    ctx.strokeStyle='rgba(180,0,255,'+(glitchIntensity*0.4)+')';
+    ctx.lineWidth=3;ctx.stroke();
+  }
+}
+
+var SKINS = {
+  iptime:   [drawIPTIME,   drawIPTIME_FLAT],
+  hotspot:  [drawHOTSPOT,  drawHOTSPOT_FLOWER],
+  asus:     [drawASUS,     drawASUS_BSOD],
+  tplink:   [drawTPLINK,   drawTPLINK_RADIO],
+  netgear:  [drawNETGEAR,  drawNETGEAR_STEAMPUNK],
+  mercusys: [drawMERCUSYS, drawMERCUSYS_PC],
+  efm:      [drawEFM,      drawEFM_GRENADE],
+  dlink:    [drawDLINK,    drawDLINK_RUSTY],
+  linksys:  [drawLINKSYS,  drawLINKSYS_PROJECTOR],
+  ubiquiti: [drawUBIQUITI, drawUBIQUITI_CYBER],
+  huawei:   [drawHUAWEI,   drawHUAWEI_DRAWER],
+};
+var SKIN_LABELS = {
+  iptime:   ['기본','플랫 TV'],    hotspot:  ['기본','꽃송이'],
+  asus:     ['기본','BSOD'],       tplink:   ['기본','라디오'],
+  netgear:  ['기본','스팀펑크'],   mercusys: ['기본','모니터'],
+  efm:      ['기본','수류탄'],     dlink:    ['기본','녹슨 프레스'],
+  linksys:  ['기본','영사기'],     ubiquiti: ['기본','사이버펑크'],
+  huawei:   ['기본','서랍장'],
+};
+var skinIndex = {};
+
+var MONSTER_LIST = [
+  {id:'iptime',  name:'IPTIME',   num:'#001', ssid:'iptime / iptime_5G'},
+  {id:'hotspot', name:'HOTSPOT',  num:'#002', ssid:'iPhone / Galaxy'},
+  {id:'asus',    name:'ASUS',     num:'#003', ssid:'ASUS / RT-AX'},
+  {id:'tplink',  name:'TP-LINK',  num:'#004', ssid:'TP-Link / Archer'},
+  {id:'netgear', name:'NETGEAR',  num:'#005', ssid:'NETGEAR / Nighthawk'},
+  {id:'mercusys',name:'MERCUSYS', num:'#006', ssid:'Mercusys / MERCURY'},
+  {id:'efm',     name:'EFM',      num:'#007', ssid:'ipTIME / EFM'},
+  {id:'dlink',   name:'D-LINK',   num:'#008', ssid:'D-Link / DIR'},
+  {id:'linksys', name:'LINKSYS',  num:'#009', ssid:'Linksys / Velop'},
+  {id:'ubiquiti',name:'UBIQUITI', num:'#010', ssid:'UniFi / UAP'},
+  {id:'huawei',  hidden:true, name:'HUAWEI',   num:'#011', ssid:'HUAWEI / HiRouter'},
+];
+
+var skinIndex = {};
+
+var ENEMIES = [
+  {id:'junk',  fn:drawJUNK,  num:'E001', name:'JUNK',  type:'MACHINE · HEAVY',
+   desc:'회색+노랑 고철 덩어리.<br>뒤에 달린 태엽이 천천히 돌아간다.'},
+  {id:'speed', fn:drawSPEED, num:'E002', name:'SPEED', type:'MACHINE · FAST',
+   desc:'고철 판에 바퀴 두 개.<br>배기구에서 연기가 끊임없이 나온다.'},
+  {id:'roulette', fn:drawROULETTE, num:'E003', name:'ROULETTE', type:'MACHINE · TRICK',
+   desc:'검정,하양,회색 룰렛 몸체.<br>화살표가 쉬지 않고 돌아간다.'},
+  {id:'box', fn:drawBOX, num:'E004', name:'BOX', type:'MACHINE · AMBUSH',
+   desc:'고철 상자 안에서 씨뻘건 눈이 노려본다.<br>열리면 검은 몸체가 튀어나온다.'},
+  {id:'glove', fn:drawGLOVE, num:'E005', name:'GLOVE', type:'MACHINE · AERIAL',
+   desc:'날아다니는 회색 장갑.<br>눈도 없이 혼자 부유한다.'},
+  {id:'unglove', fn:drawUNGLOVE, num:'E006', name:'UNGLOVE', type:'MACHINE · DARK',
+   desc:'뒤집어진 장갑. 보라·파랑·검정 그라데이션.<br>손등 가운데 하얀 눈이 떠있다.'},
+  {id:'junkv2', fn:drawJUNKV2, num:'E007', name:'JUNK v2', type:'MACHINE · HEAVY+',
+   desc:'진화한 정크. 큰 팔이 달리고<br>태엽 3개, 보라빛이 섞였다.'},
+  {id:'ultraspeed', fn:drawULTRASPEED, num:'E008', name:'ULTRA SPEED', type:'MACHINE · TANK',
+   desc:'탱크로 진화한 스피드.<br>바퀴 4개, 깨진 고글, 보라빛 장갑.'},
+  {id:'wheel', fn:drawWHEEL, num:'E009', name:'WHEEL', type:'MACHINE · CHAOS',
+   desc:'부서진 룰렛의 강화형.<br>파편이 날아다니고 보라 화살표가 거대해졌다.'},
+  {id:'toybox', fn:drawTOYBOX, num:'E010', name:'TOYBOX', type:'MACHINE · BOSS',
+   desc:'보라 상자의 강화판.<br>열리면 하얀 팔과 몸통이 튀어나온다.'},
+];
+
+var currentTab='wifi';
+function switchTab(tab){
+  currentTab=tab;
+  document.getElementById('tab_wifi').style.opacity  =tab==='wifi' ?'1':'0.4';
+  document.getElementById('tab_enemy').style.opacity =tab==='enemy'?'1':'0.4';
+  document.getElementById('tab_wifi').style.borderColor  =tab==='wifi' ?'#00ff88':'#0d3a1a';
+  document.getElementById('tab_enemy').style.borderColor =tab==='enemy'?'#ff4444':'#1a0a0a';
+  document.getElementById('panel_wifi').style.display  =tab==='wifi' ?'flex':'none';
+  document.getElementById('panel_enemy').style.display =tab==='enemy'?'flex':'none';
+}
+
+var wCtxs={};
+function buildWifi(){
+  var grid=document.getElementById('panel_wifi');
+  MONSTER_LIST.forEach(function(m){
+    skinIndex[m.id]=0;
+    var hasSkin=SKINS[m.id].length>1;
+    var div=document.createElement('div');
+    div.className='mcard';
+    if(m.hidden) div.style.display='none';
+    div.id='wcard_'+m.id;
+    var nav=hasSkin?
+      '<div class="snav">'+
+        '<button class="sarr" data-id="'+m.id+'" data-dir="-1" onclick="chSkinBtn(this)">◀</button>'+
+        '<span class="slabel" id="sl_'+m.id+'">기본</span>'+
+        '<button class="sarr" data-id="'+m.id+'" data-dir="1" onclick="chSkinBtn(this)">▶</button>'+
+      '</div>':
+      '<div class="snav"><span class="slabel">기본</span></div>';
+    div.innerHTML=
+      '<div class="badge">'+m.num+'</div>'+
+      '<canvas id="wc_'+m.id+'" style="width:120px;height:120px;"></canvas>'+
+      '<div class="mname">'+m.name+'</div>'+
+      '<div class="mssid">'+m.ssid+'</div>'+nav;
+    grid.appendChild(div);
+    var c=document.getElementById('wc_'+m.id);
+    var dpr=window.devicePixelRatio||1;
+    c.width=120*dpr;c.height=120*dpr;c.style.width='120px';c.style.height='120px';
+    var ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+    wCtxs[m.id]=ctx;
+  });
+}
+
+function chSkin(el,id,dir){
+  var n=SKINS[id].length;
+  skinIndex[id]=((skinIndex[id]||0)+dir+n)%n;
+  var sl=document.getElementById('sl_'+id);
+  if(sl) sl.textContent=SKIN_LABELS[id][skinIndex[id]];
+}
+function chSkinBtn(btn){
+  var id=btn.getAttribute('data-id');
+  var dir=parseInt(btn.getAttribute('data-dir'));
+  chSkin(btn,id,dir);
+}
+
+var eCtxs={},shameOn=false;
+function buildEnemy(){
+  var grid=document.getElementById('panel_enemy');
+  ENEMIES.forEach(function(e,idx){
+    var div=document.createElement('div');
+    div.className='ecard';
+    div.innerHTML=
+      '<div class="badge">'+e.num+'</div>'+
+      '<canvas id="ec_'+e.id+'" style="width:120px;height:120px;"></canvas>'+
+      '<div class="ename">'+e.name+'</div>'+
+      '<div class="etype">// '+e.type+' //</div>'+
+      '<div class="edesc">'+e.desc+'</div>'+
+      '';
+    div.onclick=function(){
+      document.querySelectorAll('.ecard').forEach(function(c){c.style.borderColor='';});
+      div.style.borderColor='#ff4444';
+    };
+    grid.appendChild(div);
+    var c=document.getElementById('ec_'+e.id);
+    var dpr=window.devicePixelRatio||1;
+    c.width=120*dpr;c.height=120*dpr;c.style.width='120px';c.style.height='120px';
+    var ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+    eCtxs[e.id]=ctx;
+    setTimeout(function(){ e.fn(eCtxs[e.id],0); },idx*40);
+  });
+  var sc=document.createElement('div');
+  sc.className='ecard';sc.id='shame_card';sc.style.display='none';
+  sc.innerHTML=
+    '<div class="badge">E???</div>'+
+    '<canvas id="ec_shame" style="width:120px;height:120px;"></canvas>'+
+    '<div class="ename" style="color:#cc44ff;">SHAME</div>'+
+    '<div class="etype">// ??? HIDDEN //</div>'+
+    '<div class="edesc">검은 컴퓨터 속 사악한 존재.<br>글리치가 현실을 침범한다.</div>';
+  grid.appendChild(sc);
+}
+
+function revealHuawei(){
+  var card=document.getElementById('wcard_huawei');
+  if(card&&card.style.display==='none'){
+    card.style.display='flex';
+    card.style.opacity='0';card.style.transform='scale(0.7)';
+    card.style.transition='opacity 0.5s,transform 0.5s';
+    setTimeout(function(){card.style.opacity='1';card.style.transform='scale(1)';},50);
+  }
+}
+
+function revealShame(){
+  if(shameOn)return;
+  revealHuawei();
+  shameOn=true;
+  switchTab('enemy');
+  var card=document.getElementById('shame_card');
+  card.style.cssText+='display:flex;opacity:0;transform:scale(0.5);transition:opacity .5s,transform .5s;border-color:#cc44ff;';
+  setTimeout(function(){card.style.opacity='1';card.style.transform='scale(1)';},50);
+  var c=document.getElementById('ec_shame');
+  var dpr=window.devicePixelRatio||1;
+  c.width=120*dpr;c.height=120*dpr;c.style.width='120px';c.style.height='120px';
+  var ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+  eCtxs['shame']=ctx;
+}
+
+var lastTS=0,T=0;
+function loop(ts){
+  if(!lastTS)lastTS=ts;
+  T+=Math.min((ts-lastTS)/1000,0.05);
+  lastTS=ts;
+  MONSTER_LIST.forEach(function(m){
+    if(!wCtxs[m.id])return;
+    var fn=SKINS[m.id][skinIndex[m.id]||0];
+    if(fn)fn(wCtxs[m.id],T);
+  });
+  ENEMIES.forEach(function(e){
+    if(eCtxs[e.id]) e.fn(eCtxs[e.id],T);
+  });
+  if(shameOn&&eCtxs['shame'])drawSHAME(eCtxs['shame'],T);
+  requestAnimationFrame(loop);
+}
+
+window.onload=function(){
+  buildWifi();
+  buildEnemy();
+  switchTab('wifi');
+  requestAnimationFrame(loop);
+};
+
+</script>
+</body>
+</html>

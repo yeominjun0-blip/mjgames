@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MJ ARCADE — Game Portfolio</title>
+<style>
+@font-face{
+  font-family:'Galmuri11';
+  src:url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/Galmuri11.woff2') format('woff2');
+  font-display:swap;
+}
+@font-face{
+  font-family:'Galmuri9';
+  src:url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/Galmuri9.woff2') format('woff2');
+  font-display:swap;
+}
+:root{
+  --bg:#0e0a1f;
+  --panel:#1a1433;
+  --panel2:#221a44;
+  --line:#352a63;
+  --ink:#efeaff;
+  --dim:#9b8fd0;
+  --amber:#ffb347;
+  --magenta:#ff4f9a;
+  --cyan:#4fe3ff;
+  --act:#ff4f6d;
+  --str:#4fe3ff;
+  --inc:#ffb347;
+  --col:#c77dff;
+  --cas:#7dff8f;
+  --toy:#ff9de2;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);font-family:'Galmuri11','Galmuri9',Pretendard,'Apple SD Gothic Neo',sans-serif;-webkit-font-smoothing:none}
+body{min-height:100vh;overflow-x:hidden}
+
+/* ── 배경 그리드 ───────────────────── */
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(79,227,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(79,227,255,.04) 1px,transparent 1px);
+  background-size:36px 36px;
+  mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 100%);
+}
+
+/* ── 마키 헤더 ───────────────────── */
+header{position:relative;z-index:1;text-align:center;padding:54px 16px 26px}
+.marquee-frame{display:inline-block;border:3px solid var(--line);border-radius:14px;padding:26px 38px 22px;position:relative;background:linear-gradient(180deg,#1c1540,#130e2b);box-shadow:0 0 0 3px #0a0718,0 14px 50px rgba(0,0,0,.55)}
+.bulbs{position:absolute;inset:-8px;border-radius:18px;pointer-events:none}
+.bulb{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.bulb:nth-child(3n+1){background:var(--magenta);box-shadow:0 0 8px var(--magenta)}
+.bulb:nth-child(3n+2){background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.bulb{animation:blink 1.6s infinite}
+.logo{font-family:'Press Start 2P','Galmuri11',monospace;font-size:clamp(26px,6vw,52px);letter-spacing:2px;line-height:1.1;
+  background:linear-gradient(90deg,var(--amber),var(--magenta) 50%,var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,79,154,.35));}
+.logo small{display:block;font-size:clamp(10px,1.8vw,14px);color:var(--dim);-webkit-text-fill-color:var(--dim);margin-top:12px;letter-spacing:6px}
+.tagline{margin-top:18px;color:var(--dim);font-size:14px;line-height:1.7}
+.tagline b{color:var(--ink)}
+.stats{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.stat{border:2px solid var(--line);border-radius:8px;padding:7px 14px;font-size:12px;color:var(--dim);background:var(--panel)}
+.stat b{color:var(--amber);font-size:14px;margin-right:4px}
+
+/* ── 컨트롤 ───────────────────── */
+.controls{position:sticky;top:0;z-index:5;background:rgba(14,10,31,.92);backdrop-filter:blur(8px);border-bottom:2px solid var(--line);padding:12px 16px}
+.controls-inner{max-width:1180px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;border:2px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 12px}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:14px}
+.search input::placeholder{color:var(--dim)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--panel);color:var(--dim);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;cursor:pointer;transition:.15s}
+.chip:hover{color:var(--ink);border-color:var(--dim)}
+.chip.on{color:#0e0a1f;background:var(--amber);border-color:var(--amber);font-weight:700}
+.chip:focus-visible,.card:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* ── 카드 그리드 ───────────────────── */
+main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:26px 16px 80px}
+.count{color:var(--dim);font-size:12px;margin-bottom:14px;letter-spacing:1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+.card{position:relative;border:2px solid var(--line);border-radius:10px;background:linear-gradient(180deg,var(--panel2),var(--panel));text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);overflow:hidden;transition:transform .15s,border-color .15s,box-shadow .15s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 18px color-mix(in srgb,var(--c) 30%,transparent)}
+.strip{height:7px;background:repeating-linear-gradient(45deg,var(--c) 0 10px,color-mix(in srgb,var(--c) 55%,#000) 10px 20px)}
+.card-body{padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;flex:1}
+.cat-label{font-size:10px;letter-spacing:2px;color:var(--c);font-weight:700}
+.title{font-size:16px;font-weight:700;line-height:1.3}
+.desc{font-size:12px;color:var(--dim);line-height:1.6;flex:1}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:10px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:2px 6px}
+.play{font-size:11px;color:var(--c);font-weight:700;letter-spacing:1px;white-space:nowrap}
+.empty{color:var(--dim);text-align:center;padding:60px 0;font-size:14px}
+
+/* ── 대기 슬롯 ───────────────────── */
+.pending-h{font-size:13px;letter-spacing:2px;color:var(--dim);margin:44px 0 14px;font-weight:400}
+.pending-h span{font-size:11px;letter-spacing:1px}
+.slot{border:2px dashed var(--line);border-radius:10px;background:rgba(26,20,51,.45);padding:0;display:flex;flex-direction:column;opacity:.75}
+.slot .strip{height:7px;background:repeating-linear-gradient(45deg,var(--line) 0 10px,transparent 10px 20px)}
+.slot .title{color:var(--dim)}
+.badge{font-size:10px;letter-spacing:1px;border:1px solid var(--line);border-radius:4px;padding:2px 7px;color:var(--dim);white-space:nowrap}
+.badge.dev{color:var(--amber);border-color:var(--amber)}
+
+/* ── 테스트장 (플레이어) ───────────────────── */
+.player{position:fixed;inset:0;z-index:50;background:#070512;display:none;flex-direction:column}
+.player.open{display:flex}
+.player-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(180deg,#1c1540,#120d2a);border-bottom:3px solid var(--line);flex-wrap:wrap}
+.now{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.led{width:10px;height:10px;border-radius:50%;background:var(--cas);box-shadow:0 0 10px var(--cas);animation:blink 1.2s infinite;flex-shrink:0}
+.now-title{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-cat{font-size:10px;letter-spacing:2px;color:var(--dim);white-space:nowrap}
+.pbtn{border:2px solid var(--line);background:var(--panel);color:var(--ink);font-family:inherit;font-size:12px;border-radius:8px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.pbtn:hover{border-color:var(--cyan);color:var(--cyan)}
+.pbtn.close:hover{border-color:var(--act);color:var(--act)}
+.screen{flex:1;position:relative;background:#000}
+.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+
+footer{position:relative;z-index:1;text-align:center;color:var(--dim);font-size:11px;padding:0 16px 50px;line-height:2}
+footer b{color:var(--amber)}
+
+@media (max-width:520px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .marquee-frame{padding:20px 18px 16px}
+  .scanlines{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .bulb,.led{animation:none}
+  .card,.card:hover{transition:none;transform:none}
+}
+</style>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header>
+  <div class="marquee-frame">
+    <div class="bulbs" id="bulbs"></div>
+    <h1 class="logo">MJ ARCADE<small>BROWSER GAME PORTFOLIO</small></h1>
+  </div>
+  <p class="tagline">전부 <b>단일 HTML 파일</b>로 직접 설계하고 디버깅한 브라우저 게임들.<br>카드를 누르면 <b>테스트장</b>에서 바로 플레이할 수 있어요.</p>
+  <div class="stats">
+    <div class="stat"><b id="stat-total">0</b>GAMES</div>
+    <div class="stat"><b id="stat-cat">0</b>GENRES</div>
+    <div class="stat"><b>1</b>DEVELOPER</div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <label class="search">🔍<input id="q" type="search" placeholder="게임 검색…" aria-label="게임 검색"></label>
+    <div class="chips" id="chips" role="tablist"></div>
+  </div>
+</div>
+
+<main>
+  <p class="count" id="count"></p>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>검색 결과가 없어요. 다른 키워드로 찾아보세요.</p>
+
+  <section id="pending-sec" hidden>
+    <h2 class="pending-h">▸ INSERT CARTRIDGE <span>— 입고 대기 슬롯</span></h2>
+    <div class="grid" id="pending-grid"></div>
+  </section>
+</main>
+
+<footer>
+  MJ ARCADE · 모든 게임은 HTML/CSS/JS 단일 파일로 제작 · AI 협업 기반 반복 개발<br>
+  <b>▲</b> 카드 클릭 = 즉시 플레이 · 진행 데이터는 브라우저에 저장됩니다
+</footer>
+
+<!-- 테스트장 -->
+<div class="player" id="player" role="dialog" aria-modal="true" aria-label="게임 플레이어">
+  <div class="player-bar">
+    <div class="now">
+      <span class="led"></span>
+      <div>
+        <div class="now-title" id="now-title">—</div>
+        <div class="now-cat" id="now-cat">—</div>
+      </div>
+    </div>
+    <button class="pbtn" id="btn-restart" title="게임 새로고침">↺ 리셋</button>
+    <button class="pbtn" id="btn-newtab">⧉ 새 탭</button>
+    <button class="pbtn close" id="btn-close">✕ 닫기 (ESC)</button>
+  </div>
+  <div class="screen">
+    <iframe id="frame" allow="autoplay; fullscreen; accelerometer; gyroscope" title="게임 화면"></iframe>
+    <div class="scanlines"></div>
+  </div>
+</div>
+
+<script>
+/* ───────── 게임 데이터 ─────────
+   새 게임 추가: games/ 폴더에 파일 넣고 아래에 한 줄 추가하면 끝 */
+const CATS = {
+  act:{name:'액션',        color:'var(--act)'},
+  str:{name:'전략·RPG',    color:'var(--str)'},
+  inc:{name:'키우기',      color:'var(--inc)'},
+  col:{name:'컬렉션·가챠', color:'var(--col)'},
+  cas:{name:'캐주얼·리듬', color:'var(--cas)'},
+  toy:{name:'웹토이·툴',   color:'var(--toy)'},
+};
+
+const GAMES = [
+ // ── 액션 ──
+ {f:'wizard-clash-2.html',        t:'WIZARD CLASH',          c:'act', d:'마법사들의 클래시 대전. 크로스 브라우저까지 잡은 대표작.', g:['대전','대표작']},
+ {f:'tale_of_arena_clash.html',   t:'ARENA CLASH: TALE',     c:'act', d:'검 가챠 + 라운드 아레나 격투. 상인 자크에게 검을 뽑아 강해져라.', g:['격투','가챠']},
+ {f:'carrier_brawl.html',         t:'캐리어 배틀',            c:'act', d:'캐리어 끌고 박아라! 2인 대전 + 1인 배틀 + 캐릭터 뽑기.', g:['2인 대전','브롤']},
+ {f:'eclipse_v2.html',            t:'ECLIPSE — 균열의 기사',  c:'act', d:'웨이브 보스 액션. PC/모바일 듀얼 조작과 대시 회피.', g:['보스전','모바일']},
+ {f:'wifi_survivors-2.html',      t:'WIFI SURVIVORS',        c:'act', d:'10분 생존 뱀서라이크. 레벨업 빌드로 와이파이 물결을 버텨라.', g:['생존','뱀서류']},
+ {f:'arsenal_dimensions-4.html',  t:'ARSENAL ∞ DIMENSIONS',  c:'act', d:'차원을 넘나드는 3D 슈터. 무기 5종 스왑 + 인벤토리.', g:['3D','슈터']},
+ {f:'glitch_knight.html',         t:'GLITCH_KNIGHT',         c:'act', d:'고장날수록 깊어지는 게임. 코드 조각을 장착해 물리를 망가뜨려라.', g:['실험작','로그라이트']},
+ {f:'shadow_strike.html',         t:'SHADOW STRIKE',         c:'act', d:'숨으면 적이 못 본다. 은신 메커니즘의 스텔스 플랫포머.', g:['스텔스','플랫포머']},
+ {f:'viral_crash-3.html',         t:'VIRAL CRASH 3D',        c:'act', d:'바이러스 3종 장착 후 사무실→도시→우주까지 파괴 질주.', g:['3D','파괴']},
+ {f:'double_jump_fight.html',     t:'JUMP SMASH!',           c:'act', d:'더블 점프로 상대를 눌러 찍어라! 플레이어 vs AI 대전.', g:['대전','점프']},
+ // ── 전략·RPG ──
+ {f:'tower_defense_v2-3.html',    t:'IRON BASTION',          c:'str', d:'가챠로 포탑 덱을 짜는 타워 디펜스. Z등급 1% 소환 도전.', g:['디펜스','덱빌딩']},
+ {f:'viral_containment_v3-1.html',t:'VIRAL CONTAINMENT',     c:'str', d:'바이오 격리시설 운영 시뮬. 4일 밤 동안 전력과 시설을 지켜라.', g:['시뮬','운영']},
+ {f:'world_rpg.html',             t:'WORLD BREAKER',         c:'str', d:'탐험·전투·채집·스킬. 세계를 부수며 성장하는 RPG.', g:['RPG','성장']},
+ {f:'yakyu_final.html',           t:'YAKYU ⚾',               c:'str', d:'15가지 구종의 야구 시뮬레이터. 투수와 타자 양쪽 플레이.', g:['스포츠','시뮬']},
+ // ── 키우기 ──
+ {f:'GWANGJIL.html',              t:'GWANGJIL ⛏',            c:'inc', d:'지구의 핵까지 파 내려가는 채굴 인크리멘탈. 가챠·도감·돌파 챌린지.', g:['방치형','채굴']},
+ {f:'box_rush_v3-2.html',         t:'BOX RUSH',              c:'inc', d:'27등급 강화 도박. 터지기 전에 팔 것인가, 더 갈 것인가.', g:['강화','한방']},
+ {f:'THE_CRYPTO_TERMINAL.html',   t:'CRYPTO TERMINAL',       c:'inc', d:'1억으로 시작하는 모의 코인판. 한정 세일의 유혹을 버텨라.', g:['트레이딩','시뮬']},
+ {f:'GAME_VAULT-2.html',          t:'GAME VAULT',            c:'inc', d:'캐주얼 9 + 하드코어 9, 18종 미니게임 금고. GHOST_NET 시리즈 수록.', g:['미니게임','GHOST_NET']},
+ // ── 컬렉션·가챠 ──
+ {f:'evo_dex-1.html',             t:'EVOLUTION DEX',         c:'col', d:'와이파이 공유기가 진화한다?! 중복 수집 기반 진화 도감.', g:['도감','진화']},
+ {f:'full_dex_v4.html',           t:'WIFI HUNTER: FULL DEX', c:'col', d:'와이파이 몬스터를 사냥해 채우는 풀 도감. EVO DEX의 확장판.', g:['도감','헌팅']},
+ {f:'weather_soul_v4.html',       t:'WEATHER SOUL',          c:'col', d:'실제 하늘을 읽어 정령을 소환. 별자리를 직접 잇는 수집 게임.', g:['감성','소환']},
+ {f:'melodia-v5.html',            t:'MELODIA',               c:'col', d:'음원 스캐너. 스캔할수록 차오르는 사운드 컬렉션. (스캐너 3부작)', g:['스캐너','수집']},
+ {f:'metro-v2-2.html',            t:'METRO',                 c:'col', d:'교통카드 스캐너. 찍을수록 모이는 노선의 기록. (스캐너 3부작)', g:['스캐너','수집']},
+ {f:'vitalis-v5-1.html',          t:'VITALIS',               c:'col', d:'검체 스캐너. 분석할수록 드러나는 표본들. (스캐너 3부작)', g:['스캐너','수집']},
+ {f:'viral_chamber_v3-1.html',    t:'VIRAL CHAMBER',         c:'col', d:'51종 바이러스 표본실. 감염력·변이율·위험도 데이터 도감.', g:['도감','51종']},
+ {f:'pencil-vault.html',          t:'PENCIL VAULT',          c:'col', d:'연필을 찍으면 등급이 매겨진다. 감정·보관 시스템.', g:['카메라','감정']},
+ {f:'easter_party.html',          t:'부활절 초콜릿 뽑기 🐣',   c:'col', d:'레버를 당겨 행운의 초콜릿을. 점박이 변이 1/5의 낭만.', g:['뽑기','변이']},
+ {f:'ultra-danger-roulette.html', t:'ULTRA DANGER ROULETTE', c:'col', d:'생존이 불가능한 극악 룰렛. 콤보 배율로 점수 폭발.', g:['극악','운빨']},
+ // ── 캐주얼·리듬 ──
+ {f:'exam_beat2.html',            t:'기말고사 BEAT',          c:'cas', d:'리듬으로 증명하는 실력. 과목마다 다른 5가지 입력 방식.', g:['리듬','5과목']},
+ {f:'rhythm_blade_v3.html',       t:'리듬 블레이드',           c:'cas', d:'박자에 맞춰 검을 휘둘러라. 검기·스킨 뽑기 + 스토리 모드.', g:['리듬','액션']},
+ {f:'word-chain.html',            t:'끝말잇기',               c:'cas', d:'2~4인 로컬 끝말잇기. 제한시간·탈락 모드·테마 변경.', g:['파티','2~4인']},
+ {f:'paper_dig.html',             t:'시험지 더미',            c:'cas', d:'F 시험지 더미를 걷어내 맨 아래 A를 찾아라. 헬 난이도 150장.', g:['스피드','랭킹']},
+ {f:'snake2000.html',             t:'SNAKE 2000',            c:'cas', d:'© 2001 RETRO SOFT. 윈도우 창 속에서 돌아가는 익스트림 스네이크.', g:['레트로','클래식']},
+ {f:'battery-tank-v3-1.html',     t:'BATTERY TANK',          c:'cas', d:'폰을 내려놓고 집중하면 액체 배터리가 차오른다. 기울기 센서 연동.', g:['집중','센서']},
+ // ── 웹토이·툴 ──
+ {f:'win98_desktop.html',         t:'WIN98 DESKTOP',         c:'toy', d:'윈도우 98 바탕화면 재현. 우클릭 메뉴까지 그 시절 그대로.', g:['레트로','재현']},
+ {f:'dj_turntable-4.html',        t:'DJ BOOTH',              c:'toy', d:'음악 파일을 올려 믹싱하는 DJ 부스. 이펙트 8종 + BPM + 스크래치.', g:['음악','믹싱']},
+ {f:'haengbok_museum_v6.html',    t:'행복한 미술관 🖌️',       c:'toy', d:'3개 전시관을 거닐며 작품 감상. 숨은 문과 판자를 찾아라.', g:['탐험','히든']},
+ {f:'goonghap_v2.html',           t:'GOONGHAP.SYS',          c:'toy', d:'이름 두 개를 넣으면 궁합이 분석되는 의문의 시스템.', g:['궁합','분석']},
+ {f:'ultra_picker_v4.html',       t:'ULTRA PICKER',          c:'toy', d:'카드·UFO캐쳐·폭탄·잭인더박스. 4가지 연출의 랜덤 추첨기.', g:['추첨','실용']},
+ {f:'ideabox-v2-2.html',          t:'IDEABOX',               c:'toy', d:'아이디어를 남기면 내가 다 읽는 오픈 게시판.', g:['게시판','소통']},
+];
+
+/* ───────── 대기 슬롯 ─────────
+   파일 받으면: games/에 넣고 → GAMES 배열로 옮기면 끝. 비우면 섹션 자동 숨김 */
+const PENDING = [
+ {t:'컵라면 티어 차트',     c:'toy', d:'팝아트 스타일 아이소메트릭 컵라면 티어표. 온도계 게이지 레이아웃.', s:'파일 대기'},
+ {t:'SURVIVAL',          c:'act', d:'서바이벌 v2.', s:'파일 대기'},
+ {t:'CHAOS THRONE',      c:'str', d:'카오스 스론.', s:'파일 대기'},
+ {t:'KOREA FIELD OPS',   c:'str', d:'코리아 필드 옵스.', s:'파일 대기'},
+ {t:'BEAT GAME',         c:'cas', d:'비트 게임.', s:'파일 대기'},
+ {t:'드레펄스 DREPULSE',   c:'act', d:'현재 설계 진행 중인 신작.', s:'개발 중'},
+];
+
+/* ───────── 렌더 ───────── */
+const grid=document.getElementById('grid');
+const chipsEl=document.getElementById('chips');
+const q=document.getElementById('q');
+let cat='all', query='';
+
+/* 마키 전구 */
+(()=>{const box=document.getElementById('bulbs');
+for(let i=0;i<14;i++){const b=document.createElement('span');b.className='bulb';
+  b.style.left=(3+i*7)+'%';b.style.top='-4px';b.style.animationDelay=(i*0.12)+'s';box.append(b);}
+for(let i=0;i<14;i++){const b=document.createElement('span');b.className='bulb';
+  b.style.left=(3+i*7)+'%';b.style.bottom='-4px';b.style.animationDelay=(i*0.12+0.6)+'s';box.append(b);}})();
+
+document.getElementById('stat-total').textContent=GAMES.length;
+document.getElementById('stat-cat').textContent=Object.keys(CATS).length;
+
+function chip(key,label){
+  const b=document.createElement('button');
+  b.className='chip'+(key===cat?' on':'');
+  b.textContent=label; b.dataset.key=key; b.setAttribute('role','tab');
+  b.onclick=()=>{cat=key;render();
+    chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.key===key));};
+  return b;
+}
+chipsEl.append(chip('all','전체'));
+for(const[k,v]of Object.entries(CATS)) chipsEl.append(chip(k,v.name));
+
+q.addEventListener('input',()=>{query=q.value.trim().toLowerCase();render();});
+
+function render(){
+  grid.innerHTML='';
+  const list=GAMES.filter(g=>
+    (cat==='all'||g.c===cat)&&
+    (!query||(g.t+g.d+g.g.join('')+CATS[g.c].name).toLowerCase().includes(query)));
+  document.getElementById('count').textContent=`▸ ${list.length} GAMES READY`;
+  document.getElementById('empty').hidden=list.length>0;
+  for(const g of list){
+    const c=CATS[g.c];
+    const el=document.createElement('button');
+    el.className='card'; el.style.setProperty('--c',c.color);
+    el.innerHTML=`<div class="strip"></div>
+      <div class="card-body">
+        <div class="cat-label">${c.name}</div>
+        <div class="title">${g.t}</div>
+        <div class="desc">${g.d}</div>
+        <div class="card-foot">
+          <div class="tags">${g.g.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+          <span class="play">▶ PLAY</span>
+        </div>
+      </div>`;
+    el.onclick=()=>openGame(g);
+    grid.append(el);
+  }
+}
+
+/* ───────── 테스트장 ───────── */
+const player=document.getElementById('player');
+const frame=document.getElementById('frame');
+let current=null;
+
+function openGame(g){
+  current=g;
+  document.getElementById('now-title').textContent=g.t;
+  document.getElementById('now-cat').textContent=CATS[g.c].name.toUpperCase()+' · TEST CHAMBER';
+  frame.src='games/'+g.f;
+  player.classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('btn-close').focus();
+}
+function closeGame(){
+  player.classList.remove('open');
+  frame.src='about:blank'; /* 사운드/루프 정지 */
+  document.body.style.overflow='';
+  current=null;
+}
+document.getElementById('btn-close').onclick=closeGame;
+document.getElementById('btn-restart').onclick=()=>{if(current)frame.src='games/'+current.f;};
+document.getElementById('btn-newtab').onclick=()=>{if(current)window.open('games/'+current.f,'_blank');};
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&player.classList.contains('open'))closeGame();});
+
+render();
+
+/* 대기 슬롯 렌더 */
+(()=>{
+  if(!PENDING.length) return;
+  const sec=document.getElementById('pending-sec');
+  const pg=document.getElementById('pending-grid');
+  sec.hidden=false;
+  for(const p of PENDING){
+    const c=CATS[p.c];
+    const el=document.createElement('div');
+    el.className='slot'; el.style.setProperty('--c',c.color);
+    el.innerHTML=`<div class="strip"></div>
+      <div class="card-body">
+        <div class="cat-label" style="color:var(--dim)">${c.name}</div>
+        <div class="title">${p.t}</div>
+        <div class="desc">${p.d}</div>
+        <div class="card-foot">
+          <span class="badge${p.s==='개발 중'?' dev':''}">${p.s==='개발 중'?'⚙ IN DEV':'⬚ AWAITING FILE'}</span>
+        </div>
+      </div>`;
+    pg.append(el);
+  }
+})();
+</script>
+</body>
+</html>

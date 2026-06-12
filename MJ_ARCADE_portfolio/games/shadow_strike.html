@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHADOW STRIKE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Share+Tech+Mono&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #c0392b;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    text-shadow: 0 0 20px rgba(192,57,43,0.8), 0 0 40px rgba(192,57,43,0.3);
+  }
+
+  #hud {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    color: #888;
+    letter-spacing: 0.15em;
+  }
+
+  #hud span { color: #c0392b; font-weight: bold; }
+
+  #gameCanvas {
+    border: 1px solid #1a1a1a;
+    box-shadow: 0 0 60px rgba(192,57,43,0.15), inset 0 0 60px rgba(0,0,0,0.8);
+    display: block;
+  }
+
+  #controls {
+    margin-top: 8px;
+    font-size: 0.6rem;
+    color: #333;
+    letter-spacing: 0.1em;
+    display: flex;
+    gap: 30px;
+  }
+
+  #controls span { color: #555; }
+
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+  }
+
+  #overlay h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #c0392b;
+    letter-spacing: 0.5em;
+    text-shadow: 0 0 30px rgba(192,57,43,0.9);
+    animation: flicker 2s infinite;
+  }
+
+  #overlay p {
+    font-size: 0.75rem;
+    color: #555;
+    letter-spacing: 0.2em;
+    line-height: 2;
+    text-align: center;
+  }
+
+  #overlay p span { color: #999; }
+
+  #startBtn {
+    margin-top: 8px;
+    background: none;
+    border: 1px solid #c0392b;
+    color: #c0392b;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    padding: 10px 32px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    box-shadow: 0 0 15px rgba(192,57,43,0.3);
+  }
+
+  #startBtn:hover {
+    background: rgba(192,57,43,0.15);
+    box-shadow: 0 0 25px rgba(192,57,43,0.6);
+  }
+
+  @keyframes flicker {
+    0%,100% { opacity:1; }
+    92% { opacity:1; }
+    93% { opacity:0.4; }
+    94% { opacity:1; }
+    96% { opacity:0.7; }
+    97% { opacity:1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="title">SHADOW STRIKE</div>
+<div id="hud">
+  <div>SCORE <span id="scoreVal">0</span></div>
+  <div>KILLS <span id="killsVal">0</span></div>
+  <div>WAVE <span id="waveVal">1</span></div>
+  <div>HP <span id="hpVal">●●●</span></div>
+</div>
+<canvas id="gameCanvas" width="800" height="420"></canvas>
+<div id="controls">
+  <div><span>A/D</span> 이동</div>
+  <div><span>W / SPACE</span> 점프</div>
+  <div><span>J / ↑</span> 공격</div>
+  <div><span>K / S</span> 숨기</div>
+  <div><span>더블점프</span> 가능</div>
+</div>
+
+<div id="overlay">
+  <h1>SHADOW STRIKE</h1>
+  <p>
+    <span>A/D</span> — 이동 &nbsp;&nbsp; <span>W / SPACE</span> — 점프 (2단 점프)<br>
+    <span>J / ↑</span> — 점프 공격 &nbsp;&nbsp; <span>K / S</span> — 물건 뒤에 숨기<br><br>
+    숨으면 적이 못 봄. 점프 중 공격으로 적 처치.
+  </p>
+  <button id="startBtn" onclick="startGame()">— INITIATE —</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ─── 상태 ───────────────────────────────────────
+let gameRunning = false;
+let score = 0, kills = 0, wave = 1;
+let frameCount = 0;
+let particles = [];
+let screenShake = 0;
+
+// ─── 입력 ───────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  keys[e.key] = true;
+});
+document.addEventListener('keyup', e => {
+  keys[e.code] = false;
+  keys[e.key] = false;
+});
+
+// ─── 플레이어 ────────────────────────────────────
+let player;
+function resetPlayer() {
+  player = {
+    x: 100, y: 300,
+    w: 20, h: 28,
+    vx: 0, vy: 0,
+    onGround: false,
+    jumpsLeft: 2,
+    attacking: false,
+    attackTimer: 0,
+    attackCooldown: 0,
+    hiding: false,
+    hideTimer: 0,
+    hp: 3,
+    maxHp: 3,
+    invincible: 0,
+    facing: 1,
+    runFrame: 0,
+    runTimer: 0,
+    dashTimer: 0,
+    hitEffect: 0,
+  };
+}
+
+// ─── 맵 / 플랫폼 ────────────────────────────────
+let platforms, hidingSpots;
+function buildMap() {
+  platforms = [
+    { x: 0,   y: 380, w: 800, h: 40, type: 'ground' },   // 바닥
+    { x: 80,  y: 290, w: 120, h: 12, type: 'platform' },
+    { x: 280, y: 240, w: 140, h: 12, type: 'platform' },
+    { x: 500, y: 290, w: 120, h: 12, type: 'platform' },
+    { x: 650, y: 210, w: 120, h: 12, type: 'platform' },
+    { x: 360, y: 160, w: 100, h: 12, type: 'platform' },
+    { x: 150, y: 180, w: 80,  h: 12, type: 'platform' },
+  ];
+  hidingSpots = [
+    { x: 60,  y: 352, w: 36, h: 28, label: '상자' },
+    { x: 310, y: 352, w: 36, h: 28, label: '통' },
+    { x: 580, y: 352, w: 36, h: 28, label: '상자' },
+    { x: 710, y: 352, w: 30, h: 28, label: '통' },
+    { x: 100, y: 262, w: 30, h: 28, label: '상자' },
+    { x: 520, y: 262, w: 30, h: 28, label: '통' },
+  ];
+}
+
+// ─── 적 ──────────────────────────────────────────
+let enemies = [];
+function spawnEnemy(x, y) {
+  enemies.push({
+    x, y: y || 352,
+    w: 22, h: 28,
+    vx: (Math.random() < 0.5 ? 1 : -1) * (0.8 + wave * 0.15),
+    vy: 0,
+    onGround: false,
+    hp: 1 + Math.floor(wave / 3),
+    maxHp: 1 + Math.floor(wave / 3),
+    state: 'patrol',   // patrol | chase | stunned | dead
+    alertTimer: 0,
+    stunTimer: 0,
+    facing: 1,
+    runFrame: 0,
+    runTimer: 0,
+    deathTimer: 0,
+    alertFlash: 0,
+  });
+}
+
+function spawnWave() {
+  enemies = enemies.filter(e => e.state !== 'dead');
+  const count = 2 + wave;
+  const spawnXs = [30, 760, 200, 600, 400];
+  for (let i = 0; i < count; i++) {
+    const sx = spawnXs[i % spawnXs.length] + (Math.random() * 20 - 10);
+    spawnEnemy(sx);
+  }
+}
+
+// ─── 파티클 ──────────────────────────────────────
+function spawnParticles(x, y, color, count, speed) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const s = speed * (0.5 + Math.random());
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * s,
+      vy: Math.sin(angle) * s - 1,
+      life: 1,
+      decay: 0.04 + Math.random() * 0.05,
+      size: 2 + Math.random() * 3,
+      color,
+    });
+  }
+}
+
+function spawnSlash(x, y, dir) {
+  for (let i = 0; i < 8; i++) {
+    particles.push({
+      x: x + dir * (i * 5),
+      y: y + (Math.random() - 0.5) * 20,
+      vx: dir * (3 + Math.random() * 4),
+      vy: (Math.random() - 0.5) * 3,
+      life: 1,
+      decay: 0.12,
+      size: 3 + Math.random() * 4,
+      color: `hsl(${0 + Math.random()*20}, 100%, ${60 + Math.random()*20}%)`,
+    });
+  }
+}
+
+// ─── 충돌 ────────────────────────────────────────
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function resolveGroundCollision(obj) {
+  obj.onGround = false;
+  for (const p of platforms) {
+    if (obj.x + obj.w > p.x && obj.x < p.x + p.w) {
+      // 위에서 착지
+      if (obj.y + obj.h > p.y && obj.y + obj.h < p.y + p.h + 12 && obj.vy >= 0) {
+        obj.y = p.y - obj.h;
+        obj.vy = 0;
+        obj.onGround = true;
+        if (obj === player) obj.jumpsLeft = 2;
+      }
+      // 아래서 부딪힘
+      else if (obj.y < p.y + p.h && obj.y > p.y && obj.vy < 0) {
+        obj.y = p.y + p.h;
+        obj.vy = 0;
+      }
+    }
+  }
+  // 화면 경계
+  if (obj.x < 0) { obj.x = 0; obj.vx = 0; }
+  if (obj.x + obj.w > W) { obj.x = W - obj.w; obj.vx = 0; }
+  if (obj.y > H) { obj.y = H; obj.vy = 0; obj.onGround = true; if (obj === player) obj.jumpsLeft = 2; }
+}
+
+// ─── 업데이트 ────────────────────────────────────
+let jumpPressed = false, attackPressed = false;
+
+function updatePlayer() {
+  const speed = 3.2;
+  const gravity = 0.45;
+
+  // 이동
+  player.vx = 0;
+  if (keys['KeyA'] || keys['ArrowLeft'])  { player.vx = -speed; player.facing = -1; }
+  if (keys['KeyD'] || keys['ArrowRight']) { player.vx =  speed; player.facing =  1; }
+
+  // 점프 (한 번만 인식)
+  const jumpNow = keys['KeyW'] || keys['Space'] || keys['ArrowUp'];
+  if (jumpNow && !jumpPressed && player.jumpsLeft > 0) {
+    player.vy = -10;
+    player.jumpsLeft--;
+    jumpPressed = true;
+    spawnParticles(player.x + player.w/2, player.y + player.h, '#444', 6, 2);
+  }
+  if (!jumpNow) jumpPressed = false;
+
+  // 공격
+  const attackNow = keys['KeyJ'] || keys['ArrowUp'];
+  if (attackNow && !attackPressed && player.attackCooldown <= 0 && !player.hiding) {
+    player.attacking = true;
+    player.attackTimer = 14;
+    player.attackCooldown = 22;
+    attackPressed = true;
+    // 공중 공격이면 약간 boost
+    if (!player.onGround) {
+      player.vy = Math.min(player.vy, 1);
+    }
+    doAttack();
+  }
+  if (!attackNow) attackPressed = false;
+
+  // 숨기
+  const hideNow = keys['KeyK'] || keys['KeyS'];
+  let nearHide = false;
+  for (const h of hidingSpots) {
+    if (rectsOverlap({ x: player.x, y: player.y, w: player.w, h: player.h }, 
+                     { x: h.x - 10, y: h.y - 10, w: h.w + 20, h: h.h + 20 })) {
+      nearHide = true;
+      break;
+    }
+  }
+  if (hideNow && nearHide) {
+    player.hiding = true;
+  } else if (!hideNow) {
+    player.hiding = false;
+  }
+
+  // 물리
+  if (!player.onGround) player.vy += gravity;
+  player.x += player.vx;
+  player.y += player.vy;
+  resolveGroundCollision(player);
+
+  // 타이머
+  if (player.attackTimer > 0) player.attackTimer--;
+  else player.attacking = false;
+  if (player.attackCooldown > 0) player.attackCooldown--;
+  if (player.invincible > 0) player.invincible--;
+  if (player.hitEffect > 0) player.hitEffect--;
+
+  // 달리기 프레임
+  if (Math.abs(player.vx) > 0.1 && player.onGround) {
+    player.runTimer++;
+    if (player.runTimer > 8) { player.runTimer = 0; player.runFrame = (player.runFrame + 1) % 4; }
+  } else { player.runFrame = 0; }
+}
+
+function doAttack() {
+  const atkRange = 48;
+  const atkX = player.x + (player.facing > 0 ? player.w : -atkRange);
+  const atkY = player.y;
+  const atkW = atkRange;
+  const atkH = player.h + 10;
+
+  spawnSlash(player.x + player.w/2 + player.facing * 20, player.y + player.h/2, player.facing);
+
+  for (const e of enemies) {
+    if (e.state === 'dead') continue;
+    if (rectsOverlap({ x: atkX, y: atkY, w: atkW, h: atkH }, e)) {
+      e.hp--;
+      e.stunTimer = 20;
+      e.state = 'stunned';
+      screenShake = 8;
+      spawnParticles(e.x + e.w/2, e.y + e.h/2, '#c0392b', 12, 4);
+      if (e.hp <= 0) {
+        e.state = 'dead';
+        e.deathTimer = 30;
+        kills++;
+        score += 100 * wave;
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, '#e74c3c', 20, 5);
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, '#ff6b35', 10, 3);
+      }
+    }
+  }
+}
+
+function updateEnemies() {
+  for (const e of enemies) {
+    if (e.state === 'dead') {
+      e.deathTimer--;
+      continue;
+    }
+    if (e.state === 'stunned') {
+      e.stunTimer--;
+      if (e.stunTimer <= 0) e.state = 'patrol';
+      e.vy += 0.45;
+      e.y += e.vy;
+      resolveGroundCollision(e);
+      continue;
+    }
+
+    // 플레이어 감지 (숨으면 못 봄)
+    const dx = player.x - e.x;
+    const dy = player.y - e.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const canSee = !player.hiding && dist < 180;
+
+    if (canSee) {
+      e.state = 'chase';
+      e.alertTimer = 60;
+      e.alertFlash = 10;
+    } else if (e.alertTimer > 0) {
+      e.alertTimer--;
+      if (e.alertTimer <= 0) e.state = 'patrol';
+    }
+
+    if (e.state === 'chase') {
+      const chaseSpeed = 1.2 + wave * 0.1;
+      e.vx = dx > 0 ? chaseSpeed : -chaseSpeed;
+      e.facing = dx > 0 ? 1 : -1;
+    } else {
+      // 순찰
+      e.x += e.vx;
+      if (e.x < 20 || e.x + e.w > W - 20) e.vx *= -1;
+      e.facing = e.vx > 0 ? 1 : -1;
+      e.vy += 0.45;
+      e.y += e.vy;
+      resolveGroundCollision(e);
+      e.runTimer = (e.runTimer||0) + 1;
+      if (e.runTimer > 10) { e.runTimer = 0; e.runFrame = ((e.runFrame||0) + 1) % 4; }
+      if (e.alertFlash > 0) e.alertFlash--;
+      continue;
+    }
+
+    e.vy += 0.45;
+    e.x += e.vx;
+    e.y += e.vy;
+    resolveGroundCollision(e);
+    e.runTimer = (e.runTimer||0) + 1;
+    if (e.runTimer > 6) { e.runTimer = 0; e.runFrame = ((e.runFrame||0) + 1) % 4; }
+    if (e.alertFlash > 0) e.alertFlash--;
+
+    // 플레이어 피격
+    if (player.invincible <= 0 && !player.hiding &&
+        rectsOverlap(player, e)) {
+      player.hp--;
+      player.invincible = 90;
+      player.hitEffect = 20;
+      player.vy = -7;
+      player.vx = (player.x < e.x ? -5 : 5);
+      screenShake = 12;
+      spawnParticles(player.x + player.w/2, player.y + player.h/2, '#fff', 8, 3);
+      if (player.hp <= 0) { endGame(); return; }
+    }
+  }
+
+  // 죽은 적 제거
+  enemies = enemies.filter(e => !(e.state === 'dead' && e.deathTimer <= 0));
+
+  // 모두 처치 → 다음 웨이브
+  if (enemies.length === 0) {
+    wave++;
+    score += 500 * wave;
+    setTimeout(spawnWave, 1200);
+  }
+}
+
+function updateParticles() {
+  for (const p of particles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.life -= p.decay;
+  }
+  particles = particles.filter(p => p.life > 0);
+}
+
+// ─── 그리기 ──────────────────────────────────────
+function drawBackground() {
+  // 하늘 그라데이션
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#050508');
+  grad.addColorStop(1, '#0a0810');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 원경 건물들
+  ctx.fillStyle = '#0d0d14';
+  const buildings = [
+    {x:0,w:60,h:180},{x:70,w:40,h:140},{x:120,w:80,h:200},{x:210,w:50,h:160},
+    {x:270,w:70,h:180},{x:350,w:55,h:150},{x:415,w:90,h:210},{x:515,w:45,h:170},
+    {x:570,w:65,h:190},{x:645,w:80,h:155},{x:735,w:65,h:180},
+  ];
+  for (const b of buildings) {
+    ctx.fillRect(b.x, H - 380 - b.h, b.w, b.h);
+    // 창문
+    ctx.fillStyle = 'rgba(192,57,43,0.15)';
+    for (let wy = H - 380 - b.h + 10; wy < H - 380 - 10; wy += 18) {
+      for (let wx = b.x + 8; wx < b.x + b.w - 8; wx += 14) {
+        if (Math.random() < 0.3) ctx.fillStyle = 'rgba(192,57,43,0.4)';
+        else ctx.fillStyle = 'rgba(192,57,43,0.08)';
+        ctx.fillRect(wx, wy, 6, 8);
+      }
+    }
+    ctx.fillStyle = '#0d0d14';
+  }
+
+  // 달
+  ctx.beginPath();
+  ctx.arc(680, 50, 35, 0, Math.PI*2);
+  ctx.fillStyle = '#1a1520';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(693, 50, 30, 0, Math.PI*2);
+  ctx.fillStyle = '#c8c0b0';
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = 'rgba(200,192,176,0.3)';
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // 별
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  const stars = [[50,20],[120,40],[200,15],[300,35],[420,10],[510,30],[150,60],[600,20],[750,45]];
+  for (const [sx,sy] of stars) {
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawPlatforms() {
+  for (const p of platforms) {
+    if (p.type === 'ground') {
+      // 바닥
+      const g = ctx.createLinearGradient(0, p.y, 0, p.y + p.h);
+      g.addColorStop(0, '#1c1c24');
+      g.addColorStop(1, '#0a0a0e');
+      ctx.fillStyle = g;
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = '#2a2a35';
+      ctx.fillRect(p.x, p.y, p.w, 2);
+    } else {
+      // 플랫폼
+      ctx.fillStyle = '#1a1a24';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = '#2d2d40';
+      ctx.fillRect(p.x, p.y, p.w, 2);
+      ctx.fillStyle = '#111118';
+      ctx.fillRect(p.x, p.y + p.h - 2, p.w, 2);
+    }
+  }
+}
+
+function drawHidingSpots() {
+  for (const h of hidingSpots) {
+    const isNear = rectsOverlap({ x: player.x, y: player.y, w: player.w, h: player.h },
+                                 { x: h.x - 10, y: h.y - 10, w: h.w + 20, h: h.h + 20 });
+    
+    // 상자/통 그리기
+    const bx = h.x, by = h.y, bw = h.w, bh = h.h;
+    ctx.fillStyle = '#1e1610';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = isNear ? '#c0392b' : '#3a2e1e';
+    ctx.lineWidth = isNear ? 1.5 : 1;
+    ctx.strokeRect(bx, by, bw, bh);
+    // 십자 선
+    ctx.strokeStyle = isNear ? 'rgba(192,57,43,0.5)' : '#2a2010';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(bx + bw/2, by); ctx.lineTo(bx + bw/2, by + bh);
+    ctx.moveTo(bx, by + bh/2); ctx.lineTo(bx + bw, by + bh/2);
+    ctx.stroke();
+
+    // 힌트 텍스트
+    if (isNear && !player.hiding) {
+      ctx.fillStyle = 'rgba(192,57,43,0.8)';
+      ctx.font = '9px Share Tech Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText('[K]숨기', bx + bw/2, by - 6);
+    }
+  }
+}
+
+function drawNinja(x, y, w, h, facing, attacking, hiding, invincible, runFrame, isPlayer, hitEffect) {
+  ctx.save();
+  const alpha = invincible > 0 ? (Math.floor(invincible / 5) % 2 === 0 ? 0.4 : 1) : 1;
+  ctx.globalAlpha = alpha;
+
+  const cx = x + w/2;
+  const cy = y + h/2;
+
+  if (hiding && isPlayer) {
+    // 숨은 상태 - 눈만 빛남
+    ctx.fillStyle = 'rgba(192,57,43,0.6)';
+    ctx.beginPath();
+    ctx.arc(cx - 4, y + 10, 2, 0, Math.PI*2);
+    ctx.arc(cx + 4, y + 10, 2, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  const bodyColor = isPlayer ? '#1a1a2e' : '#1a0a0a';
+  const accentColor = isPlayer ? '#c0392b' : '#8b0000';
+  const eyeColor = isPlayer ? '#c0392b' : '#ff4444';
+
+  // 히트 이펙트
+  if (hitEffect > 0) {
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#fff';
+  }
+
+  // 다리 (달리기 애니메이션)
+  const legSwing = player.onGround || !isPlayer ? Math.sin(runFrame * Math.PI / 2) * 5 : 0;
+  ctx.fillStyle = bodyColor;
+  // 왼다리
+  ctx.save();
+  ctx.translate(cx - 3, y + h * 0.7);
+  ctx.rotate(legSwing * 0.3);
+  ctx.fillRect(-3, 0, 6, h * 0.35);
+  ctx.restore();
+  // 오른다리
+  ctx.save();
+  ctx.translate(cx + 3, y + h * 0.7);
+  ctx.rotate(-legSwing * 0.3);
+  ctx.fillRect(-3, 0, 6, h * 0.35);
+  ctx.restore();
+
+  // 몸통
+  ctx.fillStyle = bodyColor;
+  ctx.fillRect(x + 2, y + h * 0.3, w - 4, h * 0.45);
+
+  // 스카프/붕대 디테일
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x + 2, y + h * 0.3, w - 4, 3);
+
+  // 팔 (공격 시 뻗음)
+  if (attacking && isPlayer) {
+    const armX = facing > 0 ? x + w : x - 16;
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(armX, y + h * 0.35, 16, 7);
+    // 검 이펙트
+    ctx.fillStyle = '#e8e8f0';
+    ctx.fillRect(armX + (facing > 0 ? 10 : -8), y + h * 0.3, 4, 14);
+    ctx.fillStyle = accentColor;
+    ctx.globalAlpha *= 0.6;
+    ctx.fillRect(armX + (facing > 0 ? 6 : -12), y + h * 0.25, 12, 4);
+    ctx.globalAlpha = alpha;
+  } else {
+    // 기본 팔
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(x - 1, y + h * 0.35, 5, 10);
+    ctx.fillRect(x + w - 4, y + h * 0.35, 5, 10);
+  }
+
+  // 머리
+  ctx.fillStyle = bodyColor;
+  ctx.fillRect(x + 3, y, w - 6, h * 0.32);
+
+  // 눈 (마스크)
+  ctx.fillStyle = eyeColor;
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = eyeColor;
+  if (facing > 0) {
+    ctx.fillRect(x + w - 9, y + 7, 5, 3);
+  } else {
+    ctx.fillRect(x + 4, y + 7, 5, 3);
+  }
+  ctx.shadowBlur = 0;
+
+  // 두건 끈
+  ctx.fillStyle = '#111';
+  ctx.fillRect(x + 3, y + h * 0.28, w - 6, 2);
+
+  ctx.restore();
+}
+
+function drawEnemy(e) {
+  const alertColor = e.state === 'chase' ? '#ff4444' : (e.alertFlash > 0 ? '#ffaa00' : 'transparent');
+  
+  // 경계 표시
+  if (e.state === 'chase' || e.alertFlash > 0) {
+    ctx.fillStyle = alertColor;
+    ctx.font = 'bold 10px Share Tech Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(e.state === 'chase' ? '!' : '?', e.x + e.w/2, e.y - 8);
+    
+    // HP바
+    const hpW = e.w * (e.hp / e.maxHp);
+    ctx.fillStyle = '#300';
+    ctx.fillRect(e.x, e.y - 6, e.w, 3);
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(e.x, e.y - 6, hpW, 3);
+  }
+
+  const stunAlpha = e.state === 'stunned' ? 0.6 : 1;
+  drawNinja(e.x, e.y, e.w, e.h, e.facing, false, false, 
+            e.state === 'stunned' ? 2 : 0, e.runFrame || 0, false, 0);
+  
+  // 적 눈 색상 오버라이드
+  ctx.save();
+  ctx.globalAlpha = stunAlpha;
+  const eyeColor = e.state === 'chase' ? '#ff2222' : '#882222';
+  ctx.fillStyle = eyeColor;
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = eyeColor;
+  if (e.facing > 0) ctx.fillRect(e.x + e.w - 9, e.y + 7, 5, 3);
+  else ctx.fillRect(e.x + 4, e.y + 7, 5, 3);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = p.color;
+    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+}
+
+function drawUI() {
+  // 숨기 상태 표시
+  if (player.hiding) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(W/2 - 60, 10, 120, 24);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '11px Share Tech Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('[ HIDDEN ]', W/2, 26);
+    ctx.restore();
+  }
+
+  // 공격 쿨다운 바
+  if (player.attackCooldown > 0) {
+    const pct = 1 - player.attackCooldown / 22;
+    ctx.fillStyle = 'rgba(192,57,43,0.3)';
+    ctx.fillRect(10, H - 16, 80, 6);
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(10, H - 16, 80 * pct, 6);
+    ctx.fillStyle = '#666';
+    ctx.font = '8px Share Tech Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText('ATK', 94, H - 11);
+  }
+
+  // 웨이브 남은 적
+  ctx.fillStyle = '#333';
+  ctx.font = '9px Share Tech Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(`REMAIN: ${enemies.filter(e=>e.state!=='dead').length}`, W - 10, H - 10);
+
+  // DOM HUD 업데이트
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('killsVal').textContent = kills;
+  document.getElementById('waveVal').textContent = wave;
+  const hpStr = '●'.repeat(player.hp) + '○'.repeat(player.maxHp - player.hp);
+  document.getElementById('hpVal').textContent = hpStr;
+}
+
+// ─── 메인 루프 ───────────────────────────────────
+function gameLoop() {
+  if (!gameRunning) return;
+  frameCount++;
+
+  // 스크린 쉐이크
+  let sx = 0, sy = 0;
+  if (screenShake > 0) {
+    sx = (Math.random() - 0.5) * screenShake;
+    sy = (Math.random() - 0.5) * screenShake;
+    screenShake = Math.max(0, screenShake - 1.5);
+  }
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  drawBackground();
+  drawPlatforms();
+  drawHidingSpots();
+
+  // 적
+  for (const e of enemies) {
+    if (e.state !== 'dead') drawEnemy(e);
+  }
+
+  // 플레이어
+  drawNinja(player.x, player.y, player.w, player.h,
+            player.facing, player.attacking, player.hiding,
+            player.invincible, player.runFrame, true, player.hitEffect);
+
+  // 파티클
+  drawParticles();
+  drawUI();
+
+  ctx.restore();
+
+  // 업데이트
+  updatePlayer();
+  updateEnemies();
+  updateParticles();
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ─── 게임 시작/종료 ──────────────────────────────
+function startGame() {
+  document.getElementById('overlay').style.display = 'none';
+  gameRunning = true;
+  score = 0; kills = 0; wave = 1;
+  particles = [];
+  resetPlayer();
+  buildMap();
+  spawnWave();
+  gameLoop();
+}
+
+function endGame() {
+  gameRunning = false;
+  const ov = document.getElementById('overlay');
+  ov.style.display = 'flex';
+  ov.innerHTML = `
+    <h1 style="font-size:2.5rem;letter-spacing:0.3em;">MISSION FAILED</h1>
+    <p style="color:#666">SCORE <span style="color:#c0392b;font-size:1.2em">${score}</span> &nbsp;|&nbsp; KILLS <span style="color:#c0392b">${kills}</span> &nbsp;|&nbsp; WAVE <span style="color:#c0392b">${wave}</span></p>
+    <button id="startBtn" onclick="startGame()" style="
+      margin-top:12px; background:none; border:1px solid #c0392b;
+      color:#c0392b; font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+      letter-spacing:0.3em; padding:10px 32px; cursor:pointer;
+      box-shadow:0 0 15px rgba(192,57,43,0.3);">— RETRY —</button>
+  `;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>기말고사 BEAT TEST</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#111;}
+
+body{
+  font-family:'Noto Serif KR',serif;
+  display:flex;align-items:center;justify-content:center;
+}
+
+#app{
+  width:100%;
+  max-width:440px;
+  height:100vh;
+  max-height:900px;
+  background:#f5f0e8;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* 줄노트 배경 */
+#app::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(transparent,transparent 27px,#ddd5c888 27px,#ddd5c888 28px);
+  pointer-events:none;z-index:0;
+}
+
+/* ── 시작화면 ── */
+#screen-start{
+  position:absolute;inset:0;z-index:50;
+  background:#f5f0e8;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:30px 28px;
+  gap:0;
+}
+#screen-start::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(transparent,transparent 27px,#ddd5c866 27px,#ddd5c866 28px);
+}
+.ss-deco{font-family:'Bebas Neue';font-size:10px;letter-spacing:8px;color:#1a1a2e44;position:relative;z-index:1;margin-bottom:16px;}
+.ss-title{font-family:'Bebas Neue';font-size:56px;letter-spacing:10px;color:#1a1a2e;line-height:1;text-align:center;position:relative;z-index:1;}
+.ss-sub{font-size:11px;color:#c0392b;letter-spacing:3px;margin:8px 0 24px;position:relative;z-index:1;text-align:center;}
+.ss-subjects{width:100%;position:relative;z-index:1;margin-bottom:20px;}
+.ss-row{
+  display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #ddd5c8;
+  gap:10px;font-size:12px;color:#1a1a2e;
+}
+.ss-num{font-family:'Bebas Neue';font-size:11px;background:#1a1a2e;color:#f5f0e8;padding:1px 5px;letter-spacing:1px;}
+.ss-sname{font-weight:700;letter-spacing:2px;flex:1;}
+.ss-method{font-size:10px;color:#888;letter-spacing:1px;}
+.ss-bpm{font-family:'Share Tech Mono';font-size:11px;color:#c0392b;}
+.btn-start{
+  position:relative;z-index:1;
+  width:100%;padding:14px;background:#1a1a2e;color:#f5f0e8;
+  border:none;font-family:'Noto Serif KR';font-size:15px;letter-spacing:4px;
+  cursor:pointer;transition:background .15s;
+}
+.btn-start:hover{background:#c0392b;}
+
+/* ── 결과화면 ── */
+#screen-result{
+  position:absolute;inset:0;z-index:40;
+  background:#f5f0e8;
+  display:none;flex-direction:column;
+  overflow-y:auto;
+}
+#screen-result.show{display:flex;}
+#screen-result::before{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(transparent,transparent 27px,#ddd5c866 27px,#ddd5c866 28px);
+  pointer-events:none;z-index:0;
+}
+.res-header{
+  position:relative;z-index:1;
+  padding:20px 20px 12px;border-bottom:3px double #1a1a2e;
+  text-align:center;flex-shrink:0;
+}
+.res-school{font-size:9px;letter-spacing:5px;color:#1a1a2e66;margin-bottom:4px;}
+.res-title{font-family:'Bebas Neue';font-size:26px;letter-spacing:8px;color:#1a1a2e;}
+.res-big-grade{font-family:'Bebas Neue';font-size:90px;line-height:1;margin:6px 0;}
+.res-pct{font-size:13px;color:#c0392b;letter-spacing:2px;}
+.res-table{
+  position:relative;z-index:1;
+  margin:12px 16px;border-collapse:collapse;width:calc(100% - 32px);
+  font-size:12px;flex-shrink:0;
+}
+.res-table th{background:#1a1a2e;color:#f5f0e8;padding:6px 8px;text-align:left;letter-spacing:1px;font-size:11px;}
+.res-table td{padding:7px 8px;border-bottom:1px solid #ddd5c8;vertical-align:top;}
+.res-table tr:nth-child(even) td{background:#00000008;}
+.res-grade-cell{font-family:'Bebas Neue';font-size:22px;text-align:center;}
+.res-trait{font-size:10px;color:#1a5276;line-height:1.7;}
+.res-total td{font-weight:700;border-top:2px solid #1a1a2e;font-size:13px;}
+.res-comment{
+  position:relative;z-index:1;
+  margin:0 16px 12px;padding:12px;
+  border:2px solid #1a1a2e;font-size:11px;line-height:1.9;
+  flex-shrink:0;
+}
+.res-comment-label{
+  position:absolute;top:-9px;left:10px;background:#f5f0e8;
+  padding:0 6px;font-size:10px;letter-spacing:2px;color:#c0392b;
+}
+.res-btns{
+  position:relative;z-index:1;
+  display:flex;gap:10px;padding:12px 16px 16px;
+  flex-shrink:0;border-top:2px solid #1a1a2e;
+}
+.res-btn{flex:1;padding:11px;border:none;font-family:'Noto Serif KR';font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .15s;}
+.res-btn.primary{background:#1a1a2e;color:#f5f0e8;}
+.res-btn.primary:hover{background:#c0392b;}
+.res-btn.secondary{background:transparent;color:#1a1a2e;border:2px solid #1a1a2e;}
+.res-btn.secondary:hover{background:#1a1a2e11;}
+
+/* ── 게임 메인 ── */
+#screen-game{
+  display:flex;flex-direction:column;height:100%;position:relative;z-index:1;
+}
+
+/* 상단 헤더 */
+#g-header{
+  flex-shrink:0;padding:10px 16px 8px;
+  border-bottom:2px double #1a1a2e;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  position:relative;z-index:2;
+}
+.g-school{font-size:9px;letter-spacing:4px;color:#1a1a2e66;}
+.g-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:5px;color:#1a1a2e;}
+#g-total-score{font-family:'Share Tech Mono';font-size:28px;color:#c0392b;line-height:1;}
+.g-score-label{font-size:9px;color:#1a1a2e66;text-align:right;letter-spacing:1px;}
+
+/* 과목 표시 */
+#g-subject-bar{
+  flex-shrink:0;
+  padding:6px 16px;
+  border-bottom:1px solid #ddd5c8;
+  display:flex;align-items:center;gap:10px;
+  position:relative;z-index:2;
+}
+#g-subject-num{font-family:'Bebas Neue';font-size:11px;background:#1a1a2e;color:#f5f0e8;padding:1px 6px;letter-spacing:1px;}
+#g-subject-name{font-size:14px;font-weight:700;letter-spacing:3px;color:#1a1a2e;flex:1;}
+#g-subject-grade{font-family:'Bebas Neue';font-size:22px;font-weight:bold;}
+#g-bpm{font-family:'Share Tech Mono';font-size:11px;color:#1a1a2e88;margin-left:auto;}
+
+/* 진행 바 */
+#g-progress-wrap{
+  flex-shrink:0;padding:4px 16px;
+  border-bottom:1px solid #ddd5c8;
+  display:flex;align-items:center;gap:8px;
+  position:relative;z-index:2;
+}
+#g-progress{flex:1;height:5px;background:#ddd5c8;}
+#g-progress-fill{height:100%;background:#1a1a2e;width:0%;transition:width .08s;}
+#g-timer{font-family:'Share Tech Mono';font-size:11px;color:#1a1a2e88;min-width:32px;}
+#g-combo{font-family:'Share Tech Mono';font-size:12px;color:#1a5276;margin-left:auto;}
+
+/* ── 박자 메인 영역 ── */
+#g-play-area{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  padding:10px;
+}
+
+/* 판정 텍스트 */
+#judge-text{
+  position:absolute;top:22%;left:50%;transform:translateX(-50%);
+  font-family:'Bebas Neue';font-size:32px;letter-spacing:4px;
+  opacity:0;pointer-events:none;transition:opacity .1s;
+  z-index:10;text-shadow:0 2px 8px #0004;
+}
+#judge-text.show{opacity:1;}
+
+/* 섹션별 콤보 */
+#sec-score-disp{
+  position:absolute;top:14%;left:50%;transform:translateX(-50%);
+  font-family:'Share Tech Mono';font-size:13px;color:#1a1a2e88;
+  letter-spacing:1px;
+}
+
+/* ────────────────────────────── */
+/*  각 과목별 레이아웃 컨테이너    */
+/* ────────────────────────────── */
+.play-module{display:none;flex-direction:column;align-items:center;gap:14px;width:100%;}
+.play-module.active{display:flex;}
+
+/* ── 수학: 4방향 화살표 ── */
+#mod-math .arrow-grid{
+  display:grid;grid-template-columns:repeat(3,70px);grid-template-rows:repeat(3,70px);
+  gap:6px;
+}
+#mod-math .arrow-btn{
+  width:70px;height:70px;background:transparent;border:2px solid #ddd5c8;
+  font-size:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .08s;border-radius:3px;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+#mod-math .arrow-btn.lit{border-color:#c0392b;background:#c0392b22;}
+#mod-math .arrow-btn.hit-ok{background:#1e844944;border-color:#1e8449;animation:cellPop .25s;}
+#mod-math .arrow-btn.hit-bad{background:#f39c1244;border-color:#f39c12;animation:cellShake .2s;}
+#mod-math .arrow-btn.miss{background:#c0392b22;border-color:#c0392b44;opacity:.4;}
+#mod-math .arrow-btn:disabled{cursor:default;}
+
+/* ── 영어: 스페이스바 (롱프레스) ── */
+#mod-english .hold-area{
+  width:240px;height:240px;border-radius:50%;
+  border:4px solid #1a5276;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .1s;
+  position:relative;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  flex-shrink:0;
+}
+#mod-english .hold-area .ring{
+  position:absolute;inset:8px;border-radius:50%;border:3px solid #1a527633;
+}
+#mod-english .hold-inner{font-family:'Bebas Neue';font-size:26px;letter-spacing:3px;color:#1a5276;text-align:center;pointer-events:none;}
+#mod-english .hold-sub{font-size:10px;letter-spacing:2px;color:#1a527688;}
+#mod-english .hold-area.ready{border-color:#f39c12;background:#f39c1211;}
+#mod-english .hold-area.holding{border-color:#1e8449;background:#1e844922;animation:pulse .3s infinite alternate;}
+#mod-english .hold-area.released-ok{border-color:#1e8449;background:#1e844933;}
+#mod-english .hold-area.released-bad{border-color:#c0392b;background:#c0392b22;}
+#mod-english .hold-bar-wrap{width:260px;height:16px;background:#ddd5c8;border-radius:0;overflow:hidden;position:relative;}
+#mod-english .hold-bar{height:100%;background:#1a5276;width:0%;transition:width .05s linear;}
+#mod-english .hold-zone-mark{position:absolute;top:0;bottom:0;background:#1e844944;border-left:2px solid #1e8449;border-right:2px solid #1e8449;}
+#mod-english .hold-hint{font-size:11px;color:#1a1a2e88;letter-spacing:2px;text-align:center;}
+
+/* ── 과학: 타이밍 원 ── */
+#mod-science .circle-wrap{
+  position:relative;width:200px;height:200px;
+  display:flex;align-items:center;justify-content:center;
+}
+#mod-science .outer-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:4px solid #ddd5c8;
+}
+#mod-science .shrink-ring{
+  position:absolute;border-radius:50%;
+  border:4px solid #1e8449;
+  width:100%;height:100%;
+  animation:none;pointer-events:none;
+}
+#mod-science .center-btn{
+  width:80px;height:80px;border-radius:50%;
+  background:#f5f0e8;border:4px solid #1a1a2e;
+  font-family:'Bebas Neue';font-size:16px;letter-spacing:2px;color:#1a1a2e;
+  cursor:pointer;transition:all .1s;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  z-index:2;
+}
+#mod-science .center-btn:active{transform:scale(.93);}
+#mod-science .center-btn.hit-ok{background:#1e844944;border-color:#1e8449;color:#1e8449;}
+#mod-science .center-btn.hit-bad{background:#f39c1244;border-color:#f39c12;color:#f39c12;}
+#mod-science .beat-guide{
+  font-size:11px;color:#1a1a2e88;letter-spacing:2px;text-align:center;
+}
+
+/* ── 국어: 연타 (래피드파이어) ── */
+#mod-korean .mash-btn{
+  width:160px;height:160px;border-radius:50%;
+  background:#f5f0e8;border:4px solid #6c3483;
+  font-family:'Bebas Neue';font-size:18px;letter-spacing:2px;color:#6c3483;
+  cursor:pointer;transition:all .05s;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  box-shadow:0 6px 0 #6c348355;
+}
+#mod-korean .mash-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #6c348355;}
+#mod-korean .mash-count{
+  font-family:'Share Tech Mono';font-size:48px;color:#6c3483;
+  line-height:1;
+}
+#mod-korean .mash-target{font-size:11px;color:#6c348888;letter-spacing:2px;}
+#mod-korean .mash-bar-wrap{width:260px;height:12px;background:#ddd5c8;}
+#mod-korean .mash-bar{height:100%;background:#6c3483;width:0%;transition:width .05s;}
+
+/* ── 역사: 시퀀스 패턴 ── */
+#mod-history .seq-display{
+  display:flex;gap:10px;margin-bottom:10px;
+}
+#mod-history .seq-dot{
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid #ddd5c8;
+  background:transparent;transition:all .15s;
+}
+#mod-history .seq-dot.lit{background:#784212;border-color:#784212;}
+#mod-history .seq-dot.done{background:#1e8449;border-color:#1e8449;}
+#mod-history .seq-dot.wrong{background:#c0392b;border-color:#c0392b;}
+#mod-history .seq-btns{
+  display:grid;grid-template-columns:repeat(2,110px);gap:10px;
+}
+#mod-history .seq-btn{
+  height:54px;border:2px solid #ddd5c8;background:#f5f0e8;
+  font-family:'Share Tech Mono';font-size:20px;cursor:pointer;
+  transition:all .1s;border-radius:3px;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  display:flex;align-items:center;justify-content:center;
+}
+#mod-history .seq-btn.lit{border-color:#784212;background:#78421222;color:#784212;}
+#mod-history .seq-btn.correct{background:#1e844933;border-color:#1e8449;animation:cellPop .2s;}
+#mod-history .seq-btn.wrong{background:#c0392b22;border-color:#c0392b;animation:cellShake .2s;}
+#mod-history .seq-hint{font-size:11px;color:#1a1a2e88;letter-spacing:2px;text-align:center;}
+
+/* ── 공통 애니메이션 ── */
+@keyframes cellPop{0%{transform:scale(.85)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes cellShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes pulse{from{box-shadow:0 0 0 0 #1e844944}to{box-shadow:0 0 0 12px transparent}}
+@keyframes shrinkAnim{from{width:190%;height:190%;top:-45%;left:-45%}to{width:100%;height:100%;top:0;left:0}}
+@keyframes judgeIn{0%{opacity:1;transform:translateX(-50%) scale(.7)}20%{transform:translateX(-50%) scale(1.1)}40%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+
+/* 하단 */
+#g-footer{
+  flex-shrink:0;padding:8px 16px;
+  border-top:2px solid #1a1a2e;
+  display:flex;align-items:center;gap:10px;
+  position:relative;z-index:2;
+}
+.g-dots{display:flex;gap:5px;flex:1;}
+.g-dot{width:12px;height:12px;border-radius:50%;border:2px solid #ddd5c8;transition:all .3s;}
+.g-dot.done{background:#1a1a2e;border-color:#1a1a2e;}
+.g-dot.active{background:#c0392b;border-color:#c0392b;box-shadow:0 0 6px #c0392b88;}
+.g-key-hint{font-family:'Share Tech Mono';font-size:10px;color:#1a1a2e44;letter-spacing:2px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══ 시작 화면 ═══ -->
+<div id="screen-start">
+  <div class="ss-deco">◆ BEAT ACADEMY ◆</div>
+  <div class="ss-title">기말고사<br>BEAT</div>
+  <div class="ss-sub">리듬으로 증명하는 실력</div>
+  <div class="ss-subjects">
+    <div class="ss-row"><span class="ss-num">1</span><span class="ss-sname">수학</span><span class="ss-method">↑↓←→ 방향 입력</span><span class="ss-bpm">BPM 140</span></div>
+    <div class="ss-row"><span class="ss-num">2</span><span class="ss-sname">영어</span><span class="ss-method">타이밍 맞춰 꾹 누르기</span><span class="ss-bpm">BPM 90</span></div>
+    <div class="ss-row"><span class="ss-num">3</span><span class="ss-sname">과학</span><span class="ss-method">원이 줄어들 때 탭</span><span class="ss-bpm">BPM 120</span></div>
+    <div class="ss-row"><span class="ss-num">4</span><span class="ss-sname">국어</span><span class="ss-method">최대한 빠르게 연타</span><span class="ss-bpm">BPM 160</span></div>
+    <div class="ss-row"><span class="ss-num">5</span><span class="ss-sname">역사</span><span class="ss-method">순서대로 패턴 기억</span><span class="ss-bpm">BPM 110</span></div>
+  </div>
+  <button class="btn-start" onclick="G.start()">시험 시작 →</button>
+</div>
+
+<!-- ═══ 결과 화면 ═══ -->
+<div id="screen-result">
+  <div class="res-header">
+    <div class="res-school">◆ BEAT ACADEMY · 리듬고등학교 ◆</div>
+    <div class="res-title">기말고사 성적 통지표</div>
+    <div class="res-big-grade" id="res-big-grade"></div>
+    <div class="res-pct" id="res-pct"></div>
+  </div>
+  <table class="res-table">
+    <thead><tr><th>영역</th><th>점수</th><th>등급</th><th>특징</th></tr></thead>
+    <tbody id="res-tbody"></tbody>
+    <tfoot><tr class="res-total">
+      <td>총점</td><td id="res-total-score"></td>
+      <td class="res-grade-cell" id="res-final-grade"></td>
+      <td id="res-combo-info"></td>
+    </tr></tfoot>
+  </table>
+  <div class="res-comment" style="position:relative">
+    <span class="res-comment-label">담임 총평</span>
+    <span id="res-teacher"></span>
+  </div>
+  <div class="res-btns">
+    <button class="res-btn secondary" onclick="location.reload()">다시 시험</button>
+    <button class="res-btn primary" onclick="G.hideResult()">닫기</button>
+  </div>
+</div>
+
+<!-- ═══ 게임 화면 ═══ -->
+<div id="screen-game">
+  <div id="g-header">
+    <div>
+      <div class="g-school">◆ BEAT ACADEMY</div>
+      <div class="g-title">기말고사 BEAT</div>
+    </div>
+    <div style="text-align:right">
+      <div class="g-score-label">TOTAL</div>
+      <div id="g-total-score">000</div>
+    </div>
+  </div>
+
+  <div id="g-subject-bar">
+    <span id="g-subject-num"></span>
+    <span id="g-subject-name"></span>
+    <span id="g-bpm"></span>
+    <span id="g-subject-grade"></span>
+  </div>
+
+  <div id="g-progress-wrap">
+    <div id="g-progress"><div id="g-progress-fill"></div></div>
+    <div id="g-timer">--</div>
+    <div id="g-combo">COMBO ×0</div>
+  </div>
+
+  <!-- 플레이 영역 -->
+  <div id="g-play-area">
+    <div id="sec-score-disp">SECTION 000</div>
+    <div id="judge-text">PERFECT</div>
+
+    <!-- 수학: 4방향 -->
+    <div class="play-module" id="mod-math">
+      <div class="arrow-grid">
+        <div></div>
+        <button class="arrow-btn" id="arrow-up" data-dir="up">↑</button>
+        <div></div>
+        <button class="arrow-btn" id="arrow-left" data-dir="left">←</button>
+        <div class="arrow-btn" style="border:none;cursor:default;font-size:14px;color:#1a1a2e44;letter-spacing:1px;font-family:'Share Tech Mono'">HIT</div>
+        <button class="arrow-btn" id="arrow-right" data-dir="right">→</button>
+        <div></div>
+        <button class="arrow-btn" id="arrow-down" data-dir="down">↓</button>
+        <div></div>
+      </div>
+      <div style="font-size:11px;color:#1a1a2e66;letter-spacing:2px;text-align:center;">방향키 또는 WASD</div>
+    </div>
+
+    <!-- 영어: 홀드 -->
+    <div class="play-module" id="mod-english">
+      <div class="hold-bar-wrap">
+        <div class="hold-bar" id="hold-bar"></div>
+        <div class="hold-zone-mark" id="hold-zone"></div>
+      </div>
+      <div class="hold-area" id="hold-area">
+        <div class="ring"></div>
+        <div>
+          <div class="hold-inner" id="hold-inner-text">PRESS<br>&<br>HOLD</div>
+          <div class="hold-sub" id="hold-sub-text">박자에 맞춰</div>
+        </div>
+      </div>
+      <div class="hold-hint" id="hold-hint">스페이스 또는 길게 터치</div>
+    </div>
+
+    <!-- 과학: 타이밍 원 -->
+    <div class="play-module" id="mod-science">
+      <div class="circle-wrap">
+        <div class="outer-ring"></div>
+        <div class="shrink-ring" id="shrink-ring"></div>
+        <button class="center-btn" id="science-btn">TAP</button>
+      </div>
+      <div class="beat-guide" id="sci-guide">원이 안쪽으로 들어올 때 탭!</div>
+    </div>
+
+    <!-- 국어: 연타 -->
+    <div class="play-module" id="mod-korean">
+      <div class="mash-count" id="mash-count">0</div>
+      <button class="mash-btn" id="mash-btn">
+        <span style="font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;">TAP!</span>
+        <span class="mash-target" id="mash-target">목표: 30</span>
+      </button>
+      <div class="mash-bar-wrap"><div class="mash-bar" id="mash-bar"></div></div>
+      <div style="font-size:11px;color:#1a1a2e66;letter-spacing:2px;">스페이스 또는 터치</div>
+    </div>
+
+    <!-- 역사: 시퀀스 -->
+    <div class="play-module" id="mod-history">
+      <div class="seq-display" id="seq-display"></div>
+      <div class="seq-btns" id="seq-btns">
+        <button class="seq-btn" data-key="▲">▲</button>
+        <button class="seq-btn" data-key="●">●</button>
+        <button class="seq-btn" data-key="■">■</button>
+        <button class="seq-btn" data-key="◆">◆</button>
+      </div>
+      <div class="seq-hint" id="seq-hint">패턴을 외워서 입력!</div>
+    </div>
+  </div><!-- /g-play-area -->
+
+  <div id="g-footer">
+    <div class="g-dots" id="g-dots"></div>
+    <div class="g-key-hint" id="g-key-hint">D F J K</div>
+  </div>
+</div><!-- /screen-game -->
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════
+//  데이터
+// ══════════════════════════════════════════
+const SUBJECTS=[
+  {id:'math',   name:'수학',  num:'1', color:'#c0392b', bpm:140},
+  {id:'english',name:'영어',  num:'2', color:'#1a5276', bpm:90},
+  {id:'science',name:'과학',  num:'3', color:'#1e8449', bpm:120},
+  {id:'korean', name:'국어',  num:'4', color:'#6c3483', bpm:160},
+  {id:'history',name:'역사',  num:'5', color:'#784212', bpm:110},
+];
+
+const GRADE_TABLE=[
+  {min:90,grade:'S+',color:'#8b0000'},
+  {min:78,grade:'A', color:'#c0392b'},
+  {min:62,grade:'B', color:'#1a5276'},
+  {min:45,grade:'C', color:'#1e8449'},
+  {min:28,grade:'D', color:'#f39c12'},
+  {min:0, grade:'F', color:'#888'},
+];
+
+const TRAITS={
+  math:{'S+':'수식을 보면 설레는 타입','A':'논리적 사고 발달','B':'기본기는 탄탄함','C':'공식은 외웠지만 응용이...','D':'수학 공포증 의심','F':'수학과 전생의 원수'},
+  english:{'S+':'원어민 수준 리듬 감각','A':'영어 뉴스 즐겨 보는 타입','B':'독해는 되는데 말하기는...','C':'번역기에 의존','D':'영어가 외계어','F':'알파벳만 앎'},
+  science:{'S+':'미래의 노벨상 후보','A':'실험실이 놀이터','B':'개념 이해 양호','C':'암기는 했지만 이해는...','D':'원소 기호가 외계어','F':'빅뱅을 모름'},
+  korean:{'S+':'소설 쓰는 타입','A':'독서량 최상위','B':'책 읽는 걸 즐김','C':'글 읽기 싫어하는 타입','D':'받아쓰기 전국 꼴찌','F':'띄어쓰기 개념 없음'},
+  history:{'S+':'역사 탐정 소질','A':'역사 덕후','B':'대략적 흐름 파악','C':'역사=암기 지옥','D':'임진왜란 연도 모름','F':'세종대왕 업적 모름'},
+};
+
+const TEACHER_COMMENTS={
+  'S+':'이 학생은 모든 영역에서 탁월합니다. 전교 1등 가능성 농후. 어떤 길을 걸어도 빛날 것입니다.',
+  'A':'전반적으로 우수한 성취를 보입니다. 조금만 더 하면 최상위권입니다.',
+  'B':'평균 이상의 실력입니다. 취약 영역 보완 시 상위권 진입 기대됩니다.',
+  'C':'보통 수준입니다. 기초를 다시 점검하고 규칙적 학습을 권장합니다.',
+  'D':'전반적 학습 부진이 우려됩니다. 방과 후 보충 학습을 강력히 권유합니다.',
+  'F':'재시험 대상자입니다. 여름방학 보충수업 의무 참여 바랍니다. 포기하지 마세요!',
+};
+
+// ══════════════════════════════════════════
+//  유틸
+// ══════════════════════════════════════════
+function getGrade(pct){return GRADE_TABLE.find(g=>pct>=g.min)||GRADE_TABLE[GRADE_TABLE.length-1];}
+
+// ══════════════════════════════════════════
+//  메인 게임 객체
+// ══════════════════════════════════════════
+const G={
+  idx:-1, totalScore:0, combo:0, maxCombo:0,
+  secScore:0, secMax:100,
+  secScores:[], secMaxes:[],
+  timer:null, rafId:null,
+
+  start(){
+    document.getElementById('screen-start').style.display='none';
+    this.idx=-1; this.totalScore=0; this.combo=0; this.maxCombo=0;
+    this.secScores=[]; this.secMaxes=[];
+    this._buildDots();
+    this._attachGlobalKeys();
+    this.nextSubject();
+  },
+
+  _buildDots(){
+    const wrap=document.getElementById('g-dots');
+    wrap.innerHTML='';
+    SUBJECTS.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.className='g-dot';d.id='dot-'+i;
+      wrap.appendChild(d);
+    });
+  },
+
+  _attachGlobalKeys(){
+    document.addEventListener('keydown',this._onKey.bind(this));
+  },
+
+  _onKey(e){
+    if(e.repeat) return;
+    const s=SUBJECTS[this.idx];
+    if(!s) return;
+    if(s.id==='math'){
+      const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right'};
+      if(map[e.key]) this._mathHit(map[e.key]);
+    } else if(s.id==='english'){
+      if(e.key===' '||e.key==='Space') this._holdStart();
+    } else if(s.id==='science'){
+      if(e.key===' '||e.key==='Space') this._sciTap();
+    } else if(s.id==='korean'){
+      if(e.key===' '||e.key==='Space'||e.key==='f'||e.key==='j') this._mashTap();
+    } else if(s.id==='history'){
+      const seqMap={w:'▲',s:'●',a:'■',d:'◆',ArrowUp:'▲',ArrowDown:'●',ArrowLeft:'■',ArrowRight:'◆'};
+      if(seqMap[e.key]) this._seqInput(seqMap[e.key]);
+    }
+  },
+
+  nextSubject(){
+    this.idx++;
+    if(this.idx>=SUBJECTS.length){this.endGame();return;}
+    const s=SUBJECTS[this.idx];
+    this.secScore=0; this.secMax=100;
+    this.combo=0;
+
+    // UI
+    document.getElementById('g-subject-num').textContent=s.num;
+    document.getElementById('g-subject-num').style.background=s.color;
+    document.getElementById('g-subject-name').textContent=s.name;
+    document.getElementById('g-subject-grade').textContent='';
+    document.getElementById('g-bpm').textContent='BPM '+s.bpm;
+    document.getElementById('g-progress-fill').style.width='0%';
+
+    // 도트
+    SUBJECTS.forEach((_,i)=>{
+      const d=document.getElementById('dot-'+i);
+      d.className='g-dot'+(i<this.idx?' done':i===this.idx?' active':'');
+    });
+
+    // 모듈 전환
+    document.querySelectorAll('.play-module').forEach(m=>m.classList.remove('active'));
+    document.getElementById('mod-'+s.id).classList.add('active');
+
+    // 과목별 초기화
+    if(s.id==='math') this._mathInit();
+    else if(s.id==='english') this._englishInit();
+    else if(s.id==='science') this._sciInit();
+    else if(s.id==='korean') this._mashInit();
+    else if(s.id==='history') this._seqInit();
+  },
+
+  _finishSubject(){
+    clearInterval(this.timer);
+    cancelAnimationFrame(this.rafId);
+    const s=SUBJECTS[this.idx];
+    const pct=Math.min(100,Math.round((this.secScore/this.secMax)*100));
+    const g=getGrade(pct);
+    this.secScores.push(this.secScore);
+    this.secMaxes.push(this.secMax);
+
+    const el=document.getElementById('g-subject-grade');
+    el.textContent=g.grade; el.style.color=g.color;
+
+    document.getElementById('g-progress-fill').style.width='100%';
+    this._showJudge(g.grade, g.color);
+
+    setTimeout(()=>this.nextSubject(), 1200);
+  },
+
+  endGame(){
+    document.getElementById('g-subject-bar').style.display='none';
+    this._showResult();
+  },
+
+  _showResult(){
+    const screen=document.getElementById('screen-result');
+    screen.classList.add('show');
+
+    let totalGot=0, totalMax=0;
+    const tbody=document.getElementById('res-tbody');
+    tbody.innerHTML='';
+    SUBJECTS.forEach((s,i)=>{
+      const got=this.secScores[i]||0;
+      const max=this.secMaxes[i]||100;
+      const pct=Math.min(100,Math.round((got/max)*100));
+      const g=getGrade(pct);
+      totalGot+=got; totalMax+=max;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><b>${s.name}</b><br><span style="font-size:10px;color:#888">${got}/${max}</span></td>
+        <td style="font-family:'Share Tech Mono'">${pct}%</td>
+        <td class="res-grade-cell" style="color:${g.color}">${g.grade}</td>
+        <td class="res-trait">${TRAITS[s.id][g.grade]||''}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    const overallPct=Math.min(100,Math.round((totalGot/totalMax)*100));
+    const og=getGrade(overallPct);
+    document.getElementById('res-big-grade').textContent=og.grade;
+    document.getElementById('res-big-grade').style.color=og.color;
+    document.getElementById('res-pct').textContent=`총 ${overallPct}점 · 최대콤보 ${this.maxCombo}`;
+    document.getElementById('res-total-score').textContent=`${totalGot}/${totalMax}`;
+    document.getElementById('res-final-grade').textContent=og.grade;
+    document.getElementById('res-final-grade').style.color=og.color;
+    document.getElementById('res-combo-info').textContent=`MAX COMBO ${this.maxCombo}`;
+    document.getElementById('res-teacher').textContent=TEACHER_COMMENTS[og.grade]||TEACHER_COMMENTS['C'];
+  },
+
+  hideResult(){document.getElementById('screen-result').classList.remove('show');},
+
+  _updateScore(add){
+    this.secScore+=add; this.totalScore+=add;
+    if(add>0){this.combo++;if(this.combo>this.maxCombo)this.maxCombo=this.combo;}
+    else this.combo=0;
+    document.getElementById('g-total-score').textContent=String(this.totalScore).padStart(3,'0');
+    document.getElementById('g-combo').textContent='COMBO ×'+this.combo;
+    document.getElementById('sec-score-disp').textContent='SECTION '+String(this.secScore).padStart(3,'0');
+  },
+
+  _showJudge(text,color){
+    const el=document.getElementById('judge-text');
+    el.textContent=text; el.style.color=color||'#1a1a2e';
+    el.style.animation='none'; el.offsetHeight;
+    el.style.animation='judgeIn .8s ease forwards';
+  },
+
+  _updateProgress(elapsed,total){
+    const pct=Math.min(1,elapsed/total);
+    document.getElementById('g-progress-fill').style.width=(pct*100)+'%';
+    document.getElementById('g-timer').textContent=((total-elapsed)/1000).toFixed(1)+'s';
+  },
+
+  // ══════════════════
+  //  수학: 방향 입력
+  // ══════════════════
+  _mathState:{seq:[],pos:0,totalBeats:0},
+  _mathInit(){
+    const s=SUBJECTS[this.idx];
+    const ms=60000/s.bpm;
+    const directions=['up','down','left','right'];
+    // 32비트 시퀀스 생성
+    const seq=[];
+    for(let i=0;i<32;i++) seq.push(directions[Math.floor(Math.random()*4)]);
+    this._mathState={seq,pos:0,totalBeats:32,hitCount:0,totalCount:32};
+    this.secMax=32*10;
+
+    let beat=0;
+    const startTime=Date.now();
+    const totalTime=ms*32;
+
+    const arrows={up:'#arrow-up',down:'#arrow-down',left:'#arrow-left',right:'#arrow-right'};
+    Object.values(arrows).forEach(id=>document.querySelector(id).disabled=false);
+
+    const tick=()=>{
+      const elapsed=Date.now()-startTime;
+      this._updateProgress(elapsed,totalTime);
+      if(elapsed>=totalTime){this._finishSubject();return;}
+
+      const curBeat=Math.floor(elapsed/ms);
+      if(curBeat!==beat&&curBeat<32){
+        // 이전 박자 처리 안 됐으면 미스
+        if(this._mathState.pos<=beat){
+          this._updateScore(-0);
+          this._showJudge('MISS','#c0392b');
+        }
+        beat=curBeat;
+        // 현재 방향 표시
+        Object.values(arrows).forEach(id=>{
+          document.querySelector(id).classList.remove('lit');
+        });
+        const dir=seq[curBeat];
+        document.querySelector(arrows[dir]).classList.add('lit');
+        this._mathState.pos=curBeat;
+        this._mathState.waiting=true;
+        this._mathState.hitThisBeat=false;
+      }
+      this.rafId=requestAnimationFrame(tick);
+    };
+    this.rafId=requestAnimationFrame(tick);
+  },
+
+  _mathHit(dir){
+    if(!this._mathState.waiting||this._mathState.hitThisBeat) return;
+    const curDir=this._mathState.seq[this._mathState.pos];
+    const arrows={up:'#arrow-up',down:'#arrow-down',left:'#arrow-left',right:'#arrow-right'};
+    this._mathState.hitThisBeat=true;
+    if(dir===curDir){
+      this._updateScore(10);
+      this._showJudge('PERFECT','#1e8449');
+      document.querySelector(arrows[dir]).classList.add('hit-ok');
+    } else {
+      this._updateScore(2);
+      this._showJudge('BAD','#f39c12');
+      document.querySelector(arrows[dir]).classList.add('hit-bad');
+    }
+    setTimeout(()=>{
+      Object.values(arrows).forEach(id=>document.querySelector(id).classList.remove('lit','hit-ok','hit-bad'));
+    },200);
+  },
+
+  // ══════════════════
+  //  영어: 홀드 타이밍
+  // ══════════════════
+  _engState:{},
+  _englishInit(){
+    const s=SUBJECTS[this.idx];
+    const ms=60000/s.bpm;
+    // 존: 바 0~100% 중 60~80%에 홀드 존
+    const ZONE_START=0.55, ZONE_END=0.80;
+    const HOLD_DURATION=ms*1.5; // 홀드 지속 시간
+    const ROUNDS=6;
+    this.secMax=ROUNDS*15;
+
+    const zone=document.getElementById('hold-zone');
+    const bar=document.getElementById('hold-bar');
+    const area=document.getElementById('hold-area');
+    const inner=document.getElementById('hold-inner-text');
+    const hint=document.getElementById('hold-hint');
+
+    zone.style.left=(ZONE_START*100)+'%';
+    zone.style.width=((ZONE_END-ZONE_START)*100)+'%';
+
+    area.className='hold-area';
+    area.onmousedown=area.ontouchstart=()=>this._holdStart();
+    area.onmouseup=area.onmouseleave=area.ontouchend=()=>this._holdEnd();
+
+    let round=0, holding=false, holdStartTime=0, barPct=0;
+    let barDir=1, barSpeed=0.4; // % per ms
+    let startTime=Date.now();
+    let totalTime=ms*ROUNDS*3.5;
+    let waitingHold=true;
+
+    this._engState={
+      ZONE_START,ZONE_END,round,ROUNDS,holding,holdStartTime,
+      bar,area,inner,hint,barPct,barDir,barSpeed,
+      startTime,totalTime,waitingHold,
+      roundDone:false,
+    };
+
+    inner.innerHTML='PRESS<br>&<br>HOLD';
+    hint.textContent='박자에 맞춰 홀드!';
+
+    const tick=()=>{
+      const es=this._engState;
+      const elapsed=Date.now()-es.startTime;
+      this._updateProgress(elapsed,es.totalTime);
+      if(elapsed>=es.totalTime){this._finishSubject();return;}
+
+      // 바 이동
+      es.barPct+=es.barDir*es.barSpeed*16;
+      if(es.barPct>=100){es.barPct=100;es.barDir=-1;}
+      if(es.barPct<=0){es.barPct=0;es.barDir=1;}
+      es.bar.style.width=es.barPct+'%';
+
+      if(es.holding){
+        const held=Date.now()-es.holdStartTime;
+        if(held>=HOLD_DURATION&&!es.roundDone){
+          // 릴리즈 전에 얼마나 존 안에 있었는지는 end에서 처리
+        }
+      }
+      this.rafId=requestAnimationFrame(tick);
+    };
+    this.rafId=requestAnimationFrame(tick);
+  },
+
+  _holdStart(){
+    const es=this._engState;
+    if(!es||es.holding) return;
+    es.holding=true;
+    es.holdStartTime=Date.now();
+    es.holdBarAtStart=es.barPct;
+    es.roundDone=false;
+    es.area.className='hold-area holding';
+    es.inner.innerHTML='HOLD!';
+
+    // 스페이스 중복 방지
+    this._holdKeyDown=true;
+  },
+
+  _holdEnd(){
+    const es=this._engState;
+    if(!es||!es.holding) return;
+    es.holding=false;
+    this._holdKeyDown=false;
+
+    const held=Date.now()-es.holdStartTime;
+    const pct=es.barPct;
+    const inZone=pct>=es.ZONE_START*100&&pct<=es.ZONE_END*100;
+    const longEnough=held>=300;
+
+    if(inZone&&longEnough){
+      this._updateScore(15);
+      this._showJudge('PERFECT','#1e8449');
+      es.area.className='hold-area released-ok';
+    } else if(longEnough){
+      this._updateScore(5);
+      this._showJudge('GOOD','#1a5276');
+      es.area.className='hold-area released-ok';
+    } else {
+      this._updateScore(0);
+      this._showJudge('MISS','#c0392b');
+      es.area.className='hold-area released-bad';
+    }
+    es.inner.innerHTML='PRESS<br>&<br>HOLD';
+    setTimeout(()=>{ if(es.area) es.area.className='hold-area'; },400);
+  },
+
+  // ══════════════════
+  //  과학: 원 타이밍 탭
+  // ══════════════════
+  _sciState:{},
+  _sciInit(){
+    const s=SUBJECTS[this.idx];
+    const ms=60000/s.bpm;
+    const ROUNDS=12;
+    this.secMax=ROUNDS*10;
+
+    const ring=document.getElementById('shrink-ring');
+    const btn=document.getElementById('science-btn');
+    const guide=document.getElementById('sci-guide');
+    btn.className='center-btn';
+    btn.onclick=()=>this._sciTap();
+
+    let round=0, canHit=false, hitThisRound=false;
+    let startTime=Date.now();
+    let totalTime=ms*ROUNDS*2.5;
+    let nextBeat=ms;
+
+    this._sciState={ring,btn,guide,round,ROUNDS,canHit,hitThisRound,startTime,totalTime,nextBeat,ms};
+
+    const tick=()=>{
+      const es=this._sciState;
+      const elapsed=Date.now()-es.startTime;
+      this._updateProgress(elapsed,es.totalTime);
+      if(elapsed>=es.totalTime){this._finishSubject();return;}
+
+      if(elapsed>=es.nextBeat){
+        es.nextBeat+=es.ms*2;
+        es.round++;
+        es.hitThisRound=false;
+        es.canHit=true;
+
+        // 원 애니메이션 리셋
+        es.ring.style.animation='none';
+        es.ring.style.width='190%';es.ring.style.height='190%';
+        es.ring.style.top='-45%';es.ring.style.left='-45%';
+        es.ring.style.borderColor='#1e8449';
+        es.ring.offsetHeight;
+        es.ring.style.transition=`width ${es.ms*1.8}ms linear, height ${es.ms*1.8}ms linear, top ${es.ms*1.8}ms linear, left ${es.ms*1.8}ms linear, border-color ${es.ms*1.8}ms`;
+        es.ring.style.width='100%';es.ring.style.height='100%';es.ring.style.top='0';es.ring.style.left='0';
+
+        // 박자 지나면 미스 처리
+        setTimeout(()=>{
+          if(!es.hitThisRound&&es.canHit){
+            es.canHit=false;
+            this._updateScore(0);
+            this._showJudge('MISS','#c0392b');
+            es.ring.style.borderColor='#c0392b44';
+          }
+        },es.ms*1.9);
+      }
+      this.rafId=requestAnimationFrame(tick);
+    };
+    this.rafId=requestAnimationFrame(tick);
+  },
+
+  _sciTap(){
+    const es=this._sciState;
+    if(!es||!es.canHit||es.hitThisRound) return;
+    es.hitThisRound=true;
+    es.canHit=false;
+
+    // 원의 현재 크기로 판정
+    const rect=es.ring.getBoundingClientRect();
+    const outer=document.querySelector('#mod-science .outer-ring').getBoundingClientRect();
+    const ratio=rect.width/outer.width;
+
+    if(ratio<=1.25){
+      this._updateScore(10);
+      this._showJudge('PERFECT','#1e8449');
+      es.btn.className='center-btn hit-ok';
+    } else if(ratio<=1.6){
+      this._updateScore(6);
+      this._showJudge('GOOD','#1a5276');
+      es.btn.className='center-btn hit-ok';
+    } else {
+      this._updateScore(2);
+      this._showJudge('BAD','#f39c12');
+      es.btn.className='center-btn hit-bad';
+    }
+    es.ring.style.transition='none';
+    setTimeout(()=>{ es.btn.className='center-btn'; },300);
+  },
+
+  // ══════════════════
+  //  국어: 연타
+  // ══════════════════
+  _mashState:{},
+  _mashInit(){
+    const s=SUBJECTS[this.idx];
+    const ms=60000/s.bpm;
+    const TARGET=30;
+    const DURATION=ms*20;
+    this.secMax=TARGET*3;
+
+    let count=0, done=false;
+    let startTime=Date.now();
+
+    const btn=document.getElementById('mash-btn');
+    const countEl=document.getElementById('mash-count');
+    const barEl=document.getElementById('mash-bar');
+    const targetEl=document.getElementById('mash-target');
+    targetEl.textContent='목표: '+TARGET;
+    countEl.textContent='0';
+    barEl.style.width='0%';
+    btn.onclick=()=>this._mashTap();
+
+    this._mashState={count,done,startTime,DURATION,TARGET,btn,countEl,barEl};
+
+    const tick=()=>{
+      const es=this._mashState;
+      const elapsed=Date.now()-es.startTime;
+      this._updateProgress(elapsed,es.DURATION);
+      if(elapsed>=es.DURATION&&!es.done){
+        es.done=true;
+        const pct=Math.min(100,Math.round((es.count/es.TARGET)*100));
+        if(pct>=100){ this._updateScore(20); this._showJudge('PERFECT','#6c3483'); }
+        else if(pct>=70){ this._updateScore(10); this._showJudge('GOOD','#1a5276'); }
+        else { this._showJudge('TRY HARDER','#f39c12'); }
+        setTimeout(()=>this._finishSubject(),600);
+        return;
+      }
+      this.rafId=requestAnimationFrame(tick);
+    };
+    this.rafId=requestAnimationFrame(tick);
+  },
+
+  _mashTap(){
+    const es=this._mashState;
+    if(!es||es.done) return;
+    es.count++;
+    es.countEl.textContent=es.count;
+    es.barEl.style.width=Math.min(100,(es.count/es.TARGET)*100)+'%';
+    this._updateScore(3);
+    if(es.count>=es.TARGET){
+      this._showJudge('완벽해!','#6c3483');
+    }
+  },
+
+  // ══════════════════
+  //  역사: 시퀀스
+  // ══════════════════
+  _seqState:{},
+  _seqInit(){
+    const s=SUBJECTS[this.idx];
+    const ms=60000/s.bpm;
+    const SYMBOLS=['▲','●','■','◆'];
+    const ROUNDS=5;
+    this.secMax=ROUNDS*16;
+
+    // 라운드별 시퀀스 길이 증가: 3,4,4,5,5
+    const roundLengths=[3,4,4,5,5];
+
+    let round=0, phase='show', inputIdx=0, seq=[], score=0;
+    let startTime=Date.now();
+    let totalTime=ms*ROUNDS*8;
+
+    const display=document.getElementById('seq-display');
+    const hint=document.getElementById('seq-hint');
+    const btns=document.querySelectorAll('#seq-btns .seq-btn');
+    btns.forEach(b=>b.onclick=()=>this._seqInput(b.dataset.key));
+
+    this._seqState={
+      SYMBOLS,ROUNDS,roundLengths,round,phase,inputIdx,seq,
+      display,hint,btns,ms,startTime,totalTime,done:false
+    };
+
+    this._seqStartRound();
+  },
+
+  _seqStartRound(){
+    const es=this._seqState;
+    if(es.round>=es.ROUNDS){
+      setTimeout(()=>this._finishSubject(),500);
+      return;
+    }
+    const len=es.roundLengths[es.round];
+    es.seq=[];
+    for(let i=0;i<len;i++) es.seq.push(es.SYMBOLS[Math.floor(Math.random()*4)]);
+    es.inputIdx=0;
+    es.phase='show';
+
+    // 도트 표시
+    es.display.innerHTML='';
+    es.seq.forEach(()=>{
+      const d=document.createElement('div');
+      d.className='seq-dot';
+      es.display.appendChild(d);
+    });
+
+    es.hint.textContent='잘 봐요!';
+    es.btns.forEach(b=>b.disabled=true);
+
+    // 순서대로 점등
+    let i=0;
+    const showNext=()=>{
+      if(i>0) es.display.children[i-1].classList.remove('lit');
+      if(i>=es.seq.length){
+        es.phase='input';
+        es.hint.textContent='이제 입력!';
+        es.btns.forEach(b=>b.disabled=false);
+        // 버튼에 해당 심볼 표시
+        es.btns.forEach(b=>{
+          b.className='seq-btn';
+          b.style.color='';
+        });
+        return;
+      }
+      // 해당 버튼 점등
+      const sym=es.seq[i];
+      const matchBtn=Array.from(es.btns).find(b=>b.dataset.key===sym);
+      if(matchBtn){ matchBtn.classList.add('lit'); setTimeout(()=>matchBtn.classList.remove('lit'),es.ms*0.7); }
+      es.display.children[i].classList.add('lit');
+      i++;
+      setTimeout(showNext, es.ms*1.0);
+    };
+    setTimeout(showNext, 300);
+
+    const elapsed=Date.now()-es.startTime;
+    this._updateProgress(elapsed,es.totalTime);
+  },
+
+  _seqInput(sym){
+    const es=this._seqState;
+    if(!es||es.phase!=='input') return;
+    const expected=es.seq[es.inputIdx];
+    const dot=es.display.children[es.inputIdx];
+    const matchBtn=Array.from(es.btns).find(b=>b.dataset.key===sym);
+
+    if(sym===expected){
+      dot.classList.add('done');
+      if(matchBtn) matchBtn.classList.add('correct');
+      setTimeout(()=>matchBtn&&matchBtn.classList.remove('correct'),250);
+      this._updateScore(16/es.seq.length|0+1);
+      this._showJudge('✓','#1e8449');
+      es.inputIdx++;
+      if(es.inputIdx>=es.seq.length){
+        es.round++;
+        this._showJudge('PERFECT','#784212');
+        setTimeout(()=>this._seqStartRound(),700);
+      }
+    } else {
+      dot.classList.add('wrong');
+      if(matchBtn){matchBtn.classList.add('wrong');setTimeout(()=>matchBtn.classList.remove('wrong'),300);}
+      this._showJudge('WRONG','#c0392b');
+      // 이번 라운드 재시작
+      this._updateScore(0);
+      setTimeout(()=>this._seqStartRound(),600);
+    }
+  },
+};
+
+// 스페이스바 기본 동작 방지
+window.addEventListener('keydown',e=>{
+  if(e.key===' ') e.preventDefault();
+});
+window.addEventListener('keyup',e=>{
+  if(e.key===' '){
+    const s=SUBJECTS[G.idx];
+    if(s&&s.id==='english') G._holdEnd();
+  }
+});
+</script>
+</body>
+</html>

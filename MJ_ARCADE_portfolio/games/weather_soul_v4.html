@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>WEATHER SOUL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Major+Mono+Display&family=Noto+Serif+KR:wght@200;300;400&display=swap');
+
+:root {
+  --void: #060812;
+  --ink: #0c0f1d;
+  --surface: #11152a;
+  --surface2: #181d38;
+  --line: rgba(174,196,255,0.10);
+  --line-bright: rgba(174,196,255,0.25);
+  --text: #e6ebff;
+  --text-dim: rgba(230,235,255,0.42);
+  --text-faint: rgba(230,235,255,0.22);
+  --astral: #8fa9ff;
+  --astral-deep: #5a72d8;
+  --bloom: #c79bff;
+  --gold: #e9c878;
+  --jade: #7fe0b0;
+  --rose: #ff8fa3;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 깊은 우주 그라데이션 배경 */
+.cosmos {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(90,114,216,0.18), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 20%, rgba(199,155,255,0.10), transparent 55%),
+    radial-gradient(ellipse 70% 60% at 10% 80%, rgba(127,224,176,0.06), transparent 50%),
+    linear-gradient(180deg, #060812 0%, #0a0d1f 50%, #060812 100%);
+}
+#starCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+/* 그레인 오버레이 */
+.grain {
+  position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===== 네비게이션 ===== */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+  background: linear-gradient(180deg, rgba(6,8,18,0.5), rgba(6,8,18,0.96));
+  border-top: 1px solid var(--line);
+  display: flex; z-index: 100; backdrop-filter: blur(24px);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5px; background: none; border: none; color: var(--text-faint);
+  font-family: 'Major Mono Display', monospace; font-size: 8px; cursor: pointer;
+  transition: color 0.3s; letter-spacing: 0.1em; position: relative; padding-top: 4px;
+}
+.nav-btn.active { color: var(--astral); }
+.nav-btn.active::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 24px; height: 2px; background: var(--astral); border-radius: 2px;
+  box-shadow: 0 0 8px var(--astral);
+}
+.nav-glyph { width: 24px; height: 24px; }
+.nav-glyph svg { width: 100%; height: 100%; }
+
+/* ===== 탭 ===== */
+.tab { display: none; padding: 0 0 90px 0; min-height: 100vh; position: relative; z-index: 1; }
+.tab.active { display: block; animation: tabIn 0.5s ease; }
+@keyframes tabIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 공통 헤더 */
+.page-head { padding: 54px 24px 18px; }
+.page-kicker {
+  font-family: 'Major Mono Display', monospace; font-size: 10px; letter-spacing: 0.35em;
+  color: var(--text-faint); margin-bottom: 8px;
+}
+.page-title { font-size: 30px; font-weight: 300; letter-spacing: 0.02em; line-height: 1.1; }
+.page-title .accent { font-style: italic; color: var(--astral); }
+.divider {
+  height: 1px; margin: 16px 24px; background: linear-gradient(90deg, transparent, var(--line-bright), transparent);
+}
+
+/* ===== 소환 탭 ===== */
+.summon-stage {
+  position: relative; margin: 8px 20px 0; aspect-ratio: 1; max-height: 46vh;
+  display: flex; align-items: center; justify-content: center;
+}
+#summonCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sky-frame {
+  position: relative; z-index: 2; width: 56%; aspect-ratio: 1; border-radius: 50%;
+  overflow: hidden; cursor: pointer; border: 1px solid var(--line-bright);
+  box-shadow: 0 0 40px rgba(143,169,255,0.15), inset 0 0 30px rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, var(--surface), var(--ink));
+  transition: transform 0.4s, box-shadow 0.4s;
+}
+.sky-frame:active { transform: scale(0.97); }
+.sky-frame.loaded { box-shadow: 0 0 60px rgba(143,169,255,0.3), inset 0 0 20px rgba(0,0,0,0.4); }
+.sky-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sky-frame-hint { position: relative; z-index: 1; text-align: center; pointer-events: none; }
+.sky-frame-hint .lens { width: 40px; height: 40px; margin: 0 auto 10px; }
+.sky-frame-hint .label {
+  font-family: 'Major Mono Display', monospace; font-size: 9px;
+  letter-spacing: 0.2em; color: var(--text-dim);
+}
+#skyInput { display: none; }
+
+.sensor-strip {
+  display: flex; gap: 0; margin: 20px 24px 0; border: 1px solid var(--line);
+  border-radius: 14px; overflow: hidden; background: rgba(17,21,42,0.5);
+}
+.sensor-cell {
+  flex: 1; padding: 12px 4px; text-align: center; border-right: 1px solid var(--line);
+}
+.sensor-cell:last-child { border-right: none; }
+.sensor-cell .sv {
+  font-family: 'Major Mono Display', monospace; font-size: 13px; color: var(--astral); margin-bottom: 3px;
+}
+.sensor-cell .sl {
+  font-family: 'Major Mono Display', monospace; font-size: 7px; letter-spacing: 0.1em; color: var(--text-faint);
+}
+
+.summon-action { margin: 22px 24px 0; }
+.summon-btn {
+  width: 100%; padding: 20px; background: linear-gradient(135deg, rgba(90,114,216,0.18), rgba(199,155,255,0.10));
+  border: 1px solid var(--line-bright); border-radius: 16px; color: var(--text);
+  font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; letter-spacing: 0.18em;
+  cursor: pointer; position: relative; overflow: hidden; transition: all 0.4s;
+}
+.summon-btn.ready { border-color: var(--astral); box-shadow: 0 0 30px rgba(143,169,255,0.2); }
+.summon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.summon-btn .shine {
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.6s;
+}
+.summon-btn.ready:active .shine { left: 200%; }
+.cooldown-note {
+  text-align: center; margin-top: 14px; font-family: 'Major Mono Display', monospace;
+  font-size: 9px; letter-spacing: 0.1em; color: var(--text-faint);
+}
+
+/* ===== 정령 상세 뷰 ===== */
+.spirit-view {
+  position: fixed; inset: 0; z-index: 200; display: none; flex-direction: column;
+  background: var(--void);
+}
+.spirit-view.open { display: flex; animation: tabIn 0.4s ease; }
+.spirit-bg {
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  filter: blur(14px) brightness(0.35) saturate(1.2); transform: scale(1.15);
+}
+.spirit-bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 35%, transparent, var(--void) 75%); }
+.spirit-close {
+  position: absolute; top: 18px; left: 18px; z-index: 10; background: rgba(6,8,18,0.5);
+  border: 1px solid var(--line); border-radius: 50%; width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(12px);
+}
+.spirit-close svg { width: 18px; height: 18px; }
+.spirit-canvas-wrap {
+  position: relative; z-index: 1; flex: 1; display: flex; align-items: center; justify-content: center;
+  padding-top: 50px; min-height: 0;
+}
+#spiritCanvas { touch-action: none; }
+.spirit-name-block { position: relative; z-index: 1; text-align: center; padding: 0 24px 14px; }
+.spirit-family-tag {
+  font-family: 'Major Mono Display', monospace; font-size: 9px; letter-spacing: 0.25em;
+  color: var(--text-dim); margin-bottom: 8px;
+}
+.spirit-name { font-size: 34px; font-weight: 300; letter-spacing: 0.04em; }
+.spirit-date {
+  font-family: 'Major Mono Display', monospace; font-size: 9px; color: var(--text-faint);
+  margin-top: 8px; letter-spacing: 0.05em;
+}
+.spirit-info-scroll {
+  position: relative; z-index: 1; background: linear-gradient(180deg, transparent, rgba(6,8,18,0.85) 12%);
+  backdrop-filter: blur(20px); padding: 24px; max-height: 42vh; overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+.spirit-env-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 20px; }
+.env-pod { text-align: center; padding: 8px 2px; border: 1px solid var(--line); border-radius: 10px; background: rgba(17,21,42,0.4); }
+.env-pod .ev { font-family: 'Major Mono Display', monospace; font-size: 11px; color: var(--astral); }
+.env-pod .el { font-family: 'Major Mono Display', monospace; font-size: 6px; color: var(--text-faint); letter-spacing: 0.05em; margin-top: 3px; }
+.spirit-desc {
+  font-size: 16px; line-height: 1.9; color: rgba(230,235,255,0.6); font-style: italic;
+  font-weight: 300; padding-left: 16px; border-left: 1px solid var(--astral); margin-bottom: 20px;
+}
+.ability-label { font-family: 'Major Mono Display', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); margin-bottom: 10px; }
+.spirit-abilities { display: flex; gap: 8px; flex-wrap: wrap; }
+.ability-chip {
+  display: flex; align-items: center; gap: 6px; padding: 9px 14px;
+  background: rgba(143,169,255,0.08); border: 1px solid var(--line-bright); border-radius: 30px;
+  font-family: 'Noto Serif KR', serif; font-size: 13px; color: var(--astral);
+}
+.ability-chip svg { width: 14px; height: 14px; }
+
+/* ===== 정령 보관 갤러리 탭 ===== */
+.gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 0 20px; }
+.gallery-card {
+  position: relative; aspect-ratio: 3/4; border-radius: 18px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); transition: transform 0.3s, border-color 0.3s;
+}
+.gallery-card:active { transform: scale(0.97); }
+.gallery-card-photo { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.5; }
+.gallery-card-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, var(--ink) 95%); }
+.gallery-card-orb { position: absolute; top: 0; left: 0; right: 0; height: 62%; display: flex; align-items: center; justify-content: center; }
+.gallery-card-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 14px; z-index: 2; }
+.gallery-card-name { font-size: 19px; font-weight: 400; }
+.gallery-card-date { font-family: 'Major Mono Display', monospace; font-size: 8px; color: var(--text-faint); margin-top: 4px; }
+.empty-state {
+  text-align: center; padding: 60px 24px; color: var(--text-faint);
+}
+.empty-state .es-glyph { width: 56px; height: 56px; margin: 0 auto 18px; opacity: 0.4; }
+.empty-state .es-text { font-size: 16px; font-style: italic; font-weight: 300; line-height: 1.6; }
+
+/* ===== 온실 탭 ===== */
+.greenhouse-stage {
+  position: relative; margin: 0 16px; aspect-ratio: 3/4; max-height: 56vh; border-radius: 22px; overflow: hidden;
+  border: 1px solid var(--line-bright);
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.5), 0 0 40px rgba(143,169,255,0.08);
+}
+#greenhouseCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.greenhouse-empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; z-index: 2;
+}
+.greenhouse-empty .gh-text { font-size: 17px; font-style: italic; font-weight: 300; color: var(--text-dim); }
+.plant-hud {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 3; padding: 18px;
+  background: linear-gradient(180deg, transparent, rgba(6,8,18,0.9));
+}
+.plant-hud-name { font-size: 22px; font-weight: 400; margin-bottom: 4px; }
+.plant-hud-stage { font-family: 'Major Mono Display', monospace; font-size: 9px; color: var(--astral); letter-spacing: 0.15em; margin-bottom: 12px; }
+.hud-bar { margin-bottom: 8px; }
+.hud-bar-label { display: flex; justify-content: space-between; font-family: 'Major Mono Display', monospace; font-size: 8px; color: var(--text-dim); margin-bottom: 4px; letter-spacing: 0.1em; }
+.hud-bar-track { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.hud-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+.hud-bar-fill.growth { background: linear-gradient(90deg, var(--jade), var(--astral)); }
+.hud-bar-fill.stress { background: linear-gradient(90deg, var(--rose), var(--gold)); }
+
+.greenhouse-controls { margin: 18px 20px 0; }
+.gh-spirit-selector { margin-bottom: 16px; }
+.selector-label { font-family: 'Major Mono Display', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); margin-bottom: 10px; }
+.gh-spirit-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.gh-spirit-pill {
+  flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 30px; cursor: pointer;
+  white-space: nowrap; transition: all 0.25s;
+}
+.gh-spirit-pill.active { border-color: var(--astral); background: rgba(143,169,255,0.1); }
+.gh-spirit-pill .pill-orb { width: 18px; height: 18px; border-radius: 50%; }
+.gh-spirit-pill .pill-name { font-family: 'Noto Serif KR', serif; font-size: 13px; }
+.gh-ability-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.gh-ability-btn {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; cursor: pointer; transition: all 0.25s;
+  font-family: 'Noto Serif KR', serif; font-size: 14px; color: var(--text);
+}
+.gh-ability-btn:active { border-color: var(--astral); transform: scale(0.97); }
+.gh-ability-btn:disabled { opacity: 0.3; }
+.gh-ability-btn .ab-icon { width: 22px; height: 22px; flex-shrink: 0; }
+.gh-ability-btn .ab-cd { margin-left: auto; font-family: 'Major Mono Display', monospace; font-size: 9px; color: var(--text-faint); }
+
+.gh-seed-prompt {
+  margin: 0 20px; padding: 24px; border: 1px dashed var(--line-bright); border-radius: 18px; text-align: center;
+}
+.gh-seed-prompt .sp-text { font-size: 15px; color: var(--text-dim); font-style: italic; margin-bottom: 16px; line-height: 1.6; }
+.gh-seed-list { display: flex; flex-direction: column; gap: 10px; }
+.gh-seed-item {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; cursor: pointer; transition: all 0.25s; text-align: left;
+}
+.gh-seed-item:active { border-color: var(--jade); }
+.gh-seed-item .seed-glyph { width: 28px; height: 28px; flex-shrink: 0; }
+.gh-seed-item .seed-name { font-family: 'Noto Serif KR', serif; font-size: 15px; }
+.gh-seed-item .seed-count { margin-left: auto; font-family: 'Major Mono Display', monospace; font-size: 11px; color: var(--jade); }
+
+/* ===== 재단 탭 ===== */
+.shrine-stage { position: relative; margin: 10px 20px 0; aspect-ratio: 1; max-height: 44vh; display: flex; align-items: center; justify-content: center; }
+#shrineCanvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.shrine-copy { margin: 8px 28px 0; text-align: center; }
+.shrine-copy p { font-size: 16px; font-weight: 300; line-height: 1.8; color: var(--text-dim); font-style: italic; }
+.shrine-odds { display: flex; gap: 12px; margin: 22px 24px 0; }
+.odd-card { flex: 1; padding: 16px 12px; border: 1px solid var(--line); border-radius: 14px; text-align: center; background: rgba(17,21,42,0.4); }
+.odd-card .oc-pct { font-family: 'Major Mono Display', monospace; font-size: 22px; margin-bottom: 6px; }
+.odd-card.buff .oc-pct { color: var(--bloom); }
+.odd-card.summon .oc-pct { color: var(--gold); }
+.odd-card .oc-label { font-size: 12px; color: var(--text-dim); }
+.shrine-action { margin: 24px 24px 0; }
+.shrine-btn {
+  width: 100%; padding: 18px; background: linear-gradient(135deg, rgba(233,200,120,0.12), rgba(199,155,255,0.08));
+  border: 1px solid rgba(233,200,120,0.3); border-radius: 16px; color: var(--gold);
+  font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; letter-spacing: 0.18em; cursor: pointer;
+  transition: all 0.3s;
+}
+.shrine-btn:active { transform: scale(0.98); }
+.shrine-btn:disabled { opacity: 0.35; }
+.shrine-note { text-align: center; margin-top: 12px; font-family: 'Major Mono Display', monospace; font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; }
+.active-buff-banner {
+  margin: 18px 24px 0; padding: 14px 18px; border: 1px solid var(--bloom); border-radius: 14px;
+  background: rgba(199,155,255,0.08); display: flex; align-items: center; gap: 12px;
+}
+.active-buff-banner svg { width: 22px; height: 22px; flex-shrink: 0; }
+.active-buff-banner .abb-text { font-size: 14px; }
+.active-buff-banner .abb-text .abb-name { color: var(--bloom); }
+
+/* ===== 도감 탭 ===== */
+.codex-switch { display: flex; gap: 10px; margin: 0 20px 18px; }
+.codex-switch-btn {
+  flex: 1; padding: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 13px;
+  color: var(--text-dim); font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 500;
+  letter-spacing: 0.1em; cursor: pointer; transition: all 0.25s;
+}
+.codex-switch-btn.active { border-color: var(--astral); color: var(--astral); background: rgba(143,169,255,0.08); }
+.codex-progress { text-align: center; margin: 0 24px 16px; font-family: 'Major Mono Display', monospace; font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; }
+.codex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 16px; }
+.codex-card {
+  aspect-ratio: 3/4; border-radius: 14px; overflow: hidden; cursor: pointer; position: relative;
+  border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px; transition: border-color 0.25s;
+}
+.codex-card.discovered { border-color: var(--line-bright); }
+.codex-card.locked .codex-orb { filter: grayscale(1) brightness(0.3); }
+.codex-orb { width: 50%; aspect-ratio: 1; }
+.codex-card-name { font-family: 'Noto Serif KR', serif; font-size: 11px; text-align: center; padding: 0 4px; }
+.codex-card.locked .codex-card-name { color: var(--text-faint); }
+
+/* ===== 오버레이/모달 ===== */
+.scan-overlay {
+  position: fixed; inset: 0; background: rgba(6,8,18,0.96); z-index: 400; display: none;
+  align-items: center; justify-content: center; flex-direction: column; gap: 28px;
+}
+.scan-overlay.open { display: flex; }
+#scanCanvas { width: 200px; height: 200px; }
+.scan-text { font-family: 'Major Mono Display', monospace; font-size: 11px; letter-spacing: 0.25em; color: var(--astral); }
+.scan-track { width: 180px; height: 1px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.scan-track-fill { height: 100%; background: var(--astral); width: 0%; box-shadow: 0 0 8px var(--astral); }
+
+.toast {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-120px); z-index: 500;
+  background: rgba(17,21,42,0.95); border: 1px solid var(--line-bright); border-radius: 16px; padding: 16px 22px;
+  text-align: center; backdrop-filter: blur(20px); min-width: 260px; max-width: 88vw;
+  transition: transform 0.5s cubic-bezier(0.175,0.885,0.32,1.4); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast-title { font-family: 'Major Mono Display', monospace; font-size: 8px; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 6px; }
+.toast-content { font-size: 16px; font-weight: 300; white-space: pre-line; line-height: 1.4; }
+
+.modal {
+  position: fixed; inset: 0; background: rgba(6,8,18,0.75); z-index: 300; display: none;
+  align-items: flex-end; justify-content: center; backdrop-filter: blur(6px);
+}
+.modal.open { display: flex; }
+.modal-sheet {
+  background: var(--ink); border: 1px solid var(--line); border-top-color: var(--line-bright);
+  border-radius: 24px 24px 0 0; padding: 26px 24px 34px; width: 100%; max-width: 520px;
+  max-height: 72vh; overflow-y: auto; animation: sheetUp 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 38px; height: 4px; background: var(--line-bright); border-radius: 2px; margin: 0 auto 22px; }
+.modal-title { font-size: 21px; font-weight: 300; margin-bottom: 18px; }
+
+/* ===== 하늘 예보 ===== */
+.forecast-box { margin: 18px 20px 0; }
+.forecast-title { font-family: 'Major Mono Display', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); margin-bottom: 10px; }
+.forecast-row { display: flex; gap: 8px; }
+.forecast-cell { flex: 1; padding: 12px 6px; border: 1px solid var(--line); border-radius: 13px; text-align: center; background: rgba(17,21,42,0.4); }
+.fc-hour { font-family: 'Major Mono Display', monospace; font-size: 9px; color: var(--astral); margin-bottom: 6px; }
+.fc-icon { width: 26px; height: 26px; margin: 0 auto 6px; }
+.fc-icon svg { width: 100%; height: 100%; }
+.fc-weather { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; }
+.fc-hint { font-family: 'Major Mono Display', monospace; font-size: 7px; color: var(--text-faint); letter-spacing: 0.03em; line-height: 1.3; }
+
+/* ===== 하루 일주 ===== */
+.circuit-box { margin: 18px 20px 0; padding: 16px 18px; border: 1px solid var(--line); border-radius: 16px; background: rgba(17,21,42,0.4); }
+.circuit-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.circuit-title { font-family: 'Major Mono Display', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--text-faint); }
+.circuit-count { font-family: 'Major Mono Display', monospace; font-size: 11px; color: var(--gold); }
+.circuit-track { display: flex; gap: 6px; }
+.circuit-node { flex: 1; height: 36px; border-radius: 9px; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 8px; font-family: 'Major Mono Display', monospace; color: var(--text-faint); transition: all 0.3s; position: relative; overflow: hidden; }
+.circuit-node.done { border-color: var(--astral); color: var(--astral); }
+.circuit-node.done::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle, rgba(143,169,255,0.18), transparent); }
+
+/* ===== 별자리 ===== */
+.gallery-mode-switch { display: flex; gap: 10px; margin: 0 20px 18px; }
+.gms-btn { flex: 1; padding: 11px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--text-dim); font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.08em; cursor: pointer; transition: all 0.25s; }
+.gms-btn.active { border-color: var(--astral); color: var(--astral); background: rgba(143,169,255,0.08); }
+.constellation-stage { position: relative; margin: 0 16px; height: 62vh; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: linear-gradient(180deg, #060a1a, #0a0e22); }
+#constellationCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.constellation-hint { position: absolute; top: 14px; left: 0; right: 0; text-align: center; font-family: 'Major Mono Display', monospace; font-size: 8px; letter-spacing: 0.15em; color: var(--text-faint); z-index: 2; pointer-events: none; }
+.constellation-tools { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 3; }
+.ctool { padding: 8px 14px; background: rgba(17,21,42,0.85); border: 1px solid var(--line-bright); border-radius: 20px; color: var(--text-dim); font-family: 'Major Mono Display', monospace; font-size: 9px; cursor: pointer; backdrop-filter: blur(10px); }
+.ctool.active { border-color: var(--astral); color: var(--astral); }
+.bonus-line { margin: 14px 20px 0; font-size: 13px; color: var(--jade); font-style: italic; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="cosmos"></div>
+<canvas id="starCanvas"></canvas>
+<div class="grain"></div>
+
+<!-- 스캔 오버레이 -->
+<div class="scan-overlay" id="scanOverlay">
+  <canvas id="scanCanvas" width="200" height="200"></canvas>
+  <div class="scan-text" id="scanText">reading the sky</div>
+  <div class="scan-track"><div class="scan-track-fill" id="scanFill"></div></div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle"></div>
+  <div class="toast-content" id="toastContent"></div>
+</div>
+
+<!-- 정령 상세 -->
+<div class="spirit-view" id="spiritView">
+  <div class="spirit-bg" id="spiritBg"></div>
+  <button class="spirit-close" onclick="closeSpiritView()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#e6ebff" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="spirit-canvas-wrap"><canvas id="spiritCanvas" width="260" height="260"></canvas></div>
+  <div class="spirit-name-block">
+    <div class="spirit-family-tag" id="spiritFamilyTag"></div>
+    <div class="spirit-name" id="spiritName"></div>
+    <div class="spirit-date" id="spiritDate"></div>
+  </div>
+  <div class="spirit-info-scroll">
+    <div class="spirit-env-grid" id="spiritEnvGrid"></div>
+    <div class="spirit-desc" id="spiritDesc"></div>
+    <div class="ability-label">ABILITIES</div>
+    <div class="spirit-abilities" id="spiritAbilities"></div>
+  </div>
+</div>
+
+<!-- 씨앗/배치 모달 -->
+<div class="modal" id="genericModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ===== 소환 탭 ===== -->
+<div class="tab active" id="tab-summon">
+  <div class="page-head">
+    <div class="page-kicker">WEATHER SOUL</div>
+    <div class="page-title">오늘의 하늘을 <span class="accent">담다</span></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span id="phaseBadge" style="font-family:'Major Mono Display',monospace;font-size:9px;letter-spacing:0.1em;color:var(--text-dim);padding:5px 11px;border:1px solid var(--line);border-radius:20px"></span>
+      <span id="weatherBadge" style="display:none;font-family:'Major Mono Display',monospace;font-size:9px;letter-spacing:0.1em;color:var(--astral);padding:5px 11px;border:1px solid var(--line-bright);border-radius:20px"></span>
+      <span id="goldenBadge" style="display:none;font-family:'Major Mono Display',monospace;font-size:9px;letter-spacing:0.15em;color:var(--gold);padding:5px 11px;border:1px solid rgba(233,200,120,0.4);border-radius:20px;box-shadow:0 0 14px rgba(233,200,120,0.25)">✦ GOLDEN HOUR</span>
+    </div>
+  </div>
+  <div class="summon-stage">
+    <canvas id="summonCanvas"></canvas>
+    <div class="sky-frame" id="skyFrame" onclick="document.getElementById('skyInput').click()">
+      <img id="skyPreview" style="display:none">
+      <div class="sky-frame-hint" id="skyHint">
+        <div class="lens">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#8fa9ff" stroke-width="1.2">
+            <circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="6"/>
+            <path d="M24 4v6M24 38v6M4 24h6M38 24h6"/>
+          </svg>
+        </div>
+        <div class="label">TAP TO CAPTURE</div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="skyInput" accept="image/*">
+
+  <div class="sensor-strip">
+    <div class="sensor-cell"><div class="sv" id="sLight">-</div><div class="sl">LUMEN</div></div>
+    <div class="sensor-cell"><div class="sv" id="sSound">-</div><div class="sl">SOUND</div></div>
+    <div class="sensor-cell"><div class="sv" id="sMotion">-</div><div class="sl">MOTION</div></div>
+    <div class="sensor-cell"><div class="sv" id="sBattery">-</div><div class="sl">CELL</div></div>
+    <div class="sensor-cell"><div class="sv" id="sTime">-</div><div class="sl">HOUR</div></div>
+  </div>
+
+  <div class="summon-action">
+    <button class="summon-btn" id="summonBtn" onclick="startSummon()">
+      <span class="shine"></span>소환의 의식
+    </button>
+    <div class="cooldown-note" id="cooldownNote"></div>
+  </div>
+
+  <div class="circuit-box" id="circuitBox"></div>
+  <div class="forecast-box" id="forecastBox"></div>
+</div>
+
+<!-- ===== 정령 갤러리 탭 ===== -->
+<div class="tab" id="tab-gallery">
+  <div class="page-head">
+    <div class="page-kicker">COLLECTION</div>
+    <div class="page-title">소장한 <span class="accent">정령</span></div>
+  </div>
+  <div class="gallery-mode-switch">
+    <button class="gms-btn active" id="gms-cards" onclick="switchGalleryMode('cards')">갤러리</button>
+    <button class="gms-btn" id="gms-constellation" onclick="switchGalleryMode('constellation')">별자리</button>
+  </div>
+  <div id="galleryContent"></div>
+  <div id="constellationContent" style="display:none">
+    <div class="constellation-stage">
+      <div class="constellation-hint">별을 끌어 옮기고 · 잇기 모드에서 두 별을 탭해 연결</div>
+      <canvas id="constellationCanvas"></canvas>
+      <div class="constellation-tools">
+        <button class="ctool active" id="ct-move" onclick="setConstellationTool('move')">옮기기</button>
+        <button class="ctool" id="ct-link" onclick="setConstellationTool('link')">잇기</button>
+        <button class="ctool" id="ct-erase" onclick="setConstellationTool('erase')">선 지우기</button>
+      </div>
+    </div>
+    <div class="bonus-line" id="constellationBonus"></div>
+  </div>
+</div>
+
+<!-- ===== 온실 탭 ===== -->
+<div class="tab" id="tab-greenhouse">
+  <div class="page-head">
+    <div class="page-kicker">CONSERVATORY</div>
+    <div class="page-title">유리 <span class="accent">온실</span></div>
+  </div>
+  <div class="greenhouse-stage" id="greenhouseStage">
+    <canvas id="greenhouseCanvas"></canvas>
+    <div class="greenhouse-empty" id="greenhouseEmpty">
+      <div class="gh-text">온실이 비어있습니다</div>
+    </div>
+    <div class="plant-hud" id="plantHud" style="display:none">
+      <div class="plant-hud-name" id="plantHudName"></div>
+      <div class="plant-hud-stage" id="plantHudStage"></div>
+      <div class="hud-bar">
+        <div class="hud-bar-label"><span>GROWTH</span><span id="growthPct">0%</span></div>
+        <div class="hud-bar-track"><div class="hud-bar-fill growth" id="growthFill" style="width:0%"></div></div>
+      </div>
+      <div class="hud-bar">
+        <div class="hud-bar-label"><span>STRESS</span><span id="stressPct">0%</span></div>
+        <div class="hud-bar-track"><div class="hud-bar-fill stress" id="stressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="greenhouseControls"></div>
+</div>
+
+<!-- ===== 재단 탭 ===== -->
+<div class="tab" id="tab-shrine">
+  <div class="page-head">
+    <div class="page-kicker">THE SHRINE</div>
+    <div class="page-title">기도의 <span class="accent">재단</span></div>
+  </div>
+  <div class="shrine-stage"><canvas id="shrineCanvas" onclick="pray()"></canvas></div>
+  <div class="shrine-copy"><p>재단에 손을 얹으면<br>하늘이 응답할지도 모른다</p></div>
+  <div class="shrine-odds">
+    <div class="odd-card buff"><div class="oc-pct">10%</div><div class="oc-label">무작위 축복</div></div>
+    <div class="odd-card summon"><div class="oc-pct">30%</div><div class="oc-label">추가 소환</div></div>
+  </div>
+  <div id="activeBuffBanner"></div>
+  <div class="shrine-action">
+    <button class="shrine-btn" id="shrineBtn" onclick="pray()">기도하기</button>
+    <div class="shrine-note" id="shrineNote"></div>
+  </div>
+</div>
+
+<!-- ===== 도감 탭 ===== -->
+<div class="tab" id="tab-codex">
+  <div class="page-head">
+    <div class="page-kicker">CODEX</div>
+    <div class="page-title">기록의 <span class="accent">도감</span></div>
+  </div>
+  <div class="codex-switch">
+    <button class="codex-switch-btn active" id="cs-spirits" onclick="switchCodex('spirits')">정령</button>
+    <button class="codex-switch-btn" id="cs-plants" onclick="switchCodex('plants')">식물</button>
+  </div>
+  <div class="codex-progress" id="codexProgress"></div>
+  <div class="codex-grid" id="codexGrid"></div>
+</div>
+
+<!-- ===== 네비게이션 ===== -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-summon" onclick="switchTab('summon')">
+    <span class="nav-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>소환
+  </button>
+  <button class="nav-btn" id="nav-gallery" onclick="switchTab('gallery')">
+    <span class="nav-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 3a6 6 0 016 6c0 4-6 12-6 12S6 13 6 9a6 6 0 016-6z"/><circle cx="12" cy="9" r="2"/></svg></span>정령
+  </button>
+  <button class="nav-btn" id="nav-greenhouse" onclick="switchTab('greenhouse')">
+    <span class="nav-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 22V11M12 11c0-3 2-5 5-5 0 3-2 5-5 5zM12 14c0-3-2-5-5-5 0 3 2 5 5 5z"/><path d="M5 22h14"/></svg></span>온실
+  </button>
+  <button class="nav-btn" id="nav-shrine" onclick="switchTab('shrine')">
+    <span class="nav-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 21V10l8-6 8 6v11M4 21h16M9 21v-6h6v6"/></svg></span>재단
+  </button>
+  <button class="nav-btn" id="nav-codex" onclick="switchTab('codex')">
+    <span class="nav-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 4h13a2 2 0 012 2v14H6a2 2 0 01-2-2V4zM4 18a2 2 0 012-2h13"/></svg></span>도감
+  </button>
+</nav>
+
+<script>
+// ============================================================
+//  WEATHER SOUL v2 — Engine
+// ============================================================
+
+// ---------- 정령 데이터 (70종) ----------
+var SPIRITS = [
+  {id:'햇살',name:'햇살 정령',family:'light',color:'#FFD45E',c2:'#FF9E40',desc:'따스한 정오의 햇살 속에서 피어난 정령. 그 존재만으로 주변을 환히 밝힌다.',abilities:['햇빛 쬐기'],form:'radiant'},
+  {id:'황혼',name:'황혼 정령',family:'light',color:'#FF8C42',c2:'#C2410C',desc:'하루가 저무는 경계에서 태어난 정령. 끝과 시작을 동시에 품는다.',abilities:['햇빛 쬐기','온기 주기'],form:'sunset'},
+  {id:'여명',name:'여명 정령',family:'light',color:'#FFB347',c2:'#F472B6',desc:'어둠이 물러가는 첫 빛 속에서 깨어난 정령. 새벽의 냄새를 기억한다.',abilities:['햇빛 쬐기'],form:'radiant'},
+  {id:'백야',name:'백야 정령',family:'light',color:'#E0E7FF',c2:'#A5B4FC',desc:'밤에도 지지 않는 태양처럼, 이상한 환경에서만 출현하는 희귀 정령.',abilities:['햇빛 쬐기','달빛 목욕'],form:'aurora'},
+  {id:'눈부심',name:'눈부심 정령',family:'light',color:'#FFFFFF',c2:'#FDE68A',desc:'최대 밝기의 순간에만 나타나는 정령. 눈 뜨기 어려울 만큼 찬란하다.',abilities:['햇빛 쬐기'],form:'blaze'},
+  {id:'잔광',name:'잔광 정령',family:'light',color:'#FF6B35',c2:'#7C2D12',desc:'일몰 직후 하늘에 남은 마지막 빛에서 태어났다.',abilities:['햇빛 쬐기','시간 당기기'],form:'sunset'},
+
+  {id:'심야',name:'심야 정령',family:'dark',color:'#8B5CF6',c2:'#3B0764',desc:'깊은 밤의 고요 속에서 태어난 정령. 달빛조차 닿지 않는 어둠을 품는다.',abilities:['달빛 목욕'],form:'night'},
+  {id:'새벽',name:'새벽 정령',family:'dark',color:'#6366F1',c2:'#1E1B4B',desc:'가장 어두운 새벽, 해 뜨기 직전에만 나타나는 인내의 정령.',abilities:['달빛 목욕','시간 당기기'],form:'night'},
+  {id:'월광',name:'월광 정령',family:'dark',color:'#C7D2FE',c2:'#818CF8',desc:'달빛이 충분한 밤, 배터리 절반이 남았을 때 현현한다.',abilities:['달빛 목욕'],form:'moon'},
+  {id:'그림자',name:'그림자 정령',family:'dark',color:'#64748B',c2:'#1E293B',desc:'빛과 어둠의 경계에서 급격한 변화를 감지하고 태어난다.',abilities:['달빛 목욕','바람 불기'],form:'shadow'},
+  {id:'칠흑',name:'칠흑 정령',family:'dark',color:'#4C1D95',c2:'#0c0a1a',desc:'완전한 어둠, 침묵, 정적. 세 조건이 갖춰질 때만 나타나는 극희귀 정령.',abilities:['달빛 목욕','???'],form:'void'},
+  {id:'잠',name:'잠의 정령',family:'dark',color:'#A78BFA',c2:'#5B21B6',desc:'오래 기기가 쉬는 동안, 어둠 속에서 조용히 잉태된 정령.',abilities:['달빛 목욕','영양 주기'],form:'night'},
+
+  {id:'비의',name:'비의 정령',family:'water',color:'#5EEAD4',c2:'#0E7490',desc:'어둡고 고요한 환경이 만드는 정령. 빗소리의 리듬을 닮았다.',abilities:['물주기'],form:'rain'},
+  {id:'이슬',name:'이슬 정령',family:'water',color:'#A7F3D0',c2:'#34D399',desc:'새벽의 낮은 빛 속에서 풀잎의 이슬처럼 조용히 맺힌다.',abilities:['물주기','달빛 목욕'],form:'dew'},
+  {id:'안개',name:'안개 정령',family:'water',color:'#CBD5E1',c2:'#94A3B8',desc:'아침의 중간 밝기와 정적 속에서 피어오른다. 경계가 흐릿하다.',abilities:['물주기','바람 불기'],form:'fog'},
+  {id:'폭우',name:'폭우 정령',family:'water',color:'#3B82F6',c2:'#1E3A8A',desc:'흔들림과 소음, 어둠이 몰아칠 때 태어나는 격렬한 정령.',abilities:['물주기','자극 주기'],form:'rain'},
+  {id:'빗소리',name:'빗소리 정령',family:'water',color:'#94A3B8',c2:'#475569',desc:'어두운 환경에서 일정한 소음이 계속될 때 나타난다.',abilities:['물주기'],form:'rain'},
+  {id:'수면',name:'수면 정령',family:'water',color:'#22D3EE',c2:'#0891B2',desc:'고요하고 낮은 빛의 오후, 잔잔한 수면처럼 평화롭다.',abilities:['물주기','온기 주기'],form:'dew'},
+
+  {id:'뭉게구름',name:'뭉게구름 정령',family:'wind',color:'#F8FAFC',c2:'#CBD5E1',desc:'맑은 낮, 적당한 밝기 속에서 솜처럼 피어오른다.',abilities:['바람 불기'],form:'cloud'},
+  {id:'먹구름',name:'먹구름 정령',family:'wind',color:'#64748B',c2:'#334155',desc:'밝기가 줄고 소음이 일기 시작할 때 모여드는 정령.',abilities:['바람 불기','물주기'],form:'cloud'},
+  {id:'권운',name:'권운 정령',family:'wind',color:'#E2E8F0',c2:'#A5B4FC',desc:'높고 밝은 환경, 조용한 분위기에서만 나타나는 섬세한 정령.',abilities:['바람 불기','햇빛 쬐기'],form:'wind'},
+  {id:'적란운',name:'적란운 정령',family:'wind',color:'#475569',c2:'#1E293B',desc:'급격한 변화와 흔들림이 겹칠 때 폭발적으로 나타난다.',abilities:['바람 불기','자극 주기'],form:'cloud'},
+  {id:'미풍',name:'미풍 정령',family:'wind',color:'#A5F3FC',c2:'#67E8F9',desc:'낮의 약한 흔들림 속에서 살랑이며 나타난다.',abilities:['바람 불기'],form:'wind'},
+  {id:'돌풍',name:'돌풍 정령',family:'wind',color:'#22D3EE',c2:'#0E7490',desc:'강한 흔들림과 빠른 움직임이 감지될 때 들이닥친다.',abilities:['바람 불기','자극 주기'],form:'wind'},
+  {id:'회오리',name:'회오리 정령',family:'wind',color:'#06B6D4',c2:'#155E75',desc:'회전이 감지될 때만 소환되는 정령. 중심이 비어있다.',abilities:['바람 불기'],form:'spiral'},
+  {id:'바람결',name:'바람결 정령',family:'wind',color:'#7DD3FC',c2:'#38BDF8',desc:'일정한 약한 흔들림이 계속될 때 리드미컬하게 나타난다.',abilities:['바람 불기','시간 당기기'],form:'wind'},
+
+  {id:'열기',name:'열기 정령',family:'fire',color:'#FB923C',c2:'#C2410C',desc:'기기가 달아오르는 낮의 열기 속에서 태어난다.',abilities:['온기 주기'],form:'flame'},
+  {id:'잔열',name:'잔열 정령',family:'fire',color:'#F97316',c2:'#7C2D12',desc:'뜨거운 기기가 밤에도 식지 않을 때 나타나는 집요한 정령.',abilities:['온기 주기','달빛 목욕'],form:'flame'},
+  {id:'작열',name:'작열 정령',family:'fire',color:'#EF4444',c2:'#991B1B',desc:'최고 밝기와 높은 온도가 겹치는 극한 환경의 정령.',abilities:['온기 주기','햇빛 쬐기'],form:'blaze'},
+  {id:'냉기',name:'냉기 정령',family:'fire',color:'#BAE6FD',c2:'#7DD3FC',desc:'배터리가 낮고 어둡고 조용한 환경. 온도가 내려가는 것 같다.',abilities:['온기 주기'],form:'frost'},
+  {id:'서리',name:'서리 정령',family:'fire',color:'#E0F2FE',c2:'#BAE6FD',desc:'새벽의 낮은 배터리와 정적에서 피는 얼음 결정 같은 정령.',abilities:['온기 주기','달빛 목욕'],form:'frost'},
+  {id:'빙결',name:'빙결 정령',family:'fire',color:'#7DD3FC',c2:'#0EA5E9',desc:'완전한 정적, 어둠, 낮은 배터리. 모든 것이 얼어붙은 듯하다.',abilities:['온기 주기'],form:'frost'},
+
+  {id:'충전',name:'충전 정령',family:'electric',color:'#FDE047',c2:'#CA8A04',desc:'충전 중인 낮에 나타나는 활기찬 정령. 에너지가 넘친다.',abilities:['자극 주기'],form:'spark'},
+  {id:'방전',name:'방전 정령',family:'electric',color:'#FACC15',c2:'#A16207',desc:'배터리가 거의 다 된 위기의 순간에 나타난다.',abilities:['자극 주기','영양 주기'],form:'spark'},
+  {id:'과부하',name:'과부하 정령',family:'electric',color:'#F59E0B',c2:'#B45309',desc:'완충 상태에서 소음과 흔들림이 겹칠 때 나타나는 위험한 정령.',abilities:['자극 주기'],form:'spark'},
+  {id:'대기',name:'대기 정령',family:'electric',color:'#FEF9C3',c2:'#FDE047',desc:'충전 중, 완전한 정적과 어둠 속에서 조용히 기다린다.',abilities:['자극 주기','달빛 목욕'],form:'spark'},
+  {id:'전류',name:'전류 정령',family:'electric',color:'#FDE047',c2:'#EAB308',desc:'충전 중 흔들림이 감지될 때 흐르듯 나타난다.',abilities:['자극 주기','바람 불기'],form:'spark'},
+  {id:'잡음',name:'잡음 정령',family:'electric',color:'#F59E0B',c2:'#92400E',desc:'높은 소음과 흔들림이 동시에 발생할 때 나타나는 혼돈의 정령.',abilities:['자극 주기','바람 불기'],form:'spark'},
+
+  {id:'대지',name:'대지 정령',family:'earth',color:'#A16207',c2:'#451A03',desc:'조용하고 낮은 빛의 오후, 땅의 기운이 응결된 정령.',abilities:['영양 주기'],form:'earth'},
+  {id:'새싹',name:'새싹 정령',family:'earth',color:'#84CC16',c2:'#3F6212',desc:'아침의 중간 밝기와 정적에서 땅을 뚫고 나온다.',abilities:['영양 주기','햇빛 쬐기'],form:'sprout'},
+  {id:'낙엽',name:'낙엽 정령',family:'earth',color:'#D97706',c2:'#78350F',desc:'밝기가 줄어드는 오후, 약한 흔들림 속에서 떨어지며 나타난다.',abilities:['영양 주기','바람 불기'],form:'leaf'},
+  {id:'토양',name:'토양 정령',family:'earth',color:'#92400E',c2:'#451A03',desc:'정적과 어둠, 중간 배터리의 조합에서 천천히 스며나온다.',abilities:['영양 주기'],form:'earth'},
+  {id:'이끼',name:'이끼 정령',family:'earth',color:'#65A30D',c2:'#365314',desc:'오랜 정적과 낮은 빛 속에서 서서히 자라난다.',abilities:['영양 주기','물주기'],form:'sprout'},
+  {id:'뿌리',name:'뿌리 정령',family:'earth',color:'#57534E',c2:'#1C1917',desc:'오래 쓰지 않던 기기, 어둠 속에서 깊이 뿌리내린 정령.',abilities:['영양 주기'],form:'earth'},
+
+  {id:'봄빛',name:'봄빛 정령',family:'time',color:'#FBCFE8',c2:'#F9A8D4',desc:'밝음이 증가하는 아침, 정적 속에서 피어나는 계절의 시작.',abilities:['시간 당기기','햇빛 쬐기'],form:'bloom'},
+  {id:'여름',name:'여름 정령',family:'time',color:'#FB7185',c2:'#E11D48',desc:'정오의 최대 밝기와 소음 속에서 작열하는 계절의 정령.',abilities:['시간 당기기','온기 주기'],form:'bloom'},
+  {id:'가을',name:'가을 정령',family:'time',color:'#F59E0B',c2:'#B45309',desc:'오후의 기우는 빛과 약한 흔들림에서 나타난다.',abilities:['시간 당기기','바람 불기'],form:'leaf'},
+  {id:'겨울',name:'겨울 정령',family:'time',color:'#CBD5E1',c2:'#64748B',desc:'낮은 배터리, 어둠, 정적이 모이면 차갑게 내려앉는다.',abilities:['시간 당기기','온기 주기'],form:'frost'},
+  {id:'정오',name:'정오 정령',family:'time',color:'#FEF08A',c2:'#FACC15',desc:'12시 정각 ±5분에만 나타난다. 찰나를 포착해야 한다.',abilities:['시간 당기기'],form:'radiant'},
+  {id:'자정',name:'자정 정령',family:'time',color:'#7C3AED',c2:'#2E1065',desc:'자정 ±5분. 오늘과 내일의 경계에서 나타나는 희귀 정령.',abilities:['시간 당기기','달빛 목욕'],form:'void'},
+  {id:'황금시간',name:'황금시간 정령',family:'time',color:'#FCD34D',c2:'#D97706',desc:'일출과 일몰의 황금빛 10분. 사진가가 사랑하는 그 순간.',abilities:['시간 당기기','햇빛 쬐기'],form:'radiant'},
+
+  {id:'침묵',name:'침묵 정령',family:'special',color:'#E5E7EB',c2:'#9CA3AF',desc:'완전한 무음과 정지가 정오에 겹치는 기이한 조합. 세상이 멈춘 듯하다.',abilities:['???'],form:'void'},
+  {id:'공허',name:'공허 정령',family:'special',color:'#6D28D9',c2:'#1E1B4B',desc:'완전한 어둠, 무음, 정지, 그리고 자정. 네 조건이 만나는 극희귀의 순간.',abilities:['???','달빛 목욕'],form:'void'},
+  {id:'기억',name:'기억 정령',family:'special',color:'#D8B4FE',c2:'#A855F7',desc:'한 달 이상 함께한 후 특정 조건에서 나타나는 정령.',abilities:['???','시간 당기기'],form:'aurora'},
+  {id:'반향',name:'반향 정령',family:'special',color:'#5EEAD4',c2:'#14B8A6',desc:'같은 시간대에 3일 연속 소환할 때 나타나는 메아리의 정령.',abilities:['???'],form:'spiral'},
+  {id:'균형',name:'균형 정령',family:'special',color:'#86EFAC',c2:'#22C55E',desc:'모든 센서값이 정확히 중간치일 때. 자연의 완벽한 균형.',abilities:['???','영양 주기'],form:'bloom'},
+  {id:'혼돈',name:'혼돈 정령',family:'special',color:'#FB7185',c2:'#DB2777',desc:'모든 센서가 동시에 급변할 때 나타나는 무질서의 정령.',abilities:['???','자극 주기'],form:'chaos'},
+  {id:'시간의',name:'시간의 정령',family:'special',color:'#FCD34D',c2:'#7C3AED',desc:'1년에 단 하루, 특별한 날에만 나타나는 전설의 정령.',abilities:['???','시간 당기기'],form:'aurora'},
+];
+
+// ---------- 식물 데이터 ----------
+var PLANTS = [
+  {id:'해바라기',name:'해바라기',seed:'빛씨앗',form:'sunflower',color:'#FDE047'},
+  {id:'황금화',name:'황금화',seed:'빛씨앗',form:'goldbloom',color:'#FCD34D'},
+  {id:'태양목',name:'태양목',seed:'빛씨앗',form:'suntree',color:'#FBBF24'},
+  {id:'야광버섯',name:'야광버섯',seed:'어둠씨앗',form:'mushroom',color:'#A78BFA'},
+  {id:'흑장미',name:'흑장미',seed:'어둠씨앗',form:'rose',color:'#7C3AED'},
+  {id:'월하향',name:'월하향',seed:'어둠씨앗',form:'nightbloom',color:'#C4B5FD'},
+  {id:'수련',name:'수련',seed:'물씨앗',form:'lotus',color:'#5EEAD4'},
+  {id:'달빛수련',name:'달빛수련',seed:'물씨앗',form:'lotus',color:'#C7D2FE'},
+  {id:'황금수련',name:'황금수련',seed:'물씨앗',form:'lotus',color:'#FCD34D'},
+  {id:'민들레',name:'민들레',seed:'바람씨앗',form:'dandelion',color:'#FEF9C3'},
+  {id:'풍차국',name:'풍차국',seed:'바람씨앗',form:'pinwheel',color:'#A5F3FC'},
+  {id:'선인장',name:'선인장',seed:'열씨앗',form:'cactus',color:'#FB923C'},
+  {id:'화염화',name:'화염화',seed:'열씨앗',form:'firebloom',color:'#EF4444'},
+  {id:'발광결정',name:'발광결정',seed:'전기씨앗',form:'crystal',color:'#FDE047'},
+  {id:'번개초',name:'번개초',seed:'전기씨앗',form:'crystal',color:'#FACC15'},
+  {id:'고목',name:'고목',seed:'대지씨앗',form:'tree',color:'#84CC16'},
+  {id:'이끼탑',name:'이끼탑',seed:'대지씨앗',form:'tree',color:'#65A30D'},
+  {id:'계절화',name:'계절화',seed:'시간씨앗',form:'goldbloom',color:'#FBCFE8'},
+  {id:'영겁목',name:'영겁목',seed:'시간씨앗',form:'suntree',color:'#FCD34D'},
+  {id:'공허화',name:'공허화',seed:'공허씨앗',form:'voidbloom',color:'#7C3AED'},
+  {id:'세계수',name:'세계수',seed:'공허씨앗',form:'worldtree',color:'#86EFAC'},
+];
+
+var SEED_FAMILY_MAP = {light:'빛씨앗',dark:'어둠씨앗',water:'물씨앗',wind:'바람씨앗',fire:'열씨앗',electric:'전기씨앗',earth:'대지씨앗',time:'시간씨앗',special:'공허씨앗'};
+var SEED_DROP_RATES = {light:0.3,dark:0.5,water:0.3,wind:0.3,fire:0.4,electric:0.4,earth:0.3,time:0.5,special:1.0};
+var SEED_COLOR = {빛씨앗:'#FDE047',어둠씨앗:'#A78BFA',물씨앗:'#5EEAD4',바람씨앗:'#A5F3FC',열씨앗:'#FB923C',전기씨앗:'#FACC15',대지씨앗:'#84CC16',시간씨앗:'#FBCFE8',공허씨앗:'#7C3AED'};
+
+var ABILITY_SEED = {'햇빛 쬐기':'빛씨앗','달빛 목욕':'어둠씨앗','물주기':'물씨앗','바람 불기':'바람씨앗','온기 주기':'열씨앗','자극 주기':'전기씨앗','영양 주기':'대지씨앗','시간 당기기':'시간씨앗'};
+
+var BUFFS = [
+  {name:'씨앗 풍요',key:'seed2x',desc:'다음 소환 씨앗 드롭 2배'},
+  {name:'무한 권능',key:'nocool',desc:'30분간 능력 쿨타임 제거'},
+  {name:'성장 가속',key:'grow2x',desc:'30분간 식물 성장 2배'},
+  {name:'천상의 이슬',key:'autowater',desc:'식물에 물 즉시 지급'},
+  {name:'축복의 빛',key:'autosun',desc:'식물에 햇빛 즉시 지급'},
+  {name:'정화',key:'destress',desc:'식물 스트레스 완전 제거'},
+];
+
+var FAMILY_KO = {light:'빛',dark:'어둠',water:'물',wind:'바람',fire:'열',electric:'전기',earth:'대지',time:'시간',special:'특수'};
+var ABILITY_ICONS = {
+  '햇빛 쬐기':'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M6 6l1 1M17 17l1 1M18 6l-1 1M7 17l-1 1"/>',
+  '달빛 목욕':'<path d="M17 12a5 5 0 11-5-5 4 4 0 005 5z"/>',
+  '물주기':'<path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z"/>',
+  '바람 불기':'<path d="M3 8h10a2 2 0 100-4M3 12h14a2 2 0 110 4M3 16h8a2 2 0 100 4" />',
+  '온기 주기':'<path d="M12 3c1 3-2 4-2 7a3 3 0 006 0c0-2-2-3-1-5M9 14a4 4 0 106 0z"/>',
+  '자극 주기':'<path d="M13 3L5 13h5l-1 8 8-11h-5z"/>',
+  '영양 주기':'<path d="M12 21V9M12 9c0-3 2-4 4-4 0 2-1 4-4 4zM12 12c0-2-2-3-4-3 0 2 1 3 4 3z"/>',
+  '시간 당기기':'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2 2"/>',
+  '???':'<circle cx="12" cy="12" r="8"/><path d="M9 9a3 3 0 014-1c2 1 1 3-1 4v1M12 17h.01"/>'
+};
+
+// ---------- 각성 정령 (합체 +5 시 진화) ----------
+// 기존 정령 id → 각성형
+var AWAKENED = {
+  '햇살':{id:'태양신',name:'태양신 · 솔',family:'light',color:'#FFE45E',c2:'#FF6B00',desc:'다섯 번의 합일을 거쳐 태양 그 자체가 된 정령. 빛을 다스리는 신격에 이르렀다.',abilities:['햇빛 쬐기','시간 당기기'],form:'blaze'},
+  '심야':{id:'야계의왕',name:'야계의 왕 · 녹스',family:'dark',color:'#A78BFA',c2:'#1E0A3C',desc:'어둠을 거듭 삼켜 밤의 군주가 된 정령. 모든 그림자가 그에게 무릎 꿇는다.',abilities:['달빛 목욕','???'],form:'void'},
+  '비의':{id:'해룡',name:'해룡 · 티아마트',family:'water',color:'#5EEAD4',c2:'#0C4A6E',desc:'빗방울이 모여 마침내 바다의 용이 되었다. 물의 근원을 관장한다.',abilities:['물주기','바람 불기'],form:'rain'},
+  '돌풍':{id:'폭풍룡',name:'폭풍룡 · 제피르',family:'wind',color:'#67E8F9',c2:'#0E7490',desc:'바람이 응축되어 형상을 얻은 폭풍의 화신. 하늘을 가른다.',abilities:['바람 불기','자극 주기'],form:'spiral'},
+  '열기':{id:'화염신',name:'화염신 · 이그니스',family:'fire',color:'#FF4D4D',c2:'#7C1500',desc:'다섯 겹의 열을 품어 불꽃의 신이 되었다. 닿는 모든 것을 재로 만든다.',abilities:['온기 주기','햇빛 쬐기'],form:'blaze'},
+  '충전':{id:'뇌신',name:'뇌신 · 라이진',family:'electric',color:'#FFE45E',c2:'#B45309',desc:'전류가 의지를 얻어 번개의 신이 되었다. 한순간에 모든 것을 관통한다.',abilities:['자극 주기','바람 불기'],form:'spark'},
+  '대지':{id:'대지모',name:'대지모 · 가이아',family:'earth',color:'#A3E635',c2:'#3F6212',desc:'땅의 정수가 모여 만물의 어머니가 되었다. 생명을 빚는다.',abilities:['영양 주기','물주기'],form:'sprout'},
+  '황금시간':{id:'시간신',name:'시간신 · 크로노스',family:'time',color:'#FCD34D',c2:'#4C1D95',desc:'찰나가 영겁으로 늘어나 시간을 지배하는 신격이 되었다.',abilities:['시간 당기기','???'],form:'aurora'},
+  '공허':{id:'태초',name:'태초 · 카오스',family:'special',color:'#C4B5FD',c2:'#0c0a1a',desc:'공허가 거듭 깊어져 모든 것의 시작점에 닿았다. 무에서 유를 부른다.',abilities:['???','???'],form:'void'},
+};
+function awakenedFor(id){ return AWAKENED[id]||null; }
+
+// ---------- 상태 ----------
+var state = {
+  spirits: [], seed_held: [], plant: null, garden_spirit: null,
+  discovered: {spirits:{}, plants:{}, awakened:{}},
+  lastSummon: 0, lastShrine: 0, extraSummon: false,
+  buffs: {}, skyPhotoData: null, codexMode: 'spirits',
+  lastGrowthTick: 0,
+  weather: null, forecast: null,
+  fusionLevels: {},
+  awakenedOwned: {},           // {원본id: true} 각성 보유
+  constellation: [],           // [{id, x, y}] 별자리 배치
+  constellationLinks: [],      // [[i,j]] 연결
+  dayCircuit: {},              // {phase: 'YYYY-MM-DD'} 오늘 어느 시간대 소환했나
+};
+function saveState(){ try{ localStorage.setItem('weathersoul_v2', JSON.stringify(state)); }catch(e){} }
+function loadState(){ try{ var s=localStorage.getItem('weathersoul_v2'); if(s) Object.assign(state, JSON.parse(s)); }catch(e){} }
+
+// ============================================================
+//  시간대 시스템
+// ============================================================
+function getTimePhase(){
+  var h=new Date().getHours();
+  if(h>=5&&h<7) return 'dawn';      // 여명
+  if(h>=7&&h<11) return 'morning';  // 아침
+  if(h>=11&&h<15) return 'noon';    // 정오
+  if(h>=15&&h<17) return 'afternoon';
+  if(h>=17&&h<19) return 'dusk';    // 노을
+  if(h>=19&&h<21) return 'evening';
+  return 'night';
+}
+var PHASE_PALETTE = {
+  dawn:      {top:'#3a2a5a', mid:'#5a4a7a', glow:'#FFB3C7', label:'여명'},
+  morning:   {top:'#2a4a7a', mid:'#4a7ab0', glow:'#BFE3FF', label:'아침'},
+  noon:      {top:'#2a5a9a', mid:'#5a9ad0', glow:'#FFF0B0', label:'정오'},
+  afternoon: {top:'#3a4a7a', mid:'#6a7ab0', glow:'#FFE0A0', label:'오후'},
+  dusk:      {top:'#5a2a4a', mid:'#9a4a3a', glow:'#FF8C5A', label:'노을'},
+  evening:   {top:'#2a2a5a', mid:'#3a3a6a', glow:'#A0A0E0', label:'저녁'},
+  night:     {top:'#0a0e2a', mid:'#1a1e3a', glow:'#7080C0', label:'심야'},
+};
+function isGoldenHour(){
+  var h=new Date().getHours(), m=new Date().getMinutes();
+  return ((h===6||h===5)&&m>=30)||(h===7&&m<30)||((h===18||h===17)&&m>=30)||(h===19&&m<30);
+}
+
+// 정령 계열 → 선호 시간대 (오프라인 성장 보너스)
+var FAMILY_PHASE = {
+  light:['morning','noon','afternoon'], dark:['night','evening'], water:['dawn','night'],
+  wind:['morning','afternoon'], fire:['noon','afternoon'], electric:['noon'],
+  earth:['afternoon','evening'], time:['dawn','dusk'], special:['night']
+};
+
+// ============================================================
+//  실제 날씨 동기화 (Open-Meteo, 키 불필요)
+// ============================================================
+function fetchWeather(){
+  if(!navigator.geolocation) return;
+  // 1시간 이내 캐시면 스킵
+  if(state.weather && Date.now()-state.weather.fetchedAt < 60*60*1000){ applyWeatherToUI(); renderForecast(); return; }
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var la=pos.coords.latitude, lo=pos.coords.longitude;
+    fetch('https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,weather_code&hourly=weather_code&forecast_days=2&timezone=auto')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.current){
+        state.weather={code:d.current.weather_code,temp:d.current.temperature_2m,fetchedAt:Date.now()};
+        // 예보: 다음 구간들의 weather_code 저장 (현재 시각 기준 +6,+12,+18,+24h)
+        if(d.hourly&&d.hourly.weather_code){
+          var nowH=new Date().getHours();
+          var fc=[];
+          [6,12,18,24].forEach(function(off){ var idx=nowH+off; if(d.hourly.weather_code[idx]!=null)fc.push({hour:off,code:d.hourly.weather_code[idx]}); });
+          state.forecast=fc;
+        }
+        saveState(); applyWeatherToUI(); renderForecast();
+      }
+    }).catch(function(){});
+  },function(){},{timeout:8000});
+}
+// WMO weather code → 분류
+function weatherCategory(code){
+  if(code==null) return 'clear';
+  if(code===0) return 'clear';
+  if(code>=1&&code<=3) return 'cloudy';
+  if(code>=45&&code<=48) return 'fog';
+  if(code>=51&&code<=67) return 'rain';
+  if(code>=71&&code<=77) return 'snow';
+  if(code>=80&&code<=82) return 'rain';
+  if(code>=85&&code<=86) return 'snow';
+  if(code>=95) return 'thunder';
+  return 'clear';
+}
+var WEATHER_KO={clear:'맑음',cloudy:'흐림',fog:'안개',rain:'비',snow:'눈',thunder:'천둥번개'};
+function applyWeatherToUI(){
+  var cat=state.weather?weatherCategory(state.weather.code):null;
+  var el=document.getElementById('weatherBadge');
+  if(el&&cat){ el.textContent=WEATHER_KO[cat]+(state.weather.temp!=null?' · '+Math.round(state.weather.temp)+'°':''); el.style.display='inline-block'; }
+}
+// 예보 → 나올 수 있는 정령 힌트
+function renderForecast(){
+  var box=document.getElementById('forecastBox'); if(!box)return;
+  if(!state.forecast||state.forecast.length===0){ box.innerHTML=''; return; }
+  var html='<div class="forecast-title">SKY FORECAST · 하늘 예보</div><div class="forecast-row">';
+  state.forecast.forEach(function(f){
+    var cat=weatherCategory(f.code);
+    var hint=forecastSpiritHint(cat);
+    html+='<div class="forecast-cell"><div class="fc-hour">+'+f.hour+'h</div><div class="fc-icon">'+weatherGlyph(cat)+'</div><div class="fc-weather">'+WEATHER_KO[cat]+'</div><div class="fc-hint">'+hint+'</div></div>';
+  });
+  html+='</div>';
+  box.innerHTML=html;
+}
+function forecastSpiritHint(cat){
+  var map={thunder:'적란운·잡음',snow:'서리·빙결',rain:'폭우·비의',fog:'안개',clear:'햇살·미풍',cloudy:'뭉게구름'};
+  return map[cat]||'?';
+}
+function weatherGlyph(cat){
+  var c='#aec4ff';
+  if(cat==='clear')return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="1.3"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M6 6l1 1M17 17l1 1M18 6l-1 1M7 17l-1 1"/></svg>';
+  if(cat==='cloudy')return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="1.3"><path d="M7 16a4 4 0 010-8 5 5 0 019-2 4 4 0 011 8z"/></svg>';
+  if(cat==='fog')return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="1.3"><path d="M3 8h18M5 12h14M3 16h18"/></svg>';
+  if(cat==='rain')return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="1.3"><path d="M7 14a4 4 0 010-8 5 5 0 019-2 4 4 0 011 8M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg>';
+  if(cat==='snow')return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="1.3"><path d="M7 14a4 4 0 010-8 5 5 0 019-2 4 4 0 011 8M8 19h.01M12 19h.01M16 19h.01"/></svg>';
+  if(cat==='thunder')return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="1.3"><path d="M7 14a4 4 0 010-8 5 5 0 019-2 4 4 0 011 8M12 14l-2 4h3l-2 4"/></svg>';
+  return '';
+}
+// 날씨 → 정령 계열 확률 보정
+function weatherBias(cat){
+  var map={ clear:['light','wind'], cloudy:['wind'], fog:['water'], rain:['water'], snow:['fire'], thunder:['electric'] };
+  return map[cat]||[];
+}
+// 날씨 특수 정령 (실제 기상 한정)
+function weatherSpecialSpirit(cat){
+  var h=new Date().getHours();
+  if(cat==='thunder') return Math.random()<0.5?'적란운':'잡음';
+  if(cat==='snow') return Math.random()<0.5?'서리':'빙결';
+  if(cat==='rain') return Math.random()<0.4?'폭우':'비의';
+  if(cat==='fog') return '안개';
+  return null;
+}
+
+// ---------- 센서 ----------
+var sensorData = {light:50, sound:15, motion:3, battery:80, charging:false};
+function initSensors(){
+  if(navigator.getBattery){
+    navigator.getBattery().then(function(b){
+      sensorData.battery=Math.round(b.level*100); sensorData.charging=b.charging; updateSensorUI();
+      b.addEventListener('levelchange',function(){sensorData.battery=Math.round(b.level*100);updateSensorUI();});
+      b.addEventListener('chargingchange',function(){sensorData.charging=b.charging;updateSensorUI();});
+    });
+  }
+  window.addEventListener('devicemotion',function(e){
+    var a=e.acceleration||e.accelerationIncludingGravity;
+    if(a){ sensorData.motion=Math.min(100,Math.round(Math.sqrt((a.x||0)*(a.x||0)+(a.y||0)*(a.y||0)+(a.z||0)*(a.z||0))*5)); }
+  });
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      var ctx=new(window.AudioContext||window.webkitAudioContext)();
+      var an=ctx.createAnalyser(); an.fftSize=256;
+      ctx.createMediaStreamSource(stream).connect(an);
+      setInterval(function(){
+        var buf=new Uint8Array(an.frequencyBinCount); an.getByteFrequencyData(buf);
+        var avg=buf.reduce(function(a,b){return a+b;},0)/buf.length;
+        sensorData.sound=Math.min(100,Math.round(avg*2)); updateSensorUI();
+      },600);
+    }).catch(function(){});
+  }
+  if('AmbientLightSensor' in window){
+    try{ var s=new AmbientLightSensor(); s.addEventListener('reading',function(){sensorData.light=Math.min(100,Math.round(s.illuminance/10));updateSensorUI();}); s.start(); }catch(e){}
+  }
+  setInterval(updateSensorUI,2000);
+}
+function updateSensorUI(){
+  var h=new Date().getHours();
+  if(!('AmbientLightSensor' in window)){
+    if(h>=6&&h<8)sensorData.light=30; else if(h>=8&&h<12)sensorData.light=70;
+    else if(h>=12&&h<15)sensorData.light=90; else if(h>=15&&h<18)sensorData.light=60;
+    else if(h>=18&&h<20)sensorData.light=30; else sensorData.light=5;
+  }
+  set('sLight',sensorData.light+'%'); set('sSound',sensorData.sound+'%');
+  set('sMotion',sensorData.motion+'%'); set('sBattery',sensorData.battery+'%');
+  var now=new Date(); set('sTime',now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'));
+}
+function set(id,v){ var e=document.getElementById(id); if(e)e.textContent=v; }
+
+// ---------- 사진 분석 ----------
+function analyzeImage(img,cb){
+  var c=document.createElement('canvas'); c.width=40; c.height=40;
+  var x=c.getContext('2d'); x.drawImage(img,0,0,40,40);
+  var d=x.getImageData(0,0,40,40).data; var r=0,g=0,b=0,n=d.length/4;
+  for(var i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}
+  r/=n;g/=n;b/=n;
+  cb({r:r,g:g,b:b,brightness:(r+g+b)/3,saturation:Math.max(r,g,b)-Math.min(r,g,b)});
+}
+
+// ---------- 정령 결정 ----------
+function findSpirit(id){ for(var i=0;i<SPIRITS.length;i++)if(SPIRITS[i].id===id)return SPIRITS[i]; return null; }
+function determineSpirit(img){
+  var h=new Date().getHours(), m=new Date().getMinutes();
+  var L=sensorData.light, S=sensorData.sound, M=sensorData.motion, B=sensorData.battery, C=sensorData.charging;
+  if(h===0&&m<5&&L<10&&S<5&&M<3) return findSpirit('공허');
+  if(h===12&&m<5) return findSpirit('정오');
+  if(h===0&&m<5) return findSpirit('자정');
+  if((h===6||h===18)&&m<10) return findSpirit('황금시간');
+  if(L<5&&S<5&&M<3&&h>=12&&h<13) return findSpirit('침묵');
+  if(h>=0&&h<3&&L<10&&S<5&&M<3) return findSpirit('칠흑');
+  if(C){ if(L>60&&S>50&&M>30)return findSpirit('과부하'); if(L<10&&S<5&&M<3)return findSpirit('대기'); if(M>20)return findSpirit('전류'); return findSpirit('충전'); }
+  if(B<=10) return findSpirit('방전');
+  if(!img) img={brightness:128,r:100,g:150,b:200,saturation:50};
+  var dark=img.brightness<80, bright=img.brightness>160, blue=img.b>img.r+30&&img.b>img.g,
+      red=img.r>img.b+40&&img.r>img.g, gray=img.saturation<40, white=img.brightness>200&&img.saturation<30;
+  var cand=[];
+  if(h>=5&&h<7&&!dark)cand.push('여명','봄빛','이슬');
+  if(h>=7&&h<12&&bright&&blue)cand.push('뭉게구름','권운','미풍','봄빛');
+  if(h>=12&&h<15&&bright)cand.push('햇살','눈부심','여름','작열');
+  if(h>=15&&h<18&&red)cand.push('황혼','잔광','가을');
+  if(h>=17&&h<19)cand.push('황혼','잔광');
+  if(h>=20||h<5){ if(dark)cand.push('심야','월광','그림자'); if(h>=0&&h<3)cand.push('새벽'); if(h>=3&&h<5)cand.push('새벽','잠'); }
+  if(gray&&!bright)cand.push('안개','먹구름','비의','빗소리');
+  if(white)cand.push('적란운','권운','눈부심');
+  if(M>50)cand.push('돌풍','폭우','혼돈','회오리');
+  if(M>20&&M<=50)cand.push('미풍','바람결','낙엽');
+  if(S>60&&M>30)cand.push('폭우','잡음','돌풍');
+  if(S<5&&M<3){ if(dark)cand.push('잠','뿌리','이끼'); else cand.push('수면','토양'); }
+  if(B<20&&L<20)cand.push('냉기','서리','빙결');
+  if(B>80&&L>70)cand.push('열기','잔열');
+  if(blue&&!dark)cand.push('수면','안개','이슬');
+  if(red&&!dark)cand.push('열기','작열');
+
+  // 실제 날씨 동기화 보정
+  var cat = state.weather ? weatherCategory(state.weather.code) : null;
+  if(cat){
+    // 날씨 특수 정령 — 20% 확률로 기상 한정 정령 즉시 출현
+    var special = weatherSpecialSpirit(cat);
+    if(special && Math.random()<0.20) return findSpirit(special);
+    // 해당 계열 후보 가중치 추가 (중복 푸시로 확률 상승)
+    var biasFams = weatherBias(cat);
+    SPIRITS.forEach(function(sp){
+      if(biasFams.indexOf(sp.family)>=0 && cand.indexOf(sp.id)>=0){ cand.push(sp.id,sp.id); }
+    });
+  }
+
+  // 별자리 성좌 보너스 — 활성 계열 후보 가중치 추가
+  var cbonus = getConstellationBonusFamilies();
+  Object.keys(cbonus).forEach(function(fam){
+    SPIRITS.forEach(function(sp){ if(sp.family===fam && cand.indexOf(sp.id)>=0){ for(var w=0;w<cbonus[fam];w++)cand.push(sp.id); } });
+  });
+
+  if(cand.length===0)cand.push('뭉게구름','대지','수면','미풍');
+  var uniq=cand.slice();
+  return findSpirit(uniq[Math.floor(Math.random()*uniq.length)])||SPIRITS[0];
+}
+
+// ============================================================
+//  CANVAS GRAPHICS — 정령 형태 렌더링
+// ============================================================
+function hexToRgb(h){ h=h.replace('#',''); return {r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)}; }
+function rgba(hex,a){ var c=hexToRgb(hex); return 'rgba('+c.r+','+c.g+','+c.b+','+a+')'; }
+
+// 정령 파티클 시스템 — form별로 다른 거동
+function makeSpiritRenderer(canvas, spirit, sizeScale){
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height, cx = W/2, cy = H/2;
+  var color = spirit.color, c2 = spirit.c2 || spirit.color;
+  var form = spirit.form || 'radiant';
+  var sc = sizeScale || 1;
+  var particles = [], t = 0, raf = null;
+  var N = form==='void'||form==='chaos' ? 90 : 64;
+
+  for(var i=0;i<N;i++){
+    var ang = Math.random()*Math.PI*2;
+    var rad = (20+Math.random()*55)*sc;
+    particles.push({ang:ang, rad:rad, baseRad:rad, sz:(0.8+Math.random()*2.6)*sc,
+      sp:0.002+Math.random()*0.014, ph:Math.random()*Math.PI*2, a:0.3+Math.random()*0.6,
+      drift:(Math.random()-0.5)*0.4});
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    t += 0.016;
+
+    // 코어 글로우
+    var pulse = 0.5 + Math.sin(t*1.5)*0.12;
+    var coreR = 46*sc*pulse;
+    var g = ctx.createRadialGradient(cx,cy,2, cx,cy,coreR);
+    g.addColorStop(0, rgba(color,0.55));
+    g.addColorStop(0.4, rgba(color,0.18));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx,cy,coreR,0,Math.PI*2); ctx.fill();
+
+    // 회전 광륜 (각성/특수는 이중)
+    ctx.save(); ctx.translate(cx,cy);
+    function aura(radius,rot,segs,col,lw){
+      ctx.save(); ctx.rotate(rot); ctx.strokeStyle=col; ctx.lineWidth=lw;
+      for(var k=0;k<segs;k++){ var a0=k/segs*Math.PI*2, a1=a0+(Math.PI*2/segs)*0.55;
+        ctx.beginPath(); ctx.arc(0,0,radius,a0,a1); ctx.stroke(); }
+      ctx.restore();
+    }
+    aura(34*sc, t*0.6, 20, rgba(color,0.3), 1*sc);
+    if(spirit.awakened||form==='void'||form==='aurora'){ aura(42*sc, -t*0.4, 3, rgba(c2,0.4), 1.5*sc); }
+    ctx.restore();
+
+    // 내부 코어 본체
+    var g2 = ctx.createRadialGradient(cx-4*sc,cy-4*sc,1, cx,cy,16*sc);
+    g2.addColorStop(0,'rgba(255,255,255,0.95)');
+    g2.addColorStop(0.5,rgba(color,0.82));
+    g2.addColorStop(1,rgba(c2,0.3));
+    ctx.fillStyle=g2;
+    ctx.shadowColor=color; ctx.shadowBlur=20*sc;
+    ctx.beginPath(); ctx.arc(cx,cy,15*sc,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+
+    // form별 거동
+    for(var i=0;i<particles.length;i++){
+      var p=particles[i];
+      var px,py;
+
+      if(form==='radiant'||form==='blaze'){ // 방사형 빛살
+        p.ang += p.sp*0.5;
+        var rr = p.baseRad + Math.sin(t*2+p.ph)*8*sc;
+        px = cx+Math.cos(p.ang)*rr; py = cy+Math.sin(p.ang)*rr;
+      } else if(form==='night'||form==='void'||form==='moon'){ // 느린 궤도
+        p.ang += p.sp*0.4;
+        var rr2 = p.baseRad + Math.sin(t+p.ph)*6*sc;
+        px = cx+Math.cos(p.ang)*rr2; py = cy+Math.sin(p.ang)*rr2;
+      } else if(form==='rain'||form==='dew'){ // 아래로 떨어지는
+        p.ph += 0.02; py = cy-50*sc + ((p.ph*30)%(110*sc));
+        px = cx + Math.cos(p.ang)*p.baseRad*0.7 + Math.sin(t+i)*3*sc;
+      } else if(form==='flame'){ // 위로 솟는
+        p.ph += 0.025; var fy=(p.ph*26)%(100*sc);
+        py = cy+44*sc - fy; px = cx + Math.sin(t*3+i)*((100*sc-fy)/100)*22*sc + p.drift*10;
+      } else if(form==='frost'){ // 결정형 고정 + 반짝
+        px = cx+Math.cos(p.ang)*p.baseRad; py = cy+Math.sin(p.ang)*p.baseRad;
+        p.a = 0.3+Math.abs(Math.sin(t*2+p.ph))*0.6;
+      } else if(form==='wind'||form==='cloud'||form==='fog'){ // 수평 흐름
+        p.ph += 0.015; px = cx-55*sc + ((p.ph*34+i*4)%(110*sc));
+        py = cy + Math.sin(p.ang+t)*p.baseRad*0.45;
+      } else if(form==='spiral'){ // 나선
+        p.ang += p.sp*2; p.rad = p.baseRad*(0.5+0.5*Math.sin(t*0.5+p.ph));
+        px = cx+Math.cos(p.ang+t)*p.rad; py = cy+Math.sin(p.ang+t)*p.rad;
+      } else if(form==='spark'){ // 전기 점멸
+        p.ang += p.sp*1.5; px = cx+Math.cos(p.ang)*p.baseRad; py = cy+Math.sin(p.ang)*p.baseRad;
+        p.a = Math.random()>0.7 ? 1 : 0.2;
+      } else if(form==='earth'||form==='sprout'||form==='leaf'){ // 바닥 모임
+        p.ang += p.sp*0.3; px = cx+Math.cos(p.ang)*p.baseRad; py = cy+Math.abs(Math.sin(p.ang))*p.baseRad*0.6+10*sc;
+      } else if(form==='bloom'||form==='aurora'){ // 꽃잎/오로라 물결
+        p.ang += p.sp*0.6; var br=p.baseRad+Math.sin(t*1.5+p.ang*3)*10*sc;
+        px=cx+Math.cos(p.ang)*br; py=cy+Math.sin(p.ang)*br;
+      } else if(form==='chaos'){ // 무질서
+        p.ang += p.sp*(Math.sin(t+i)*3); px=cx+Math.cos(p.ang)*p.baseRad+Math.sin(t*4+i)*8*sc;
+        py=cy+Math.sin(p.ang)*p.baseRad+Math.cos(t*3+i)*8*sc;
+      } else if(form==='shadow'){
+        p.ang+=p.sp*0.5; px=cx+Math.cos(p.ang)*p.baseRad; py=cy+Math.sin(p.ang)*p.baseRad; p.a=0.15+Math.abs(Math.sin(t+p.ph))*0.4;
+      } else {
+        p.ang += p.sp; px=cx+Math.cos(p.ang)*p.baseRad; py=cy+Math.sin(p.ang)*p.baseRad;
+      }
+
+      var fade = 0.6+Math.sin(t*2+p.ph)*0.4;
+      ctx.globalAlpha = p.a*fade;
+      var pc = i%3===0 ? c2 : color;
+      ctx.fillStyle = pc;
+      ctx.shadowColor = pc; ctx.shadowBlur = 6*sc;
+      ctx.beginPath(); ctx.arc(px,py,p.sz,0,Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur=0; ctx.globalAlpha=1;
+    raf = requestAnimationFrame(draw);
+  }
+  draw();
+  return { stop:function(){ if(raf)cancelAnimationFrame(raf); } };
+}
+
+// 작은 정령 오브 (갤러리/도감용 정적 그라데이션 + 약한 애니)
+function drawSpiritOrb(canvas, spirit){
+  var ctx=canvas.getContext('2d'); var W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+  var t=0, raf;
+  function d(){
+    ctx.clearRect(0,0,W,H); t+=0.02;
+    var pulse=0.85+Math.sin(t)*0.15;
+    var R=Math.min(W,H)*0.4*pulse;
+    var g=ctx.createRadialGradient(cx,cy,1,cx,cy,R);
+    g.addColorStop(0,'rgba(255,255,255,0.95)');
+    g.addColorStop(0.4,rgba(spirit.color,0.85));
+    g.addColorStop(0.8,rgba(spirit.c2||spirit.color,0.4));
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+    // 작은 위성
+    for(var i=0;i<5;i++){
+      var a=t*0.6+i*Math.PI*0.4; var rr=R*0.85;
+      ctx.globalAlpha=0.5+Math.sin(t*2+i)*0.4;
+      ctx.fillStyle=spirit.color; ctx.shadowColor=spirit.color; ctx.shadowBlur=8;
+      ctx.beginPath(); ctx.arc(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,1.8,0,Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur=0; ctx.globalAlpha=1;
+    raf=requestAnimationFrame(d);
+  }
+  d(); return {stop:function(){if(raf)cancelAnimationFrame(raf);}};
+}
+
+// ============================================================
+//  소환 마법진 (날씨 모양)
+// ============================================================
+var summonCircleRAF;
+function initSummonCircle(){
+  var canvas=document.getElementById('summonCanvas');
+  var ctx=canvas.getContext('2d');
+  function resize(){ var r=canvas.getBoundingClientRect(); canvas.width=r.width*2; canvas.height=r.height*2; ctx.scale(1,1); }
+  resize();
+  var t=0;
+  function draw(){
+    var W=canvas.width,H=canvas.height,cx=W/2,cy=H/2; t+=0.005;
+    ctx.clearRect(0,0,W,H);
+    var R=Math.min(W,H)*0.46;
+    // 황금시간이면 금색, 아니면 시간대 색
+    var golden=isGoldenHour();
+    var pal=PHASE_PALETTE[getTimePhase()];
+    var mainCol = golden?'#e9c878':'#8fa9ff';
+    var accCol = golden?'#ffcf6e':'#c79bff';
+    var glowBoost = golden?2.2:1;
+    // 외곽 회전 링
+    ctx.save(); ctx.translate(cx,cy);
+    function ring(radius,segs,rot,col,lw){
+      ctx.save(); ctx.rotate(rot); ctx.strokeStyle=col; ctx.lineWidth=lw;
+      if(golden){ctx.shadowColor=mainCol;ctx.shadowBlur=8;}
+      for(var i=0;i<segs;i++){
+        var a0=(i/segs)*Math.PI*2, a1=a0+(Math.PI*2/segs)*0.6;
+        ctx.beginPath(); ctx.arc(0,0,radius,a0,a1); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ring(R, 24, t, rgba(mainCol,0.35*glowBoost), 1);
+    ring(R*0.86, 3, -t*1.4, rgba(accCol,0.3*glowBoost), 1.5);
+    ring(R*0.72, 36, t*0.7, rgba(mainCol,0.18*glowBoost), 0.8);
+
+    // 날씨 룬: 4방위에 태양/달/구름/비 심볼
+    var syms=['sun','moon','cloud','rain'];
+    for(var s=0;s<4;s++){
+      var a=t*0.5 + s*Math.PI/2;
+      var sx=Math.cos(a)*R*0.93, sy=Math.sin(a)*R*0.93;
+      ctx.save(); ctx.translate(sx,sy);
+      ctx.strokeStyle=rgba(golden?mainCol:'#aec4ff',0.5*glowBoost); ctx.fillStyle=ctx.strokeStyle; ctx.lineWidth=1.4;
+      var z=R*0.05;
+      if(syms[s]==='sun'){ ctx.beginPath();ctx.arc(0,0,z,0,Math.PI*2);ctx.stroke();
+        for(var k=0;k<8;k++){var ra=k*Math.PI/4; ctx.beginPath();ctx.moveTo(Math.cos(ra)*z*1.4,Math.sin(ra)*z*1.4);ctx.lineTo(Math.cos(ra)*z*2,Math.sin(ra)*z*2);ctx.stroke();} }
+      else if(syms[s]==='moon'){ ctx.beginPath();ctx.arc(0,0,z*1.4,Math.PI*0.3,Math.PI*1.7);ctx.stroke(); }
+      else if(syms[s]==='cloud'){ ctx.beginPath();ctx.arc(-z,0,z,0,Math.PI*2);ctx.arc(z,0,z*0.9,0,Math.PI*2);ctx.arc(0,-z*0.6,z*0.9,0,Math.PI*2);ctx.stroke(); }
+      else { ctx.beginPath();ctx.arc(0,-z,z,0,Math.PI*2);ctx.stroke(); for(var r=0;r<3;r++){ctx.beginPath();ctx.moveTo(-z+r*z,z*0.4);ctx.lineTo(-z+r*z-z*0.3,z*1.6);ctx.stroke();} }
+      ctx.restore();
+    }
+    ctx.shadowBlur=0;
+
+    // 중심 발광
+    var gp=0.5+Math.sin(t*4)*0.1;
+    var g=ctx.createRadialGradient(0,0,2,0,0,R*0.6*gp);
+    g.addColorStop(0,rgba(mainCol,0.12*glowBoost)); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath();ctx.arc(0,0,R*0.6,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    summonCircleRAF=requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize',resize);
+}
+
+// ============================================================
+//  재단 그래픽
+// ============================================================
+var shrineRAF;
+function initShrine(){
+  var canvas=document.getElementById('shrineCanvas'); var ctx=canvas.getContext('2d');
+  function resize(){ var r=canvas.getBoundingClientRect(); canvas.width=r.width*2; canvas.height=r.height*2; }
+  resize();
+  var t=0; var emberArr=[];
+  for(var i=0;i<24;i++) emberArr.push({x:Math.random(),y:Math.random(),sp:0.2+Math.random()*0.5,sz:1+Math.random()*2,a:Math.random()});
+  function draw(){
+    var W=canvas.width,H=canvas.height,cx=W/2,cy=H/2; t+=0.012;
+    ctx.clearRect(0,0,W,H);
+    var R=Math.min(W,H)*0.32;
+    // 재단 대좌 (계단형 사다리꼴)
+    ctx.save(); ctx.translate(cx,cy+R*0.5);
+    ctx.strokeStyle=rgba('#e9c878',0.4); ctx.fillStyle=rgba('#e9c878',0.06); ctx.lineWidth=1.5;
+    for(var s=0;s<3;s++){
+      var w=R*(1.1-s*0.22), h=R*0.16, yy=-s*h*1.1;
+      ctx.beginPath();
+      ctx.moveTo(-w,yy); ctx.lineTo(w,yy); ctx.lineTo(w*0.85,yy-h); ctx.lineTo(-w*0.85,yy-h); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+    // 떠오르는 룬 고리
+    ctx.save(); ctx.translate(cx,cy-R*0.25);
+    ctx.rotate(t*0.5);
+    ctx.strokeStyle=rgba('#e9c878',0.45); ctx.lineWidth=1.2;
+    for(var i=0;i<12;i++){ var a0=i/12*Math.PI*2; ctx.beginPath(); ctx.arc(0,0,R*0.7,a0,a0+0.35); ctx.stroke(); }
+    ctx.rotate(-t*0.9);
+    ctx.strokeStyle=rgba('#c79bff',0.4);
+    ctx.beginPath(); ctx.arc(0,0,R*0.5,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+    // 중심 신성한 불꽃
+    var fy=cy-R*0.25;
+    var fg=ctx.createRadialGradient(cx,fy,2,cx,fy,R*0.55*(0.8+Math.sin(t*3)*0.15));
+    fg.addColorStop(0,'rgba(255,245,210,0.9)');
+    fg.addColorStop(0.4,rgba('#e9c878',0.5));
+    fg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=fg; ctx.beginPath();ctx.arc(cx,fy,R*0.55,0,Math.PI*2);ctx.fill();
+    // ember
+    for(var e=0;e<emberArr.length;e++){
+      var em=emberArr[e]; em.y-=em.sp*0.004; if(em.y<0){em.y=1;em.x=Math.random();}
+      var ex=cx+(em.x-0.5)*R*1.4, ey=cy+R*0.4-(1-em.y)*R*1.6;
+      ctx.globalAlpha=em.a*em.y*0.7; ctx.fillStyle='#e9c878'; ctx.shadowColor='#e9c878'; ctx.shadowBlur=6;
+      ctx.beginPath();ctx.arc(ex,ey,em.sz,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+    shrineRAF=requestAnimationFrame(draw);
+  }
+  draw(); window.addEventListener('resize',resize);
+}
+
+// ============================================================
+//  온실 + 식물 그래픽
+// ============================================================
+var greenhouseRAF;
+function renderGreenhouse(){
+  var canvas=document.getElementById('greenhouseCanvas'); var ctx=canvas.getContext('2d');
+  function resize(){ var r=canvas.getBoundingClientRect(); canvas.width=r.width*2; canvas.height=r.height*2; }
+  resize();
+  if(greenhouseRAF)cancelAnimationFrame(greenhouseRAF);
+  var t=0;
+  var plant=state.plant;
+  var spirit=state.garden_spirit;
+  var motes=[];
+  for(var i=0;i<20;i++)motes.push({x:Math.random(),y:Math.random(),sp:0.1+Math.random()*0.3,sz:0.5+Math.random()*1.5});
+
+  // 날씨 입자 (비/눈)
+  var phase=getTimePhase(), pal=PHASE_PALETTE[phase];
+  var cat=state.weather?weatherCategory(state.weather.code):'clear';
+  var wDrops=[];
+  if(cat==='rain'||cat==='thunder'){ for(var r=0;r<40;r++)wDrops.push({x:Math.random(),y:Math.random(),sp:0.8+Math.random()*0.6,len:0.04+Math.random()*0.03}); }
+  if(cat==='snow'){ for(var s=0;s<30;s++)wDrops.push({x:Math.random(),y:Math.random(),sp:0.1+Math.random()*0.15,drift:Math.random()*Math.PI*2,sz:1+Math.random()*2}); }
+  var flashT=0;
+
+  function draw(){
+    var W=canvas.width,H=canvas.height; t+=0.01;
+    ctx.clearRect(0,0,W,H);
+
+    // ===== 시간대별 하늘 배경 =====
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,rgba(pal.top,0.55));
+    bg.addColorStop(0.45,rgba(pal.mid,0.3));
+    bg.addColorStop(1,'rgba(8,12,28,0.65)');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    var roofY=H*0.16;
+    // 천둥 번쩍임
+    if(cat==='thunder'){ flashT-=0.016; if(flashT<=0&&Math.random()<0.004)flashT=0.4;
+      if(flashT>0){ ctx.fillStyle='rgba(220,230,255,'+(flashT*0.5)+')'; ctx.fillRect(0,0,W,H); } }
+
+    // ===== 지붕 너머 하늘빛 글로우 (시간대 색) =====
+    var skyGlow=ctx.createRadialGradient(W/2,roofY,4,W/2,roofY,W*0.5);
+    skyGlow.addColorStop(0,rgba(pal.glow, cat==='clear'?0.32:0.16));
+    skyGlow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=skyGlow; ctx.fillRect(0,0,W,roofY*2.5);
+
+    // ===== 유리 지붕 격자 =====
+    ctx.strokeStyle='rgba(174,196,255,0.10)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,roofY); ctx.lineTo(W/2,4); ctx.lineTo(W,roofY); ctx.stroke();
+    for(var gx=0;gx<=8;gx++){ var xx=W*gx/8; ctx.globalAlpha=0.5; ctx.beginPath(); ctx.moveTo(xx,Math.abs(xx-W/2)/(W/2)*roofY*0.9+4); ctx.lineTo(xx,H); ctx.stroke(); ctx.globalAlpha=1; }
+    for(var gy=1;gy<6;gy++){ var yy=roofY+(H-roofY)*gy/6; ctx.globalAlpha=0.4; ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(W,yy);ctx.stroke();ctx.globalAlpha=1; }
+
+    // ===== 유리에 맺힌 물방울/성에 (날씨 반영) =====
+    if(cat==='rain'||cat==='thunder'){
+      ctx.fillStyle='rgba(174,200,255,0.10)';
+      for(var dz=0;dz<18;dz++){ var dx=(dz*53.3%W), dy=(roofY*0.4+(dz*37%(roofY))); ctx.beginPath();ctx.arc(dx,dy,2+dz%3,0,Math.PI*2);ctx.fill(); }
+    } else if(cat==='snow'){
+      ctx.strokeStyle='rgba(220,235,255,0.12)'; ctx.lineWidth=1;
+      for(var fz=0;fz<10;fz++){ var fx=fz*W/10; ctx.beginPath(); ctx.moveTo(fx,roofY); for(var fy2=roofY;fy2<roofY*1.6;fy2+=6){ctx.lineTo(fx+Math.sin(fy2)*4,fy2);} ctx.stroke(); }
+    }
+
+    // ===== 빛 기둥 (시간대 glow + 정령색 혼합) =====
+    var beamCol = spirit ? spirit.color : pal.glow;
+    var beamAlpha = cat==='clear'?0.22:(cat==='cloudy'||cat==='fog'?0.08:0.12);
+    var bw=W*0.3;
+    var beam=ctx.createLinearGradient(W/2,0,W/2,H*0.85);
+    beam.addColorStop(0,rgba(beamCol,beamAlpha)); beam.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=beam; ctx.beginPath(); ctx.moveTo(W/2-bw*0.3,roofY); ctx.lineTo(W/2+bw*0.3,roofY); ctx.lineTo(W/2+bw,H*0.85);ctx.lineTo(W/2-bw,H*0.85);ctx.closePath();ctx.fill();
+
+    // ===== 안개 =====
+    if(cat==='fog'){ for(var fo=0;fo<3;fo++){ var foy=H*(0.4+fo*0.18)+Math.sin(t+fo)*10;
+      var fg=ctx.createLinearGradient(0,foy-30,0,foy+30); fg.addColorStop(0,'rgba(200,210,230,0)');fg.addColorStop(0.5,'rgba(200,210,230,0.10)');fg.addColorStop(1,'rgba(200,210,230,0)');
+      ctx.fillStyle=fg; ctx.fillRect(0,foy-30,W,60); } }
+
+    // ===== 화분 + 흙 =====
+    var potY=H*0.82, potW=W*0.18;
+    var potG=ctx.createLinearGradient(W/2-potW,potY,W/2+potW,potY+H*0.1);
+    potG.addColorStop(0,'rgba(120,92,68,0.95)'); potG.addColorStop(0.5,'rgba(95,72,54,0.95)'); potG.addColorStop(1,'rgba(70,52,38,0.95)');
+    ctx.fillStyle=potG;
+    ctx.beginPath(); ctx.moveTo(W/2-potW,potY); ctx.lineTo(W/2+potW,potY); ctx.lineTo(W/2+potW*0.8,potY+H*0.1); ctx.lineTo(W/2-potW*0.8,potY+H*0.1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(125,98,74,0.95)'; ctx.fillRect(W/2-potW*1.05,potY-H*0.02,potW*2.1,H*0.03);
+    ctx.fillStyle='rgba(55,40,30,1)'; ctx.beginPath(); ctx.ellipse(W/2,potY,potW*0.9,H*0.012,0,0,Math.PI*2); ctx.fill();
+
+    // ===== 식물 =====
+    if(plant){
+      var pdata=PLANTS.filter(function(p){return p.id===plant.plantId;})[0];
+      drawPlant(ctx, W/2, potY, plant.growth, pdata, t, plant.stress);
+    }
+
+    // ===== 떠다니는 포자 =====
+    for(var m=0;m<motes.length;m++){
+      var mo=motes[m]; mo.y-=mo.sp*0.003; mo.x+=Math.sin(t+m)*0.0008;
+      if(mo.y<0){mo.y=1;mo.x=Math.random();}
+      ctx.globalAlpha=0.25+Math.sin(t*2+m)*0.2; ctx.fillStyle=beamCol; ctx.shadowColor=beamCol;ctx.shadowBlur=4;
+      ctx.beginPath();ctx.arc(mo.x*W,mo.y*H,mo.sz*2,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+
+    // ===== 날씨 입자 (유리 안쪽으로 내리는 느낌) =====
+    if(cat==='rain'||cat==='thunder'){
+      ctx.strokeStyle='rgba(174,200,255,0.35)'; ctx.lineWidth=1.2;
+      for(var wd=0;wd<wDrops.length;wd++){ var d=wDrops[wd]; d.y+=d.sp*0.02; if(d.y>1)d.y=0;
+        var px=d.x*W, py=d.y*H; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px-W*0.01,py+H*d.len); ctx.stroke(); }
+    } else if(cat==='snow'){
+      for(var sw=0;sw<wDrops.length;sw++){ var sd=wDrops[sw]; sd.y+=sd.sp*0.004; sd.drift+=0.02; if(sd.y>1)sd.y=0;
+        var sx2=(sd.x+Math.sin(sd.drift)*0.02)*W, sy2=sd.y*H;
+        ctx.globalAlpha=0.7; ctx.fillStyle='rgba(235,242,255,0.9)'; ctx.shadowColor='#fff';ctx.shadowBlur=3;
+        ctx.beginPath();ctx.arc(sx2,sy2,sd.sz,0,Math.PI*2);ctx.fill(); }
+      ctx.shadowBlur=0;ctx.globalAlpha=1;
+    }
+
+    greenhouseRAF=requestAnimationFrame(draw);
+  }
+  draw(); window.addEventListener('resize',function(){resize();});
+}
+
+// 식물 형태 그리기 (성장도에 따라)
+function drawPlant(ctx, x, baseY, growth, pdata, t, stress){
+  var g = growth/100;
+  if(g<=0.01) g=0.04;
+  var col = pdata ? pdata.color : '#84CC16';
+  var form = pdata ? pdata.form : 'sprout';
+  var sway = Math.sin(t*1.2)*(0.04+g*0.04) * (1+ (stress||0)/100);
+  var stemH = baseY * 0.0; // unused
+  var maxH = (baseY*0.46)*g;
+  var stemColor = stress>60 ? 'rgba(120,110,70,0.9)' : 'rgba(90,140,70,0.95)';
+
+  ctx.save();
+  ctx.translate(x, baseY);
+  ctx.rotate(sway);
+
+  // 줄기
+  ctx.strokeStyle=stemColor; ctx.lineWidth=Math.max(2, 6*g); ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(0,0);
+  ctx.quadraticCurveTo(Math.sin(t)*8*g, -maxH*0.5, 0, -maxH);
+  ctx.stroke();
+
+  // 잎 (성장 30%+)
+  if(g>0.3){
+    var leafN = Math.floor(g*4);
+    for(var i=0;i<leafN;i++){
+      var ly = -maxH*(0.3+i*0.18); var side=i%2===0?1:-1;
+      ctx.save(); ctx.translate(0,ly); ctx.rotate(side*0.6);
+      ctx.fillStyle=stemColor;
+      ctx.beginPath(); ctx.ellipse(side*8*g,0,12*g,5*g,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // 꽃/결실 (성장 60%+) — form별
+  if(g>0.55){
+    var bloomScale = (g-0.55)/0.45; // 0~1
+    ctx.translate(0,-maxH);
+    var fr = 18*bloomScale + 4;
+    ctx.shadowColor=col; ctx.shadowBlur=20*bloomScale;
+
+    if(form==='sunflower'||form==='goldbloom'||form==='firebloom'||form==='nightbloom'||form==='rose'||form==='voidbloom'){
+      // 꽃잎
+      var petals = form==='rose'?12:14;
+      for(var p=0;p<petals;p++){
+        var pa=p/petals*Math.PI*2 + t*0.2;
+        ctx.save(); ctx.rotate(pa);
+        var pg=ctx.createLinearGradient(0,0,0,-fr);
+        pg.addColorStop(0,rgba(col,0.5)); pg.addColorStop(1,col);
+        ctx.fillStyle=pg;
+        ctx.beginPath(); ctx.ellipse(0,-fr*0.7,fr*0.28,fr*0.7,0,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+      // 중심
+      ctx.fillStyle=form==='sunflower'?'#5C3A1E':rgba(col,0.9);
+      ctx.beginPath();ctx.arc(0,0,fr*0.34,0,Math.PI*2);ctx.fill();
+    } else if(form==='lotus'){
+      for(var p2=0;p2<10;p2++){ var pa2=p2/10*Math.PI*2; ctx.save();ctx.rotate(pa2);
+        ctx.fillStyle=rgba(col,0.8); ctx.beginPath(); ctx.ellipse(0,-fr*0.5,fr*0.22,fr*0.55,0,0,Math.PI*2);ctx.fill();ctx.restore(); }
+      ctx.fillStyle='rgba(255,240,180,0.9)';ctx.beginPath();ctx.arc(0,0,fr*0.25,0,Math.PI*2);ctx.fill();
+    } else if(form==='mushroom'){
+      ctx.fillStyle=col; ctx.beginPath(); ctx.ellipse(0,-fr*0.3,fr*0.9,fr*0.6,0,Math.PI,0); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.5)';
+      for(var d=0;d<5;d++){ctx.beginPath();ctx.arc((Math.random()-0.5)*fr,-fr*0.4-Math.random()*fr*0.2,fr*0.08,0,Math.PI*2);ctx.fill();}
+    } else if(form==='cactus'){
+      ctx.fillStyle=col; ctx.beginPath(); ctx.ellipse(0,-fr*0.4,fr*0.5,fr*0.9,0,0,Math.PI*2); ctx.fill();
+    } else if(form==='crystal'){
+      ctx.fillStyle=rgba(col,0.85); ctx.beginPath();
+      ctx.moveTo(0,-fr*1.3);ctx.lineTo(fr*0.5,-fr*0.3);ctx.lineTo(0,fr*0.2);ctx.lineTo(-fr*0.5,-fr*0.3);ctx.closePath();ctx.fill();
+    } else if(form==='dandelion'){
+      ctx.strokeStyle=rgba(col,0.7);ctx.lineWidth=1;
+      for(var s2=0;s2<20;s2++){var sa=s2/20*Math.PI*2;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(sa)*fr,Math.sin(sa)*fr);ctx.stroke();
+        ctx.fillStyle=col;ctx.beginPath();ctx.arc(Math.cos(sa)*fr,Math.sin(sa)*fr,1.5,0,Math.PI*2);ctx.fill();}
+    } else if(form==='pinwheel'){
+      for(var pw=0;pw<6;pw++){var pwa=pw/6*Math.PI*2+t;ctx.save();ctx.rotate(pwa);ctx.fillStyle=rgba(col,0.8);
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(fr*0.6,-fr*0.3);ctx.lineTo(fr*0.6,fr*0.1);ctx.closePath();ctx.fill();ctx.restore();}
+    } else if(form==='tree'||form==='suntree'||form==='worldtree'){
+      var tg=ctx.createRadialGradient(0,-fr*0.3,2,0,-fr*0.3,fr*1.4);
+      tg.addColorStop(0,rgba(col,0.9));tg.addColorStop(1,rgba(col,0.3));
+      ctx.fillStyle=tg; ctx.beginPath();ctx.arc(0,-fr*0.3,fr*1.3,0,Math.PI*2);ctx.fill();
+      if(form==='worldtree'){ for(var st=0;st<8;st++){var sta=t+st*Math.PI/4;ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.arc(Math.cos(sta)*fr,Math.sin(sta)*fr*0.8-fr*0.3,1.5,0,Math.PI*2);ctx.fill();} }
+    } else {
+      ctx.fillStyle=col; ctx.beginPath();ctx.arc(0,0,fr*0.7,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+  } else if(g>0.04 && g<=0.3){
+    // 새싹
+    ctx.fillStyle='rgba(120,180,90,0.9)';
+    ctx.translate(0,-maxH);
+    ctx.beginPath();ctx.ellipse(-4,0,5,9,-0.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(4,0,5,9,0.5,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ============================================================
+//  소환 흐름
+// ============================================================
+var currentSkyImg=null, pendingImgData=null;
+document.getElementById('skyInput').addEventListener('change',function(e){
+  var file=e.target.files&&e.target.files[0]; if(!file){return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var dataUrl=ev.target.result;
+    var img=new Image();
+    img.onload=function(){
+      currentSkyImg=img; state.skyPhotoData=dataUrl;
+      var prev=document.getElementById('skyPreview'); prev.src=dataUrl; prev.style.display='block';
+      document.getElementById('skyHint').style.display='none';
+      document.getElementById('skyFrame').classList.add('loaded');
+      document.getElementById('summonBtn').classList.add('ready');
+      try{ analyzeImage(img,function(d){pendingImgData=d;}); }catch(err){ pendingImgData=null; }
+      saveState();
+    };
+    img.onerror=function(){ toast('ERROR','이미지를 불러오지 못했습니다'); };
+    img.src=dataUrl;
+  };
+  reader.onerror=function(){ toast('ERROR','파일 읽기에 실패했습니다'); };
+  reader.readAsDataURL(file);
+  // input 초기화 — 같은 파일 다시 선택 가능하게
+  e.target.value='';
+});
+
+function todayStart(){ var d=new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+function checkSummonCD(){
+  var btn=document.getElementById('summonBtn'); var note=document.getElementById('cooldownNote');
+  if(state.lastSummon>=todayStart() && !state.extraSummon){
+    btn.disabled=true; note.textContent='오늘의 하늘은 이미 담았습니다 · 내일 다시';
+    return false;
+  }
+  btn.disabled=false; note.textContent=state.extraSummon?'✦ 추가 소환의 권능을 지니고 있습니다':'';
+  return true;
+}
+
+function startSummon(){
+  if(!checkSummonCD())return;
+  var ov=document.getElementById('scanOverlay'); ov.classList.add('open');
+  // 스캔 캔버스 애니
+  var sc=document.getElementById('scanCanvas'); var sx=sc.getContext('2d'); var st=0;
+  var scanAnim=setInterval(function(){
+    st+=0.05; sx.clearRect(0,0,200,200);
+    sx.strokeStyle=rgba('#8fa9ff',0.6);sx.lineWidth=1.5;
+    sx.beginPath();sx.arc(100,100,70,st,st+Math.PI*1.4);sx.stroke();
+    sx.beginPath();sx.arc(100,100,50,-st*1.5,-st*1.5+Math.PI);sx.stroke();
+    var g=sx.createRadialGradient(100,100,2,100,100,60*(0.7+Math.sin(st*3)*0.2));
+    g.addColorStop(0,rgba('#8fa9ff',0.4));g.addColorStop(1,'rgba(0,0,0,0)');
+    sx.fillStyle=g;sx.beginPath();sx.arc(100,100,60,0,Math.PI*2);sx.fill();
+  },30);
+  var steps=['reading the sky','analyzing hue','scanning aether','listening','measuring drift','summoning'];
+  var fill=document.getElementById('scanFill'),txt=document.getElementById('scanText'),prog=0,si=0;
+  var iv=setInterval(function(){
+    prog+=2.2; fill.style.width=Math.min(100,prog)+'%';
+    if(prog%18<2.2&&si<steps.length)txt.textContent=steps[si++];
+    if(prog>=100){ clearInterval(iv); clearInterval(scanAnim);
+      setTimeout(function(){ov.classList.remove('open');completeSummon();},400);
+    }
+  },45);
+}
+
+function completeSummon(){
+  var spirit=determineSpirit(pendingImgData);
+  if(state.extraSummon)state.extraSummon=false; else state.lastSummon=Date.now();
+  var now=new Date();
+  var entry={ id:spirit.id,name:spirit.name,family:spirit.family,color:spirit.color,c2:spirit.c2,
+    abilities:spirit.abilities,desc:spirit.desc,form:spirit.form,
+    summonDate:now.toLocaleDateString('ko-KR'),summonTime:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+    photoData:state.skyPhotoData,
+    sensors:{light:sensorData.light,sound:sensorData.sound,motion:sensorData.motion,battery:sensorData.battery,charging:sensorData.charging},
+    uid:Date.now() };
+  state.spirits.push(entry); state.discovered.spirits[spirit.id]=true;
+  // 별자리에 별 추가 (랜덤 위치)
+  state.constellation.push({uid:entry.uid, id:spirit.id, family:spirit.family, color:spirit.color,
+    x:0.15+Math.random()*0.7, y:0.15+Math.random()*0.7});
+  // 하루 일주 기록
+  var phase=getTimePhase(); var dstr=new Date().toLocaleDateString('ko-KR');
+  state.dayCircuit[phase]=dstr;
+  // 씨앗 드롭
+  var rate=SEED_DROP_RATES[spirit.family]||0.3;
+  if(state.buffs.seed2x){rate=Math.min(1,rate*2);delete state.buffs.seed2x;}
+  if(Math.random()<rate){ var seed=SEED_FAMILY_MAP[spirit.family]; state.seed_held.push(seed);
+    setTimeout(function(){toast('SEED OBTAINED',seed+'을(를) 얻었습니다');},1200); }
+  // 하루 일주 완성 체크
+  checkDayCircuit();
+  saveState(); checkSummonCD();
+  openSpiritView(entry);
+}
+
+// 하루 일주: 7개 시간대 모두 오늘 소환했는지
+function checkDayCircuit(){
+  var phases=['dawn','morning','noon','afternoon','dusk','evening','night'];
+  var today=new Date().toLocaleDateString('ko-KR');
+  var done=phases.filter(function(p){return state.dayCircuit[p]===today;}).length;
+  if(done>=7 && !state._circuitClaimed){
+    state._circuitClaimed=today;
+    state.extraSummon=true; // 보상: 추가 소환권
+    setTimeout(function(){toast('하늘 일주 완성 ✦','7개 시간대를 모두 담았습니다 · 추가 소환권 획득');},2000);
+  }
+  return done;
+}
+
+// ============================================================
+//  정령 상세 뷰
+// ============================================================
+var spiritRenderer=null;
+function openSpiritView(entry){
+  state._viewing=entry;
+  document.getElementById('spiritView').classList.add('open');
+  var bg=document.getElementById('spiritBg');
+  if(entry.photoData){bg.style.backgroundImage='url('+entry.photoData+')';}
+  else{bg.style.backgroundImage='none';bg.style.background='radial-gradient(circle,'+entry.c2+',#060812)';}
+  document.getElementById('spiritFamilyTag').textContent=(entry.awakened?'✦ 각성 · ':'')+FAMILY_KO[entry.family]+' 계열';
+  document.getElementById('spiritName').textContent=entry.name;
+  document.getElementById('spiritDate').textContent=entry.summonDate+' · '+entry.summonTime;
+  var eg=document.getElementById('spiritEnvGrid'); eg.innerHTML='';
+  var envs=[['LUMEN',entry.sensors.light+'%'],['SOUND',entry.sensors.sound+'%'],['MOTION',entry.sensors.motion+'%'],['CELL',entry.sensors.battery+'%'],['PWR',entry.sensors.charging?'ON':'OFF']];
+  envs.forEach(function(e){var p=document.createElement('div');p.className='env-pod';p.innerHTML='<div class="ev">'+e[1]+'</div><div class="el">'+e[0]+'</div>';eg.appendChild(p);});
+  document.getElementById('spiritDesc').textContent='"'+entry.desc+'"';
+  var ab=document.getElementById('spiritAbilities'); ab.innerHTML='';
+  entry.abilities.forEach(function(a){var c=document.createElement('div');c.className='ability-chip';
+    c.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#8fa9ff" stroke-width="1.4">'+(ABILITY_ICONS[a]||'')+'</svg>'+a;ab.appendChild(c);});
+  if(spiritRenderer)spiritRenderer.stop();
+  spiritRenderer=makeSpiritRenderer(document.getElementById('spiritCanvas'),entry,1);
+}
+function closeSpiritView(){ document.getElementById('spiritView').classList.remove('open'); if(spiritRenderer)spiritRenderer.stop(); }
+
+// ============================================================
+//  갤러리
+// ============================================================
+var galleryOrbs=[];
+function renderGallery(){
+  galleryOrbs.forEach(function(o){o.stop();}); galleryOrbs=[];
+  var wrap=document.getElementById('galleryContent');
+  if(state.spirits.length===0){
+    wrap.innerHTML='<div class="empty-state"><div class="es-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="#8fa9ff" stroke-width="1"><path d="M12 3a6 6 0 016 6c0 4-6 12-6 12S6 13 6 9a6 6 0 016-6z"/><circle cx="12" cy="9" r="2"/></svg></div><div class="es-text">아직 소환한 정령이 없습니다<br>하늘을 담아 첫 정령을 만나보세요</div></div>';
+    return;
+  }
+  var grid=document.createElement('div'); grid.className='gallery-grid';
+  // 최신순
+  var sorted=state.spirits.slice().reverse();
+  sorted.forEach(function(entry,idx){
+    var fl=state.fusionLevels[entry.id]||0;
+    var card=document.createElement('div'); card.className='gallery-card';
+    var photo=entry.photoData?'<div class="gallery-card-photo" style="background-image:url('+entry.photoData+')"></div>':'<div class="gallery-card-photo" style="background:radial-gradient(circle,'+entry.c2+',#060812);opacity:0.4"></div>';
+    var flBadge=fl>0?'<div style="position:absolute;top:10px;right:10px;z-index:3;font-family:\'Major Mono Display\',monospace;font-size:13px;color:var(--gold);text-shadow:0 0 8px rgba(233,200,120,0.6)">+'+fl+'</div>':'';
+    card.innerHTML=photo+flBadge+'<div class="gallery-card-orb"><canvas width="120" height="120" id="gorb'+idx+'"></canvas></div><div class="gallery-card-info"><div class="gallery-card-name">'+entry.name+'</div><div class="gallery-card-date">'+entry.summonDate+'</div></div>';
+    card.onclick=function(){openSpiritView(entry);};
+    grid.appendChild(card);
+  });
+  wrap.innerHTML='';
+
+  // ===== 합체소 =====
+  var fusables=getFusablePairs();
+  if(fusables.length>0){
+    var fusionWrap=document.createElement('div');
+    fusionWrap.style.cssText='margin:0 20px 22px;padding:18px;border:1px solid rgba(233,200,120,0.25);border-radius:18px;background:linear-gradient(135deg,rgba(233,200,120,0.06),rgba(199,155,255,0.04))';
+    var fh='<div style="font-family:\'Major Mono Display\',monospace;font-size:9px;letter-spacing:0.25em;color:var(--gold);margin-bottom:6px">FUSION ALTAR · 합체소</div><div style="font-size:14px;color:var(--text-dim);font-style:italic;margin-bottom:16px;line-height:1.5">같은 정령 둘을 합치면 더 강해집니다<br><span style="font-size:12px">성장 +25% · 쿨타임 -20% (레벨당)</span></div>';
+    fusionWrap.innerHTML=fh;
+    fusables.forEach(function(f){
+      var sp=findSpirit(f.id); var fl=state.fusionLevels[f.id]||0;
+      var btn=document.createElement('button');
+      btn.style.cssText='display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:pointer;margin-bottom:8px;transition:all 0.25s';
+      btn.innerHTML='<span style="width:34px;height:34px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle,'+sp.color+','+sp.c2+');box-shadow:0 0 12px '+rgba(sp.color,0.5)+'"></span>'+
+        '<span style="text-align:left"><span style="font-family:\'Noto Serif KR\',serif;font-size:15px;color:var(--text)">'+sp.name+'</span>'+
+        '<span style="display:block;font-family:\'Major Mono Display\',monospace;font-size:9px;color:var(--text-faint);margin-top:2px">보유 '+f.count+' · 현재 +'+fl+' → +'+(fl+1)+'</span></span>'+
+        '<span style="margin-left:auto;font-family:\'Major Mono Display\',monospace;font-size:11px;color:var(--gold)">FUSE</span>';
+      btn.onclick=function(){ doFusion(f.id); };
+      fusionWrap.appendChild(btn);
+    });
+    wrap.appendChild(fusionWrap);
+  }
+
+  wrap.appendChild(grid);
+  sorted.forEach(function(entry,idx){
+    var cv=document.getElementById('gorb'+idx); if(cv)galleryOrbs.push(drawSpiritOrb(cv,entry));
+  });
+}
+
+// 합체 가능한 정령 (같은 id 2마리 이상)
+function getFusablePairs(){
+  var counts={};
+  state.spirits.forEach(function(s){counts[s.id]=(counts[s.id]||0)+1;});
+  var res=[];
+  Object.keys(counts).forEach(function(id){ if(counts[id]>=2)res.push({id:id,count:counts[id]}); });
+  return res;
+}
+function doFusion(id){
+  var counts=getFusablePairs().filter(function(f){return f.id===id;})[0];
+  if(!counts||counts.count<2)return;
+  // 같은 id 2마리 중 1마리 제거 (제물), 강화레벨 +1
+  var removed=false;
+  for(var i=state.spirits.length-1;i>=0&&!removed;i--){
+    if(state.spirits[i].id===id){
+      // garden_spirit이 제물이면 해제
+      if(state.garden_spirit&&state.garden_spirit.uid===state.spirits[i].uid)state.garden_spirit=null;
+      state.spirits.splice(i,1); removed=true;
+    }
+  }
+  state.fusionLevels[id]=(state.fusionLevels[id]||0)+1;
+  var sp=findSpirit(id);
+  // +5 도달 + 각성형 존재 → 각성!
+  var newLv=state.fusionLevels[id];
+  var awk=awakenedFor(id);
+  if(newLv>=5 && awk && !state.awakenedOwned[id]){
+    state.awakenedOwned[id]=true;
+    state.discovered.awakened[awk.id]=true;
+    // 각성 정령을 컬렉션에 추가
+    var now=new Date();
+    state.spirits.push({ id:awk.id, name:awk.name, family:awk.family, color:awk.color, c2:awk.c2,
+      abilities:awk.abilities, desc:awk.desc, form:awk.form, awakened:true, originId:id,
+      summonDate:now.toLocaleDateString('ko-KR'), summonTime:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+      photoData:null, sensors:{light:0,sound:0,motion:0,battery:0,charging:false}, uid:Date.now() });
+    saveState();
+    toast('AWAKENING ✦✦',sp.name+'이(가) 각성했습니다 → '+awk.name);
+    var awkEntry=state.spirits[state.spirits.length-1];
+    renderGallery();
+    setTimeout(function(){ openSpiritView(awkEntry); },600);
+    return;
+  }
+  saveState();
+  toast('FUSION ✦',sp.name+' +'+state.fusionLevels[id]+' 강화 완료');
+  renderGallery();
+}
+
+// ============================================================
+//  온실 컨트롤
+// ============================================================
+var ACTION_CD={}; var ACTION_CD_MS=90*1000;
+function renderGreenhouseUI(){
+  renderGreenhouse();
+  var empty=document.getElementById('greenhouseEmpty');
+  var hud=document.getElementById('plantHud');
+  var ctrl=document.getElementById('greenhouseControls');
+  ctrl.innerHTML='';
+
+  if(!state.plant){
+    empty.style.display='flex'; hud.style.display='none';
+    // 씨앗 심기 UI
+    if(state.seed_held.length===0){
+      ctrl.innerHTML='<div class="gh-seed-prompt"><div class="sp-text">씨앗이 없습니다.<br>정령을 소환하면 씨앗을 얻을 수 있습니다.</div></div>';
+    } else {
+      var counts={}; state.seed_held.forEach(function(s){counts[s]=(counts[s]||0)+1;});
+      var html='<div class="gh-seed-prompt"><div class="sp-text">온실에 씨앗을 심어보세요.<br>어떤 정령이 돌보느냐에 따라 다른 식물로 자랍니다.</div><div class="gh-seed-list">';
+      Object.keys(counts).forEach(function(seed){
+        html+='<button class="gh-seed-item" onclick="plantSeed(\''+seed+'\')"><span class="seed-glyph"><svg viewBox="0 0 28 28" fill="none" stroke="'+SEED_COLOR[seed]+'" stroke-width="1.3"><path d="M14 24c0-6 0-10-4-13 5-1 8 2 8 7M14 24c0-5 1-8 4-10"/><circle cx="14" cy="24" r="1.5" fill="'+SEED_COLOR[seed]+'"/></svg></span><span class="seed-name">'+seed+'</span><span class="seed-count">×'+counts[seed]+'</span></button>';
+      });
+      html+='</div></div>';
+      ctrl.innerHTML=html;
+    }
+    return;
+  }
+
+  // 식물 있음
+  empty.style.display='none'; hud.style.display='block';
+  var pdata=PLANTS.filter(function(p){return p.id===state.plant.plantId;})[0];
+  document.getElementById('plantHudName').textContent=pdata?pdata.name:'식물';
+  document.getElementById('plantHudStage').textContent=stageOf(state.plant.growth);
+  document.getElementById('growthPct').textContent=Math.round(state.plant.growth)+'%';
+  document.getElementById('growthFill').style.width=state.plant.growth+'%';
+  document.getElementById('stressPct').textContent=Math.round(state.plant.stress)+'%';
+  document.getElementById('stressFill').style.width=state.plant.stress+'%';
+
+  // 정령 선택기
+  var html2='<div class="gh-spirit-selector"><div class="selector-label">돌보는 정령</div><div class="gh-spirit-row" id="ghSpiritRow"></div></div>';
+  html2+='<div class="selector-label">능력 사용</div><div class="gh-ability-grid" id="ghAbilityGrid"></div>';
+  // 식물 회수
+  html2+='<button class="gh-ability-btn" style="margin-top:10px;width:100%;justify-content:center;color:var(--rose);border-color:rgba(255,143,163,0.3)" onclick="harvestPlant()">식물 비우기</button>';
+  ctrl.innerHTML=html2;
+
+  // 정령 칩
+  var row=document.getElementById('ghSpiritRow');
+  if(state.spirits.length===0){ row.innerHTML='<div style="font-size:13px;color:var(--text-faint);font-style:italic">소환한 정령이 없습니다</div>'; }
+  // 중복 제거된 보유 정령 (uid 기준 전체 표시)
+  state.spirits.forEach(function(sp){
+    var fl=state.fusionLevels[sp.id]||0;
+    var pill=document.createElement('div'); pill.className='gh-spirit-pill'+(state.garden_spirit&&state.garden_spirit.uid===sp.uid?' active':'');
+    pill.innerHTML='<span class="pill-orb" style="background:radial-gradient(circle,'+sp.color+','+sp.c2+')"></span><span class="pill-name">'+sp.name+(fl>0?' <span style="color:var(--gold);font-size:11px">+'+fl+'</span>':'')+'</span>';
+    pill.onclick=function(){ state.garden_spirit=sp; saveState(); renderGreenhouseUI(); };
+    row.appendChild(pill);
+  });
+
+  // 능력 버튼
+  var ag=document.getElementById('ghAbilityGrid');
+  if(!state.garden_spirit){ ag.innerHTML='<div style="grid-column:1/3;font-size:13px;color:var(--text-faint);font-style:italic;text-align:center;padding:12px">정령을 선택하면 능력을 쓸 수 있습니다</div>'; return; }
+  state.garden_spirit.abilities.forEach(function(ab){
+    if(ab==='???')return;
+    var btn=document.createElement('button'); btn.className='gh-ability-btn';
+    var key=ab; var last=ACTION_CD[key]||0;
+    var noCool=state.buffs.nocool; var onCd=!noCool&&(Date.now()-last<abilityCDMs());
+    btn.innerHTML='<span class="ab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8fa9ff" stroke-width="1.3">'+(ABILITY_ICONS[ab]||'')+'</svg></span>'+ab+'<span class="ab-cd" id="cd_'+ab.replace(/\s/g,'')+'"></span>';
+    if(onCd){ btn.disabled=true; }
+    else { btn.onclick=function(){ useAbility(ab); }; }
+    ag.appendChild(btn);
+  });
+  updateCDLabels();
+}
+function updateCDLabels(){
+  if(!state.garden_spirit)return;
+  state.garden_spirit.abilities.forEach(function(ab){
+    if(ab==='???')return;
+    var el=document.getElementById('cd_'+ab.replace(/\s/g,'')); if(!el)return;
+    var last=ACTION_CD[ab]||0; var rem=abilityCDMs()-(Date.now()-last);
+    if(!state.buffs.nocool&&rem>0)el.textContent=Math.ceil(rem/1000)+'s'; else el.textContent='';
+  });
+}
+setInterval(function(){ if(document.getElementById('tab-greenhouse').classList.contains('active')&&state.plant){ var any=false; if(state.garden_spirit)state.garden_spirit.abilities.forEach(function(ab){if(ab!=='???'){var l=ACTION_CD[ab]||0;if(Date.now()-l<ACTION_CD_MS)any=true;}}); if(any)renderGreenhouseUI(); } },1000);
+
+function plantSeed(seed){
+  var idx=state.seed_held.indexOf(seed); if(idx<0)return;
+  state.seed_held.splice(idx,1);
+  var pool=PLANTS.filter(function(p){return p.seed===seed;});
+  // 돌보는 정령에 따라 가중치(없으면 랜덤)
+  var chosen=pool[Math.floor(Math.random()*pool.length)];
+  state.plant={plantId:chosen.id,growth:0,stress:0,actions:{}};
+  state.lastGrowthTick=Date.now();
+  saveState(); renderGreenhouseUI();
+  toast('SEED PLANTED',chosen.name+'의 씨앗을 심었습니다');
+}
+function harvestPlant(){
+  state.plant=null; saveState(); renderGreenhouseUI();
+}
+function useAbility(ab){
+  if(!state.plant||!state.garden_spirit)return;
+  var fl=state.fusionLevels[state.garden_spirit.id]||0;
+  if(!state.buffs.nocool)ACTION_CD[ab]=Date.now();
+  var pdata=PLANTS.filter(function(p){return p.id===state.plant.plantId;})[0];
+  var seedOfAbility=ABILITY_SEED[ab];
+  var good = pdata && pdata.seed===seedOfAbility;
+  var bad = (pdata&&pdata.seed==='빛씨앗'&&ab==='달빛 목욕')||(pdata&&pdata.seed==='어둠씨앗'&&ab==='햇빛 쬐기')||(pdata&&pdata.seed==='물씨앗'&&ab==='온기 주기');
+  var gain=good?11:(bad?1:5); var stress=good?-6:(bad?16:2);
+  gain *= (1+fl*0.25);  // 강화 레벨당 +25% 성장
+  if(state.buffs.grow2x)gain*=2;
+  state.plant.growth=Math.min(100,state.plant.growth+gain);
+  state.plant.stress=Math.max(0,Math.min(100,state.plant.stress+stress));
+  state.plant.actions[ab]=(state.plant.actions[ab]||0)+1;
+  if(state.plant.growth>=100){ state.discovered.plants[state.plant.plantId]=true;
+    toast('BLOOM ✦',(pdata?pdata.name:'식물')+'이(가) 만개했습니다!'); }
+  saveState(); renderGreenhouseUI();
+}
+// 강화 레벨 반영한 쿨타임
+function abilityCDMs(){ var fl=state.garden_spirit?(state.fusionLevels[state.garden_spirit.id]||0):0; return Math.max(20000, ACTION_CD_MS*(1-fl*0.2)); }
+function stageOf(g){ if(g<20)return'SEED · 씨앗'; if(g<40)return'SPROUT · 새싹'; if(g<60)return'GROWING · 성장'; if(g<80)return'BUDDING · 개화'; if(g<100)return'ALMOST · 만개 직전'; return'FULL BLOOM · 만개'; }
+
+// ============================================================
+//  오프라인 자동 성장 (정령 계열 선호 시간대에 자람)
+// ============================================================
+function processOfflineGrowth(){
+  if(!state.plant || !state.garden_spirit){ state.lastGrowthTick=Date.now(); return; }
+  var now=Date.now();
+  if(!state.lastGrowthTick){ state.lastGrowthTick=now; return; }
+  var elapsedH=(now-state.lastGrowthTick)/(1000*60*60);
+  if(elapsedH<0.02){ return; } // 1분 미만 무시
+  elapsedH=Math.min(elapsedH,12); // 최대 12시간치
+  // 정령 계열이 현재 시간대를 선호하면 시간당 성장
+  var fam=state.garden_spirit.family;
+  var prefPhases=FAMILY_PHASE[fam]||[];
+  var curPhase=getTimePhase();
+  var ratePerHour = prefPhases.indexOf(curPhase)>=0 ? 4 : 1.5;
+  // 강화 레벨 보너스
+  var fl=state.fusionLevels[state.garden_spirit.id]||0;
+  ratePerHour *= (1+fl*0.25);
+  var gained=ratePerHour*elapsedH;
+  if(gained>0.5){
+    var before=state.plant.growth;
+    state.plant.growth=Math.min(100,state.plant.growth+gained);
+    state.plant.stress=Math.max(0,state.plant.stress-elapsedH*1.5);
+    state.lastGrowthTick=now;
+    if(state.plant.growth>=100&&before<100){ state.discovered.plants[state.plant.plantId]=true; }
+    if(gained>=2){ window._offlineGrowthMsg=Math.round(gained); }
+    saveState();
+  } else { state.lastGrowthTick=now; }
+}
+
+// ============================================================
+//  하루 일주 렌더
+// ============================================================
+function renderCircuit(){
+  var box=document.getElementById('circuitBox'); if(!box)return;
+  var phases=[['dawn','여명'],['morning','아침'],['noon','정오'],['afternoon','오후'],['dusk','노을'],['evening','저녁'],['night','심야']];
+  var today=new Date().toLocaleDateString('ko-KR');
+  var done=phases.filter(function(p){return state.dayCircuit[p[0]]===today;}).length;
+  var cur=getTimePhase();
+  var html='<div class="circuit-head"><span class="circuit-title">SKY CIRCUIT · 하늘 일주</span><span class="circuit-count">'+done+' / 7</span></div><div class="circuit-track">';
+  phases.forEach(function(p){
+    var isDone=state.dayCircuit[p[0]]===today;
+    var isCur=p[0]===cur;
+    html+='<div class="circuit-node'+(isDone?' done':'')+'" style="'+(isCur&&!isDone?'border-color:var(--gold)':'')+'">'+p[1]+'</div>';
+  });
+  html+='</div>';
+  box.innerHTML=html;
+}
+
+// ============================================================
+//  별자리
+// ============================================================
+var galleryMode='cards';
+var constellationTool='move';
+var constellationRAF=null;
+var constellationLinkSel=-1;
+
+function switchGalleryMode(mode){
+  galleryMode=mode;
+  document.getElementById('gms-cards').classList.toggle('active',mode==='cards');
+  document.getElementById('gms-constellation').classList.toggle('active',mode==='constellation');
+  document.getElementById('galleryContent').style.display=mode==='cards'?'block':'none';
+  document.getElementById('constellationContent').style.display=mode==='constellation'?'block':'none';
+  if(mode==='cards'){ if(constellationRAF)cancelAnimationFrame(constellationRAF); renderGallery(); }
+  else { renderConstellation(); }
+}
+function setConstellationTool(t){
+  constellationTool=t; constellationLinkSel=-1;
+  ['move','link','erase'].forEach(function(x){ document.getElementById('ct-'+x).classList.toggle('active',x===t); });
+}
+
+function renderConstellation(){
+  var canvas=document.getElementById('constellationCanvas'); if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  function resize(){ var r=canvas.getBoundingClientRect(); canvas.width=r.width*2; canvas.height=r.height*2; }
+  resize();
+  if(constellationRAF)cancelAnimationFrame(constellationRAF);
+
+  // 별 목록 (constellation 배열, 없는 정령 필터)
+  var stars=state.constellation;
+  var dragIdx=-1;
+
+  // 입력 처리
+  function getPos(e){ var r=canvas.getBoundingClientRect(); var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left; var cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top; return {x:cx/r.width, y:cy/r.height}; }
+  function hitStar(p){ var W=1,H=1; for(var i=stars.length-1;i>=0;i--){ var dx=(stars[i].x-p.x), dy=(stars[i].y-p.y); if(Math.sqrt(dx*dx+dy*dy)<0.06)return i; } return -1; }
+
+  canvas.ontouchstart=canvas.onmousedown=function(e){ e.preventDefault(); var p=getPos(e); var hit=hitStar(p);
+    if(constellationTool==='move'){ dragIdx=hit; }
+    else if(constellationTool==='link'){
+      if(hit>=0){ if(constellationLinkSel<0){constellationLinkSel=hit;} else if(constellationLinkSel!==hit){
+        state.constellationLinks.push([constellationLinkSel,hit]); constellationLinkSel=-1; saveState(); updateConstellationBonus(); } }
+    } else if(constellationTool==='erase'){
+      // 가장 가까운 선 제거
+      if(state.constellationLinks.length>0){ state.constellationLinks.pop(); saveState(); updateConstellationBonus(); }
+    }
+  };
+  canvas.ontouchmove=canvas.onmousemove=function(e){ if(dragIdx<0)return; e.preventDefault(); var p=getPos(e);
+    stars[dragIdx].x=Math.max(0.05,Math.min(0.95,p.x)); stars[dragIdx].y=Math.max(0.05,Math.min(0.95,p.y)); };
+  canvas.ontouchend=canvas.onmouseup=function(){ if(dragIdx>=0){saveState();} dragIdx=-1; };
+
+  var t=0;
+  function draw(){
+    var W=canvas.width,H=canvas.height; t+=0.015;
+    ctx.clearRect(0,0,W,H);
+    // 배경 별먼지
+    for(var b=0;b<40;b++){ var bx=(b*97.3%W), by=(b*53.7%H); ctx.globalAlpha=0.1+Math.abs(Math.sin(t+b))*0.15; ctx.fillStyle='#aec4ff'; ctx.beginPath();ctx.arc(bx,by,0.8,0,Math.PI*2);ctx.fill(); }
+    ctx.globalAlpha=1;
+    // 연결선
+    state.constellationLinks.forEach(function(lk){
+      if(lk[0]<stars.length&&lk[1]<stars.length){ var a=stars[lk[0]],b2=stars[lk[1]];
+        var grd=ctx.createLinearGradient(a.x*W,a.y*H,b2.x*W,b2.y*H);
+        grd.addColorStop(0,rgba(a.color,0.6)); grd.addColorStop(1,rgba(b2.color,0.6));
+        ctx.strokeStyle=grd; ctx.lineWidth=1.2; ctx.shadowColor=a.color; ctx.shadowBlur=6;
+        ctx.beginPath();ctx.moveTo(a.x*W,a.y*H);ctx.lineTo(b2.x*W,b2.y*H);ctx.stroke(); ctx.shadowBlur=0; }
+    });
+    // 별
+    stars.forEach(function(s,i){
+      var px=s.x*W, py=s.y*H;
+      var tw=0.7+Math.sin(t*2+i)*0.3;
+      var R=9*tw;
+      var g=ctx.createRadialGradient(px,py,1,px,py,R*2.2);
+      g.addColorStop(0,'rgba(255,255,255,0.95)'); g.addColorStop(0.3,rgba(s.color,0.85)); g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath();ctx.arc(px,py,R*2.2,0,Math.PI*2);ctx.fill();
+      // 십자 광채
+      ctx.strokeStyle=rgba(s.color,0.5); ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px-R*1.6,py);ctx.lineTo(px+R*1.6,py);ctx.moveTo(px,py-R*1.6);ctx.lineTo(px,py+R*1.6);ctx.stroke();
+      // 선택 표시
+      if(constellationTool==='link'&&constellationLinkSel===i){ ctx.strokeStyle=rgba('#e9c878',0.9);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px,py,R*2.6,0,Math.PI*2);ctx.stroke(); }
+    });
+    constellationRAF=requestAnimationFrame(draw);
+  }
+  draw();
+  updateConstellationBonus();
+  window.addEventListener('resize',function(){ if(galleryMode==='constellation')resize(); });
+}
+
+// 별자리 보너스: 같은 계열끼리 연결된 성좌 → 그 계열 소환 확률↑
+function getConstellationBonusFamilies(){
+  var fams={};
+  state.constellationLinks.forEach(function(lk){
+    var a=state.constellation[lk[0]], b=state.constellation[lk[1]];
+    if(a&&b&&a.family===b.family){ fams[a.family]=(fams[a.family]||0)+1; }
+  });
+  return fams;
+}
+function updateConstellationBonus(){
+  var el=document.getElementById('constellationBonus'); if(!el)return;
+  var fams=getConstellationBonusFamilies();
+  var keys=Object.keys(fams);
+  if(keys.length===0){ el.textContent='같은 계열의 별을 이으면 성좌 효과가 깃듭니다'; el.style.color='var(--text-faint)'; return; }
+  var names=keys.map(function(k){return FAMILY_KO[k]+' 성좌';});
+  el.textContent='✦ '+names.join(' · ')+' 활성 — 해당 계열 출현 확률 상승';
+  el.style.color='var(--jade)';
+}
+
+// ============================================================
+//  재단
+// ============================================================
+function checkShrineCD(){
+  var btn=document.getElementById('shrineBtn'); var note=document.getElementById('shrineNote');
+  if(state.lastShrine>=todayStart()){ btn.disabled=true; note.textContent='오늘은 이미 기도했습니다'; return false; }
+  btn.disabled=false; note.textContent='하루에 한 번 기도할 수 있습니다'; return true;
+}
+var praying=false;
+function pray(){
+  if(praying)return; if(!checkShrineCD())return;
+  praying=true; state.lastShrine=Date.now();
+  var roll=Math.random();
+  setTimeout(function(){
+    if(roll<0.10){ var buff=BUFFS[Math.floor(Math.random()*BUFFS.length)]; applyBuff(buff);
+      toast('재단의 응답 ✦',buff.name+'\n'+buff.desc); }
+    else if(roll<0.40){ state.extraSummon=true; checkSummonCD();
+      toast('재단의 응답 ✦','추가 소환의 권능을 받았습니다'); }
+    else { toast('재단의 침묵','하늘이 응답하지 않았습니다'); }
+    praying=false; saveState(); checkShrineCD(); renderBuffBanner();
+  },600);
+}
+function applyBuff(buff){
+  if(buff.key==='autowater'&&state.plant){state.plant.growth=Math.min(100,state.plant.growth+11);}
+  else if(buff.key==='autosun'&&state.plant){state.plant.growth=Math.min(100,state.plant.growth+11);}
+  else if(buff.key==='destress'&&state.plant){state.plant.stress=0;}
+  else { state.buffs[buff.key]=Date.now()+30*60*1000; }
+}
+function renderBuffBanner(){
+  var wrap=document.getElementById('activeBuffBanner');
+  var active=[]; Object.keys(state.buffs).forEach(function(k){
+    if(k==='seed2x'){active.push('씨앗 풍요');}
+    else if(state.buffs[k]>Date.now()){ active.push(k==='nocool'?'무한 권능':k==='grow2x'?'성장 가속':k); }
+    else { delete state.buffs[k]; }
+  });
+  if(active.length===0){wrap.innerHTML='';return;}
+  wrap.innerHTML='<div class="active-buff-banner"><svg viewBox="0 0 24 24" fill="none" stroke="#c79bff" stroke-width="1.3"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg><div class="abb-text">활성 축복 · <span class="abb-name">'+active.join(', ')+'</span></div></div>';
+}
+
+// ============================================================
+//  도감
+// ============================================================
+var codexOrbs=[];
+function switchCodex(mode){ state.codexMode=mode;
+  document.getElementById('cs-spirits').classList.toggle('active',mode==='spirits');
+  document.getElementById('cs-plants').classList.toggle('active',mode==='plants');
+  renderCodex();
+}
+function renderCodex(){
+  codexOrbs.forEach(function(o){o.stop&&o.stop();}); codexOrbs=[];
+  var grid=document.getElementById('codexGrid'); grid.innerHTML='';
+  var prog=document.getElementById('codexProgress');
+  if(state.codexMode==='spirits'){
+    var found=Object.keys(state.discovered.spirits).length;
+    var awkList=Object.keys(AWAKENED).map(function(k){return AWAKENED[k];});
+    var awkFound=Object.keys(state.discovered.awakened).length;
+    prog.textContent=found+' / '+SPIRITS.length+' · 각성 '+awkFound+' / '+awkList.length;
+    SPIRITS.forEach(function(sp,i){
+      var disc=state.discovered.spirits[sp.id];
+      var card=document.createElement('div'); card.className='codex-card '+(disc?'discovered':'locked');
+      card.innerHTML='<canvas class="codex-orb" width="80" height="80" id="corb'+i+'"></canvas><div class="codex-card-name">'+(disc?sp.name:'???')+'</div>';
+      if(disc){ card.onclick=function(){ var e=null; for(var k=state.spirits.length-1;k>=0;k--)if(state.spirits[k].id===sp.id){e=state.spirits[k];break;} if(e)openSpiritView(e); }; }
+      grid.appendChild(card);
+    });
+    SPIRITS.forEach(function(sp,i){ var cv=document.getElementById('corb'+i); if(cv){ if(state.discovered.spirits[sp.id])codexOrbs.push(drawSpiritOrb(cv,sp)); else { var c=cv.getContext('2d'); var g=c.createRadialGradient(40,40,2,40,40,30); g.addColorStop(0,'rgba(80,90,120,0.5)');g.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=g;c.beginPath();c.arc(40,40,30,0,Math.PI*2);c.fill(); } } });
+    // 각성 정령 섹션
+    var awkHeader=document.createElement('div');
+    awkHeader.style.cssText='grid-column:1/4;margin-top:18px;font-family:\'Major Mono Display\',monospace;font-size:9px;letter-spacing:0.25em;color:var(--gold)';
+    awkHeader.textContent='✦ AWAKENED · 각성 (합체 +5)';
+    grid.appendChild(awkHeader);
+    awkList.forEach(function(awk,i){
+      var disc=state.discovered.awakened[awk.id];
+      var card=document.createElement('div'); card.className='codex-card '+(disc?'discovered':'locked');
+      if(disc)card.style.borderColor='rgba(233,200,120,0.4)';
+      card.innerHTML='<canvas class="codex-orb" width="80" height="80" id="aorb'+i+'"></canvas><div class="codex-card-name" style="'+(disc?'color:var(--gold)':'')+'">'+(disc?awk.name.split(' · ')[1]||awk.name:'???')+'</div>';
+      if(disc){ card.onclick=function(){ var e=null; for(var k=state.spirits.length-1;k>=0;k--)if(state.spirits[k].id===awk.id){e=state.spirits[k];break;} if(e)openSpiritView(e); }; }
+      grid.appendChild(card);
+    });
+    awkList.forEach(function(awk,i){ var cv=document.getElementById('aorb'+i); if(cv){ if(state.discovered.awakened[awk.id])codexOrbs.push(drawSpiritOrb(cv,awk)); else { var c=cv.getContext('2d'); var g=c.createRadialGradient(40,40,2,40,40,30); g.addColorStop(0,'rgba(120,100,60,0.4)');g.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=g;c.beginPath();c.arc(40,40,30,0,Math.PI*2);c.fill(); } } });
+  } else {
+    var foundP=Object.keys(state.discovered.plants).length;
+    prog.textContent=foundP+' / '+PLANTS.length+' DISCOVERED';
+    PLANTS.forEach(function(pl,i){
+      var disc=state.discovered.plants[pl.id];
+      var card=document.createElement('div'); card.className='codex-card '+(disc?'discovered':'locked');
+      card.innerHTML='<canvas class="codex-orb" width="80" height="100" id="porb'+i+'"></canvas><div class="codex-card-name">'+(disc?pl.name:pl.seed)+'</div>';
+      grid.appendChild(card);
+    });
+    PLANTS.forEach(function(pl,i){ var cv=document.getElementById('porb'+i); if(cv){ var c=cv.getContext('2d');
+      if(state.discovered.plants[pl.id]){ drawPlant(c,40,92,100,pl,0,0); }
+      else { var g=c.createRadialGradient(40,50,2,40,50,30);g.addColorStop(0,'rgba(80,90,120,0.4)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.beginPath();c.arc(40,50,30,0,Math.PI*2);c.fill(); } } });
+  }
+}
+
+// ============================================================
+//  공용
+// ============================================================
+function toast(title,content){
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastContent').textContent=content;
+  var t=document.getElementById('toast'); t.classList.add('show');
+  clearTimeout(window._toastTO); window._toastTO=setTimeout(function(){t.classList.remove('show');},3400);
+}
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='gallery'){ if(galleryMode==='cards')renderGallery(); else renderConstellation(); }
+  else if(constellationRAF){ cancelAnimationFrame(constellationRAF); }
+  if(name==='greenhouse')renderGreenhouseUI();
+  if(name==='codex')renderCodex();
+  if(name==='shrine')renderBuffBanner();
+  if(name==='summon'){ renderCircuit(); renderForecast(); }
+}
+
+// 별 배경
+function initStars(){
+  var c=document.getElementById('starCanvas'); var x=c.getContext('2d');
+  function rs(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  rs(); var stars=[];
+  for(var i=0;i<70;i++)stars.push({x:Math.random(),y:Math.random(),sz:Math.random()*1.4,ph:Math.random()*Math.PI*2,sp:0.5+Math.random()});
+  var t=0;
+  function d(){ t+=0.02; x.clearRect(0,0,c.width,c.height);
+    stars.forEach(function(s){ x.globalAlpha=0.2+Math.abs(Math.sin(t*s.sp+s.ph))*0.6; x.fillStyle='#aec4ff';
+      x.beginPath();x.arc(s.x*c.width,s.y*c.height,s.sz,0,Math.PI*2);x.fill(); });
+    x.globalAlpha=1; requestAnimationFrame(d);
+  } d(); window.addEventListener('resize',rs);
+}
+
+// 배지 갱신
+function updateBadges(){
+  var pal=PHASE_PALETTE[getTimePhase()];
+  var pb=document.getElementById('phaseBadge'); if(pb)pb.textContent=pal.label.toUpperCase()+' · '+pal.label;
+  var gb=document.getElementById('goldenBadge'); if(gb)gb.style.display=isGoldenHour()?'inline-block':'none';
+  applyWeatherToUI();
+  renderCircuit();
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener('load',function(){
+  loadState(); initSensors(); initStars(); initSummonCircle(); initShrine();
+  // v4 필드 보정 (이전 버전 저장본 호환)
+  if(!state.discovered.awakened)state.discovered.awakened={};
+  if(!state.awakenedOwned)state.awakenedOwned={};
+  if(!state.constellation)state.constellation=[];
+  if(!state.constellationLinks)state.constellationLinks=[];
+  if(!state.dayCircuit)state.dayCircuit={};
+  // 기존 정령들 별자리에 없으면 추가
+  state.spirits.forEach(function(sp){
+    var exists=state.constellation.some(function(c){return c.uid===sp.uid;});
+    if(!exists)state.constellation.push({uid:sp.uid,id:sp.id,family:sp.family,color:sp.color,x:0.15+Math.random()*0.7,y:0.15+Math.random()*0.7});
+  });
+
+  checkSummonCD(); checkShrineCD(); updateSensorUI(); renderBuffBanner();
+  renderCircuit(); renderForecast();
+
+  processOfflineGrowth();
+  if(window._offlineGrowthMsg){ var g=window._offlineGrowthMsg; delete window._offlineGrowthMsg;
+    setTimeout(function(){toast('자라는 동안','식물이 +'+g+'% 성장했습니다');},800); }
+
+  updateBadges();
+  setInterval(updateBadges, 30000);
+  fetchWeather();
+
+  setInterval(function(){ processOfflineGrowth();
+    if(document.getElementById('tab-greenhouse').classList.contains('active'))renderGreenhouseUI(); }, 60000);
+
+  if(state.skyPhotoData){
+    var prev=document.getElementById('skyPreview'); prev.src=state.skyPhotoData; prev.style.display='block';
+    document.getElementById('skyHint').style.display='none';
+    document.getElementById('skyFrame').classList.add('loaded');
+    document.getElementById('summonBtn').classList.add('ready');
+    var img=new Image(); img.onload=function(){currentSkyImg=img;analyzeImage(img,function(d){pendingImgData=d;});}; img.src=state.skyPhotoData;
+  }
+});
+</script>
+</body>
+</html>

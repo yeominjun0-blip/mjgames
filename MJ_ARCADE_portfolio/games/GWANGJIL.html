@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>GWANGJIL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic+Coding&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+:root{--bg:#07070d;--bg2:#0d0d1a;--bg3:#131325;--panel:#0f0f1e;--border:#1e1e38;--border2:#28284a;--acc:#e8b84a;--acc2:#3de8c4;--red:#ff1a3a;--green:#2fff0a;--text:#e2e2f2;--text2:#6a6a9a;--text3:#38385a;--c:#c4c43a;--uc:#5ab8f0;--ra:#cc55ff;--ep:#ff8822;--le:#ffdd00;--my:#ff3388}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;display:flex;flex-direction:column}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.1)3px,rgba(0,0,0,.1)4px)}
+#hdr{background:var(--bg2);border-bottom:2px solid var(--border2);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#logo{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:3px;color:var(--acc);text-shadow:0 0 12px rgba(232,184,74,.6)}
+#logo sup{font-size:9px;color:var(--text3);vertical-align:top;margin-top:4px;display:inline-block}
+#hstats{display:flex;gap:8px}
+.hs{display:flex;flex-direction:column;align-items:flex-end;font-family:'Nanum Gothic Coding',monospace}
+.hs-l{font-size:8px;color:var(--text3)}.hs-v{font-size:12px;color:var(--acc);font-weight:bold}
+#tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.tab{flex:1;min-width:44px;padding:7px 1px 5px;text-align:center;font-size:8px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.tab i{font-size:14px;display:block;margin-bottom:1px;font-style:normal}
+#main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+#main::-webkit-scrollbar{width:2px}#main::-webkit-scrollbar-thumb{background:var(--border2)}
+.page{display:none;padding:10px}.page.on{display:block}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px}
+.ctitle{font-size:10px;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-family:'Nanum Gothic Coding',monospace}
+/* MINE */
+#mine-scene{position:relative;width:100%;border-radius:10px;overflow:hidden;margin-bottom:10px;cursor:crosshair;transition:background .6s}
+#mine-canvas{display:block;width:100%;touch-action:none}
+#depth-hud{position:absolute;top:8px;left:10px;font-family:'Nanum Gothic Coding',monospace;font-size:11px;color:var(--acc2);pointer-events:none;line-height:1.7}
+#combo-hud{position:absolute;top:8px;right:10px;font-family:'Black Han Sans',sans-serif;font-size:13px;pointer-events:none;opacity:0;transition:opacity .3s;color:var(--le);text-shadow:0 0 8px var(--le)}
+#eq-hud{position:absolute;bottom:20px;left:10px;font-family:'Nanum Gothic Coding',monospace;font-size:9px;color:rgba(255,255,255,.45);pointer-events:none}
+#reset-btn{position:absolute;bottom:18px;right:10px;padding:4px 10px;background:rgba(255,26,58,.12);border:1px solid rgba(255,26,58,.4);color:var(--red);font-size:9px;border-radius:20px;cursor:pointer;font-family:'Nanum Gothic Coding',monospace}
+.mine-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.minfo{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px}
+.minfo-l{font-size:9px;color:var(--text3);margin-bottom:2px}.minfo-v{font-size:14px;color:var(--acc);font-family:'Nanum Gothic Coding',monospace;font-weight:bold}
+.prog-wrap{margin-bottom:8px}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px}
+.prog-bar{height:7px;background:var(--bg2);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s}
+.active-buffs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.buff-tag{padding:2px 7px;border-radius:20px;font-size:9px;background:rgba(47,255,10,.08);border:1px solid rgba(47,255,10,.22);color:var(--green);font-family:'Nanum Gothic Coding',monospace}
+.challenge-btn{width:100%;padding:11px;background:rgba(61,232,196,.07);border:1px solid var(--acc2);color:var(--acc2);border-radius:7px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s}
+.challenge-btn:active{transform:scale(.97)}.challenge-btn:disabled{opacity:.4;pointer-events:none}
+/* SHOP */
+.shop-item{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px;display:flex;align-items:center;gap:11px;margin-bottom:7px;cursor:pointer;transition:all .15s;position:relative}
+.shop-item:active{transform:scale(.98)}.shop-item.owned{border-color:rgba(47,255,10,.4)}.shop-item.equipped-item{border-color:var(--acc);background:rgba(232,184,74,.07)}.shop-item.locked-item{opacity:.4;pointer-events:none}
+.shop-cv{flex-shrink:0;width:42px;height:42px;border-radius:7px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.shop-name{font-size:13px;font-weight:700;color:var(--text)}.shop-stat{font-size:10px;color:var(--text2);margin-top:1px}
+.shop-cost{font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:var(--acc);margin-top:3px}
+.shop-badge{position:absolute;top:6px;right:8px;font-size:8px;padding:2px 6px;border-radius:20px;font-family:'Nanum Gothic Coding',monospace}
+.badge-eq{background:rgba(232,184,74,.15);border:1px solid var(--acc);color:var(--acc)}
+.badge-own{background:rgba(47,255,10,.1);border:1px solid var(--green);color:var(--green)}
+.badge-lock{background:rgba(56,56,90,.3);border:1px solid var(--border);color:var(--text3)}
+.recipe-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.recipe-chip{padding:2px 6px;border-radius:20px;font-size:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2)}
+.recipe-chip.ok{border-color:var(--green);color:var(--green)}.recipe-chip.ng{border-color:var(--red);color:var(--red)}
+.shop-sec{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin:12px 0 6px;font-family:'Nanum Gothic Coding',monospace}
+/* UPG */
+.upg-list{display:flex;flex-direction:column;gap:5px}
+.upg-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
+.upg-btn:active{transform:scale(.97)}.upg-btn.can{border-color:rgba(232,184,74,.5);background:rgba(232,184,74,.04)}.upg-btn.max{border-color:var(--green);opacity:.6;pointer-events:none}
+.upg-ico{flex-shrink:0;width:34px;height:34px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px}
+.upg-left{flex:1}.upg-name{font-size:13px;color:var(--text);font-weight:700}.upg-desc{font-size:10px;color:var(--text2);margin-top:1px}
+.upg-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.upg-cost{font-family:'Nanum Gothic Coding',monospace;font-size:11px;color:var(--acc2)}.upg-lv{font-size:9px;color:var(--text3)}
+/* GACHA */
+.gacha-box{background:linear-gradient(135deg,var(--bg3),var(--panel));border:1px solid var(--border2);border-radius:12px;padding:16px;text-align:center;margin-bottom:10px;position:relative;overflow:hidden}
+.gacha-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(232,184,74,.07),transparent 70%)}
+.gacha-title{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--acc);letter-spacing:2px;margin-bottom:3px;position:relative}
+.gacha-sub{font-size:11px;color:var(--text2);position:relative;margin-bottom:12px}
+.gacha-icon{font-size:40px;margin-bottom:8px;display:block;position:relative}
+.gacha-btns{display:grid;grid-template-columns:1fr 1fr;gap:7px;position:relative;margin-bottom:8px}
+.g-btn{padding:11px;border-radius:8px;cursor:pointer;border:1px solid;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;transition:all .15s}
+.g-btn:active{transform:scale(.96)}.g-btn.x1{background:rgba(61,232,196,.1);border-color:var(--acc2);color:var(--acc2)}.g-btn.x10{background:rgba(232,184,74,.1);border-color:var(--acc);color:var(--acc)}
+.g-btn small{display:block;font-size:10px;font-weight:400;opacity:.7;margin-top:2px}
+.auto-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;position:relative}
+.auto-label{font-size:12px;color:var(--text2)}.auto-speed{font-size:10px;color:var(--text3);margin-top:2px}
+.toggle{width:42px;height:22px;background:var(--bg2);border:1px solid var(--border2);border-radius:11px;position:relative;cursor:pointer;transition:.3s;flex-shrink:0}
+.toggle.on{background:rgba(47,255,10,.15);border-color:var(--green)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--text3);transition:.3s}
+.toggle.on::after{transform:translateX(20px);background:var(--green)}
+.pity-bar{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;margin-bottom:7px}
+.pity-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.pity-label{color:var(--text2)}.pity-val{color:var(--le);font-family:'Nanum Gothic Coding',monospace}
+.pity-track{height:4px;background:var(--bg2);border-radius:2px;overflow:hidden}
+.pity-fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--le));border-radius:2px;transition:width .4s}
+.rates{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.rate-pill{padding:3px 7px;border-radius:20px;font-size:9px;border:1px solid;font-family:'Nanum Gothic Coding',monospace}
+.rate-pill.c{background:rgba(196,196,58,.1);border-color:var(--c);color:var(--c)}.rate-pill.uc{background:rgba(90,184,240,.1);border-color:var(--uc);color:var(--uc)}.rate-pill.ra{background:rgba(204,85,255,.1);border-color:var(--ra);color:var(--ra)}.rate-pill.ep{background:rgba(255,136,34,.1);border-color:var(--ep);color:var(--ep)}.rate-pill.le{background:rgba(255,221,0,.1);border-color:var(--le);color:var(--le)}.rate-pill.my{background:rgba(255,51,136,.1);border-color:var(--my);color:var(--my)}.rate-pill.rb{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.3);color:#fff}
+/* RESULT */
+#result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
+#result-overlay.show{display:flex}
+#result-box{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:380px;padding:16px;max-height:90vh;overflow-y:auto}
+#result-box::-webkit-scrollbar{display:none}
+.result-title{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--acc);letter-spacing:2px;text-align:center;margin-bottom:12px}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.rcard{border-radius:8px;padding:10px 6px;text-align:center;border:1px solid;position:relative;overflow:hidden}
+.rcard .rname{font-size:10px;font-weight:700}.rcard .rrare{font-size:9px;opacity:.7;margin-top:2px}
+.rcard.new::after{content:'NEW';position:absolute;top:3px;right:3px;background:var(--red);color:#fff;font-size:7px;padding:1px 4px;border-radius:3px;font-weight:700}
+.rcard.c{background:rgba(196,196,58,.1);border-color:var(--c);color:var(--c)}.rcard.uc{background:rgba(90,184,240,.1);border-color:var(--uc);color:var(--uc)}.rcard.ra{background:rgba(204,85,255,.1);border-color:var(--ra);color:var(--ra)}.rcard.ep{background:rgba(255,136,34,.1);border-color:var(--ep);color:var(--ep)}.rcard.le{background:rgba(255,221,0,.1);border-color:var(--le);color:var(--le)}
+.rcard.my{background:rgba(255,51,136,.1);border-color:var(--my);color:var(--my);animation:mysh .8s ease-in-out infinite alternate}
+@keyframes mysh{0%{box-shadow:0 0 6px var(--my)}100%{box-shadow:0 0 20px var(--my)}}
+.rcard.rb{border-color:transparent;color:#fff;background:linear-gradient(135deg,#ff6b35,#ffd700,#39ff14,#00e5ff,#b967ff);animation:rbsh 1s linear infinite}
+@keyframes rbsh{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+#result-close{width:100%;padding:12px;background:var(--acc);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+/* CODEX */
+.codex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
+.codex-item{border-radius:6px;padding:7px 3px;text-align:center;border:1px solid var(--border);background:var(--bg2);cursor:pointer}
+.codex-item.got{background:var(--bg3)}.codex-item.got.c{border-color:var(--c)}.codex-item.got.uc{border-color:var(--uc)}.codex-item.got.ra{border-color:var(--ra)}.codex-item.got.ep{border-color:var(--ep)}.codex-item.got.le{border-color:var(--le)}.codex-item.got.my{border-color:var(--my)}.codex-item.got.rb{border-color:rgba(255,255,255,.5)}
+.codex-name{font-size:8px;color:var(--text2);margin-top:2px}.buff-badge{font-size:7px;color:var(--green);margin-top:1px}
+.slabel{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-family:'Nanum Gothic Coding',monospace}
+#codex-detail{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:1001;padding:20px}
+#codex-detail.show{display:flex}
+#cd-box{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:340px;padding:20px;text-align:center}
+.cd-name{font-size:18px;font-weight:900;margin-bottom:3px}.cd-rare{font-size:10px;letter-spacing:1px;opacity:.8;margin-bottom:8px;font-family:'Nanum Gothic Coding',monospace}
+.cd-desc{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.cd-buff{font-size:11px;color:var(--green);background:rgba(47,255,10,.08);border:1px solid rgba(47,255,10,.2);border-radius:6px;padding:6px 10px;margin-bottom:10px}
+.cd-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.cd-stat{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px}
+.cd-stat-l{font-size:9px;color:var(--text3)}.cd-stat-v{font-size:13px;color:var(--acc2);font-family:'Nanum Gothic Coding',monospace}
+#cd-close{width:100%;padding:10px;background:rgba(232,184,74,.12);border:1px solid var(--acc);color:var(--acc);border-radius:7px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px}
+.stat-l{font-size:9px;color:var(--text3);margin-bottom:2px}.stat-v{font-size:15px;color:var(--acc2);font-family:'Nanum Gothic Coding',monospace;font-weight:bold}
+.ach-list{display:flex;flex-direction:column;gap:5px}
+.ach-item{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;display:flex;align-items:center;gap:10px}
+.ach-item.done{border-color:var(--acc)}.ach-ico{font-size:18px;flex-shrink:0}.ach-info{flex:1}.ach-name{font-size:13px;font-weight:700}.ach-desc{font-size:10px;color:var(--text2);margin-top:1px}
+.ach-badge{font-size:9px;color:var(--acc);font-family:'Nanum Gothic Coding',monospace;text-align:right;flex-shrink:0;line-height:1.6}
+.ach-prog{height:3px;background:var(--bg2);border-radius:2px;margin-top:4px;overflow:hidden}
+.ach-prog-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .5s}
+.ach-item.done .ach-prog-fill{background:var(--green)}
+/* ENDING */
+#ending-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9000;padding:24px;text-align:center}
+#ending-overlay.show{display:flex}
+.ending-title{font-family:'Black Han Sans',sans-serif;font-size:28px;margin-bottom:16px;background:linear-gradient(90deg,#ff3388,#ffdd00,#3de8c4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:egpulse 2s ease-in-out infinite}
+@keyframes egpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.ending-desc{font-size:13px;color:var(--text2);line-height:2;margin-bottom:24px}
+#ending-continue{padding:14px 36px;background:rgba(232,184,74,.15);border:2px solid var(--acc);color:var(--acc);border-radius:10px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+/* MINIGAME */
+#minigame-overlay{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:2000;padding:16px}
+#minigame-overlay.show{display:flex}
+#mg-canvas{border:1px solid var(--border2);border-radius:4px;display:block;max-width:100%;touch-action:none}
+#mg-ui{width:100%;max-width:320px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:'Nanum Gothic Coding',monospace;font-size:12px}
+#mg-title{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--acc2);letter-spacing:2px;margin-bottom:8px}
+#mg-close-btn{margin-top:10px;padding:9px 24px;background:rgba(255,26,58,.08);border:1px solid var(--red);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif}
+/* TOAST & FX */
+#toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);border:1px solid var(--acc);color:var(--acc);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;z-index:5000;opacity:0;transition:all .3s;white-space:nowrap;font-family:'Nanum Gothic Coding',monospace;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.float-txt{position:fixed;pointer-events:none;font-family:'Nanum Gothic Coding',monospace;font-weight:bold;font-size:13px;z-index:4000;animation:ftup .9s ease-out forwards}
+@keyframes ftup{0%{transform:translateY(0) scale(1.2);opacity:1}100%{transform:translateY(-60px) scale(.7);opacity:0}}
+#flash-overlay{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:0;transition:opacity .08s}
+/* NUCLEAR */
+#nuclear-section{background:linear-gradient(135deg,rgba(255,51,136,.06),rgba(255,221,0,.06));border:1px solid rgba(255,221,0,.3);border-radius:10px;padding:14px;margin-bottom:10px;display:none;text-align:center}
+#nuclear-section.show{display:block}
+.nuc-title{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--le);margin-bottom:6px;animation:nucpulse 1.5s ease-in-out infinite}
+@keyframes nucpulse{0%,100%{text-shadow:0 0 8px var(--le)}50%{text-shadow:0 0 24px var(--le),0 0 40px rgba(255,221,0,.4)}}
+.nuc-prog{height:10px;background:var(--bg2);border-radius:5px;overflow:hidden;margin:8px 0;border:1px solid var(--border)}
+.nuc-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--le));border-radius:5px;transition:width .3s}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div id="logo">⛏ GWANGJIL<sup>v4</sup></div>
+  <div id="hstats">
+    <div class="hs"><span class="hs-l">층</span><span class="hs-v" id="hs-layer">1</span></div>
+    <div class="hs"><span class="hs-l">ORE</span><span class="hs-v" id="hs-ore">0</span></div>
+    <div class="hs"><span class="hs-l">💎</span><span class="hs-v" id="hs-gem">0</span></div>
+  </div>
+</div>
+<div id="tabs">
+  <div class="tab on" onclick="switchTab('mine')" id="tab-mine"><i>⛏</i>채굴</div>
+  <div class="tab" onclick="switchTab('shop')" id="tab-shop"><i>🏪</i>상점</div>
+  <div class="tab" onclick="switchTab('upgrade')" id="tab-upgrade"><i>⬆</i>강화</div>
+  <div class="tab" onclick="switchTab('gacha')" id="tab-gacha"><i>🎰</i>가챠</div>
+  <div class="tab" onclick="switchTab('codex')" id="tab-codex"><i>📖</i>도감</div>
+  <div class="tab" onclick="switchTab('stats')" id="tab-stats"><i>🏆</i>기록</div>
+</div>
+<div id="main">
+  <!-- MINE -->
+  <div class="page on" id="page-mine">
+    <div id="mine-scene">
+      <canvas id="mine-canvas"></canvas>
+      <div id="depth-hud"><span id="layer-hud-name">표토층</span><br>채굴 <span id="hit-count">0</span>/100</div>
+      <div id="combo-hud"></div>
+      <div id="eq-hud"></div>
+      <button id="reset-btn" onclick="resetDepth()">↑ 0층으로</button>
+    </div>
+    <!-- NUCLEAR -->
+    <div id="nuclear-section">
+      <div class="nuc-title">☢ 지구의 핵</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">100번 채굴하면 엔딩!</div>
+      <div class="nuc-prog"><div class="nuc-fill" id="nuc-fill" style="width:0%"></div></div>
+      <div style="font-size:12px;color:var(--le);font-family:'Nanum Gothic Coding',monospace" id="nuc-count">0 / 100</div>
+    </div>
+    <div id="active-buffs-wrap" class="active-buffs"></div>
+    <div class="mine-info">
+      <div class="minfo"><div class="minfo-l">⛏ 광석</div><div class="minfo-v" id="mi-ore">0</div></div>
+      <div class="minfo"><div class="minfo-l">⚡ DPS</div><div class="minfo-v" id="mi-dps">0/s</div></div>
+      <div class="minfo"><div class="minfo-l">💪 파워</div><div class="minfo-v" id="mi-power">1</div></div>
+      <div class="minfo"><div class="minfo-l">🔥 콤보</div><div class="minfo-v" id="mi-combo">x1.0</div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">현재 층 정보</div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span id="layer-full-name">1층 지표면</span><span id="hit-prog-text">0/100</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="hit-prog-fill" style="background:var(--acc);width:0%"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span style="color:var(--text3);font-size:9px">지층 진행</span><span id="floor-prog-text" style="font-size:9px;color:var(--text3)">0/100</span></div>
+        <div class="prog-bar" style="height:4px"><div class="prog-fill" id="floor-prog-fill" style="background:var(--acc2);width:0%"></div></div>
+      </div>
+      <button class="challenge-btn" id="challenge-btn" onclick="startMinigame(false)">⚡ 층 돌파 챌린지</button>
+    </div>
+  </div>
+  <!-- SHOP -->
+  <div class="page" id="page-shop">
+    <div class="card">
+      <div class="ctitle">상점</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">⚒ 곡괭이: 클릭 파워 &nbsp;|&nbsp; 🔩 드릴: 자동 DPS<br>재료(광물)+광석으로 제작 &nbsp;|&nbsp; <span style="color:var(--acc)">드릴 장착=자동채굴</span></div>
+    </div>
+    <div class="shop-sec">⚒ 곡괭이</div>
+    <div id="shop-picks"></div>
+    <div class="shop-sec">🔩 드릴</div>
+    <div id="shop-drills"></div>
+  </div>
+  <!-- UPGRADE -->
+  <div class="page" id="page-upgrade">
+    <div class="card"><div class="ctitle">⚡ 동력</div><div class="upg-list" id="upg-engine"></div></div>
+    <div class="card"><div class="ctitle">🧪 연금술</div><div class="upg-list" id="upg-alch"></div></div>
+  </div>
+  <!-- GACHA -->
+  <div class="page" id="page-gacha">
+    <div class="gacha-box">
+      <span class="gacha-icon">💎</span>
+      <div class="gacha-title">광물 가챠</div>
+      <div class="gacha-sub">희귀한 광물을 발굴하세요</div>
+      <div class="gacha-btns">
+        <button class="g-btn x1" onclick="doGacha(1)">뽑기 x1<small id="g1-cost">💎 100</small></button>
+        <button class="g-btn x10" onclick="doGacha(10)">뽑기 x10<small id="g10-cost">💎 900</small></button>
+      </div>
+      <div class="auto-row">
+        <div><div class="auto-label">오토 가챠</div><div class="auto-speed" id="auto-gacha-speed">x1 (💎100/뽑기)</div></div>
+        <div class="toggle" id="auto-gacha-toggle" onclick="toggleAutoGacha()"></div>
+      </div>
+    </div>
+    <div class="pity-bar">
+      <div class="pity-row"><span class="pity-label">레전더리 천장</span><span class="pity-val" id="pity-le-val">0/80</span></div>
+      <div class="pity-track"><div class="pity-fill" id="pity-le-fill" style="width:0%"></div></div>
+    </div>
+    <div class="pity-bar">
+      <div class="pity-row"><span class="pity-label">미스틱 천장</span><span class="pity-val" id="pity-my-val">0/200</span></div>
+      <div class="pity-track"><div class="pity-fill" id="pity-my-fill" style="width:0%;background:linear-gradient(90deg,var(--my),var(--acc))"></div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">확률표</div>
+      <div class="rates"><span class="rate-pill c">커먼 50%</span><span class="rate-pill uc">언커먼 28%</span><span class="rate-pill ra">레어 15%</span><span class="rate-pill ep">에픽 5%</span><span class="rate-pill le">레전더리 1.5%</span><span class="rate-pill my">미스틱 0.5%</span><span class="rate-pill rb">레인보우 0.01%</span></div>
+      <div style="font-size:10px;color:var(--text3);line-height:1.6">※ 레전더리 80연 / 미스틱 200연 천장 &nbsp; ※ 레인보우 1/10000</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">가챠 통계</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-l">총 뽑기</div><div class="stat-v" id="g-total">0</div></div>
+        <div class="stat-card"><div class="stat-l">레전더리</div><div class="stat-v" id="g-le">0</div></div>
+        <div class="stat-card"><div class="stat-l">미스틱</div><div class="stat-v" id="g-my">0</div></div>
+        <div class="stat-card"><div class="stat-l">레인보우</div><div class="stat-v" id="g-rb">0</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- CODEX -->
+  <div class="page" id="page-codex">
+    <div class="card">
+      <div class="ctitle">광물 도감 <span id="codex-count" style="color:var(--acc)">0/22</span></div>
+      <div class="slabel">커먼</div><div class="codex-grid" id="codex-c"></div>
+      <div class="slabel">언커먼</div><div class="codex-grid" id="codex-uc"></div>
+      <div class="slabel">레어</div><div class="codex-grid" id="codex-ra"></div>
+      <div class="slabel">에픽</div><div class="codex-grid" id="codex-ep"></div>
+      <div class="slabel">레전더리</div><div class="codex-grid" id="codex-le"></div>
+      <div class="slabel">미스틱 & 레인보우</div><div class="codex-grid" id="codex-my"></div>
+    </div>
+  </div>
+  <!-- STATS -->
+  <div class="page" id="page-stats">
+    <div class="card">
+      <div class="ctitle">전체 통계</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-l">클리어 층</div><div class="stat-v" id="st-layer">0</div></div>
+        <div class="stat-card"><div class="stat-l">총 채굴</div><div class="stat-v" id="st-mine">0</div></div>
+        <div class="stat-card"><div class="stat-l">총 광석</div><div class="stat-v" id="st-ore">0</div></div>
+        <div class="stat-card"><div class="stat-l">최고 콤보</div><div class="stat-v" id="st-combo">0</div></div>
+        <div class="stat-card"><div class="stat-l">총 뽑기</div><div class="stat-v" id="st-gacha">0</div></div>
+        <div class="stat-card"><div class="stat-l">플레이</div><div class="stat-v" id="st-time">0m</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="ctitle">업적</div><div class="ach-list" id="ach-list"></div></div>
+    <div class="card">
+      <div class="ctitle">세이브</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="saveGame()" style="flex:1;padding:10px;background:rgba(47,255,10,.08);border:1px solid var(--green);color:var(--green);border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer">💾 저장</button>
+        <button id="reset-save-btn" onclick="confirmReset()" style="flex:1;padding:10px;background:rgba(255,26,58,.08);border:1px solid var(--red);color:var(--red);border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer">🗑 초기화</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- MODALS -->
+<div id="result-overlay" onclick="closeResult(event)">
+  <div id="result-box">
+    <div class="result-title" id="result-title">채굴 결과</div>
+    <div class="result-grid" id="result-grid"></div>
+    <button id="result-close" onclick="closeResult()">확인</button>
+  </div>
+</div>
+<div id="codex-detail" onclick="closeCD(event)">
+  <div id="cd-box">
+    <div style="margin-bottom:10px" id="cd-icon-wrap"></div>
+    <div class="cd-name" id="cd-name"></div>
+    <div class="cd-rare" id="cd-rare"></div>
+    <div class="cd-desc" id="cd-desc"></div>
+    <div class="cd-buff" id="cd-buff"></div>
+    <div class="cd-stats" id="cd-stats"></div>
+    <button id="cd-close" onclick="closeCD()">닫기</button>
+  </div>
+</div>
+<div id="minigame-overlay">
+  <div id="mg-title">⚡ 층 돌파 챌린지</div>
+  <div id="mg-ui">
+    <span id="mg-hp" style="color:var(--red)">❤❤❤❤❤</span>
+    <span id="mg-score" style="color:var(--acc)">0점</span>
+    <span id="mg-time" style="color:var(--acc2)">45s</span>
+  </div>
+  <canvas id="mg-canvas" width="320" height="400"></canvas>
+  <button id="mg-close-btn" onclick="closeMinigame()">포기</button>
+</div>
+<div id="ending-overlay">
+  <div class="ending-title">🌏 지구를 정복했습니다</div>
+  <div class="ending-desc">
+    당신은 지구의 표토에서 시작해<br>
+    맨틀을 뚫고 외핵을 관통하여<br>
+    <strong style="color:var(--le)">지구의 내핵에 도달했습니다.</strong><br><br>
+    수집한 광물: <span id="ending-minerals" style="color:var(--acc)">0</span>종<br>
+    총 채굴: <span id="ending-mines" style="color:var(--acc2)">0</span>회<br>
+    플레이 시간: <span id="ending-time" style="color:var(--my)">0분</span>
+  </div>
+  <button id="ending-continue" onclick="continueAfterEnding()">계속 하기</button>
+</div>
+<div id="reset-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#131325;border:1px solid #ff1a3a;border-radius:12px;padding:24px;width:100%;max-width:300px;text-align:center">
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:18px;color:#ff1a3a;margin-bottom:10px">⚠ 초기화</div>
+    <div style="font-size:13px;color:#6a6a9a;margin-bottom:20px;line-height:1.6">모든 데이터가 삭제됩니다.<br>정말 초기화하시겠습니까?</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="cancelReset()" style="flex:1;padding:11px;background:rgba(255,255,255,.05);border:1px solid #28284a;color:#e2e2f2;border-radius:7px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer">취소</button>
+      <button onclick="doReset()" style="flex:1;padding:11px;background:rgba(255,26,58,.15);border:1px solid #ff1a3a;color:#ff1a3a;border-radius:7px;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer">초기화</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="flash-overlay"></div>
+<script>
+// ══════════════════════════════════════════════════════
+// 광물/장비 캔버스 드로우
+// ══════════════════════════════════════════════════════
+const MDRAW={
+  coal:(c,s)=>{const h=s/2;c.fillStyle='#2a2a2a';c.beginPath();c.ellipse(h,h,h*.8,h*.7,.3,0,Math.PI*2);c.fill();c.fillStyle='#3d3d3d';c.beginPath();c.ellipse(h*.8,h*.7,h*.4,h*.3,-.5,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,255,255,.12)';c.beginPath();c.ellipse(h*.68,h*.58,h*.18,h*.1,-.8,0,Math.PI*2);c.fill()},
+  iron:(c,s)=>{const h=s/2;c.fillStyle='#8B6252';c.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3-Math.PI/6;i==0?c.moveTo(h+Math.cos(a)*h*.8,h+Math.sin(a)*h*.8):c.lineTo(h+Math.cos(a)*h*.8,h+Math.sin(a)*h*.8)}c.closePath();c.fill();c.fillStyle='#C4956A';c.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3-Math.PI/6;i==0?c.moveTo(h+Math.cos(a)*h*.5,h+Math.sin(a)*h*.5):c.lineTo(h+Math.cos(a)*h*.5,h+Math.sin(a)*h*.5)}c.closePath();c.fill()},
+  copper:(c,s)=>{const h=s/2;c.fillStyle='#b5651d';c.beginPath();c.arc(h,h,h*.8,0,Math.PI*2);c.fill();c.fillStyle='#d4833a';c.beginPath();c.arc(h*.8,h*.75,h*.38,0,Math.PI*2);c.fill();c.fillStyle='rgba(50,180,80,.3)';c.beginPath();c.arc(h*1.2,h*.85,h*.16,0,Math.PI*2);c.fill()},
+  quartz:(c,s)=>{const h=s/2;c.fillStyle='#e8e0f0';c.beginPath();c.moveTo(h,h*.15);c.lineTo(h+h*.58,h*.42);c.lineTo(h+h*.58,h*.92);c.lineTo(h,s*.95);c.lineTo(h-h*.58,h*.92);c.lineTo(h-h*.58,h*.42);c.closePath();c.fill();c.fillStyle='rgba(200,180,240,.6)';c.beginPath();c.moveTo(h,h*.15);c.lineTo(h+h*.58,h*.42);c.lineTo(h,h*.65);c.lineTo(h-h*.58,h*.42);c.closePath();c.fill()},
+  salt:(c,s)=>{const h=s/2;c.fillStyle='#d4cfc8';c.fillRect(h*.3,h*.35,h,h);c.fillStyle='#e8e4df';c.beginPath();c.moveTo(h*.3,h*.35);c.lineTo(h*1.1,h*.12);c.lineTo(h*1.82,h*.48);c.lineTo(h*1.3,h*.7);c.closePath();c.fill()},
+  silver:(c,s)=>{const h=s/2;const g=c.createRadialGradient(h*.7,h*.6,1,h,h,h*.85);g.addColorStop(0,'#f0f0f8');g.addColorStop(.5,'#b8bcd0');g.addColorStop(1,'#6a6e80');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,255,255,.5)';c.beginPath();c.ellipse(h*.68,h*.6,h*.22,h*.12,-.8,0,Math.PI*2);c.fill()},
+  zinc:(c,s)=>{const h=s/2;c.fillStyle='#7a8a8a';c.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?h*.8:h*.55;i==0?c.moveTo(h+Math.cos(a)*r,h+Math.sin(a)*r):c.lineTo(h+Math.cos(a)*r,h+Math.sin(a)*r)}c.closePath();c.fill();c.fillStyle='#9aabab';c.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?h*.5:h*.35;i==0?c.moveTo(h+Math.cos(a)*r,h+Math.sin(a)*r):c.lineTo(h+Math.cos(a)*r,h+Math.sin(a)*r)}c.closePath();c.fill()},
+  tin:(c,s)=>{const h=s/2;c.fillStyle='#9aacb8';c.beginPath();c.arc(h,h,h*.8,0,Math.PI*2);c.fill();c.fillStyle='#c0d4e0';c.beginPath();c.arc(h*.8,h*.75,h*.33,0,Math.PI*2);c.fill()},
+  marble:(c,s)=>{const h=s/2;c.fillStyle='#f5f0ea';c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill();c.strokeStyle='rgba(180,160,200,.4)';c.lineWidth=1.5;c.beginPath();c.moveTo(h*.3,h*.5);c.bezierCurveTo(h*.7,h*.2,h*1.1,h*1.2,h*1.6,h*.8);c.stroke()},
+  gold:(c,s)=>{const h=s/2;const g=c.createRadialGradient(h*.65,h*.55,1,h,h,h*.85);g.addColorStop(0,'#fff0a0');g.addColorStop(.4,'#f0b800');g.addColorStop(1,'#a07000');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,255,200,.5)';c.beginPath();c.ellipse(h*.65,h*.58,h*.22,h*.12,-.8,0,Math.PI*2);c.fill()},
+  ruby:(c,s)=>{const h=s/2;c.fillStyle='#cc1133';c.beginPath();c.moveTo(h,h*.1);c.lineTo(h+h*.65,h*.45);c.lineTo(h+h*.5,h*1.1);c.lineTo(h,s*.95);c.lineTo(h-h*.5,h*1.1);c.lineTo(h-h*.65,h*.45);c.closePath();c.fill();c.fillStyle='#ff3355';c.beginPath();c.moveTo(h,h*.1);c.lineTo(h+h*.65,h*.45);c.lineTo(h,h*.65);c.lineTo(h-h*.65,h*.45);c.closePath();c.fill();c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(h*.75,h*.36,h*.13,h*.07,-.5,0,Math.PI*2);c.fill()},
+  sapphire:(c,s)=>{const h=s/2;c.fillStyle='#1133bb';c.beginPath();c.moveTo(h,h*.1);c.lineTo(h+h*.65,h*.45);c.lineTo(h+h*.5,h*1.1);c.lineTo(h,s*.95);c.lineTo(h-h*.5,h*1.1);c.lineTo(h-h*.65,h*.45);c.closePath();c.fill();c.fillStyle='#2255ff';c.beginPath();c.moveTo(h,h*.1);c.lineTo(h+h*.65,h*.45);c.lineTo(h,h*.65);c.lineTo(h-h*.65,h*.45);c.closePath();c.fill()},
+  emerald:(c,s)=>{const h=s/2;c.fillStyle='#0a7a30';c.beginPath();c.moveTo(h*.55,h*.1);c.lineTo(h*1.45,h*.1);c.lineTo(h*1.75,h*.5);c.lineTo(h*1.45,h*1.6);c.lineTo(h*.55,h*1.6);c.lineTo(h*.25,h*.5);c.closePath();c.fill();c.fillStyle='#22cc66';c.beginPath();c.moveTo(h*.55,h*.1);c.lineTo(h*1.45,h*.1);c.lineTo(h*1.2,h*.45);c.lineTo(h*.8,h*.45);c.closePath();c.fill()},
+  platinum:(c,s)=>{const h=s/2;const g=c.createRadialGradient(h*.6,h*.5,1,h,h,h*.85);g.addColorStop(0,'#ffffff');g.addColorStop(.3,'#d8dce8');g.addColorStop(.7,'#9098b0');g.addColorStop(1,'#505870');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill();for(let i=0;i<6;i++){const a=i*Math.PI/3;c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=1.5;c.beginPath();c.moveTo(h+Math.cos(a)*h*.2,h+Math.sin(a)*h*.2);c.lineTo(h+Math.cos(a)*h*.75,h+Math.sin(a)*h*.75);c.stroke()}},
+  mithril:(c,s)=>{const h=s/2;c.fillStyle='#88aadd';c.beginPath();c.moveTo(h,h*.05);c.lineTo(h+h*.7,h*.38);c.lineTo(h+h*.55,h*1.05);c.lineTo(h,s*.98);c.lineTo(h-h*.55,h*1.05);c.lineTo(h-h*.7,h*.38);c.closePath();c.fill();c.fillStyle='#aaccff';c.beginPath();c.moveTo(h,h*.05);c.lineTo(h+h*.7,h*.38);c.lineTo(h,h*.65);c.lineTo(h-h*.7,h*.38);c.closePath();c.fill()},
+  obsidian:(c,s)=>{const h=s/2;c.fillStyle='#0d0d14';c.beginPath();c.moveTo(h*.5,h*.05);c.lineTo(h*1.6,h*.35);c.lineTo(h*1.75,h);c.lineTo(h*1.4,h*1.7);c.lineTo(h*.55,h*1.8);c.lineTo(h*.2,h*1.2);c.closePath();c.fill();c.fillStyle='rgba(150,100,255,.25)';c.beginPath();c.ellipse(h*.85,h*.3,h*.28,h*.11,-.4,0,Math.PI*2);c.fill()},
+  dragon_ore:(c,s)=>{const h=s/2;const g=c.createRadialGradient(h*.6,h*.5,1,h,h,h*.9);g.addColorStop(0,'#ffee44');g.addColorStop(.35,'#ff6600');g.addColorStop(.7,'#cc2200');g.addColorStop(1,'#440000');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill()},
+  void_crystal:(c,s)=>{const h=s/2;c.fillStyle='#0a0014';c.beginPath();c.moveTo(h,0);c.lineTo(h+h*.55,h*.55);c.lineTo(h+h*.4,h*1.5);c.lineTo(h,s);c.lineTo(h-h*.4,h*1.5);c.lineTo(h-h*.55,h*.55);c.closePath();c.fill();const g=c.createRadialGradient(h,h,2,h,h,h*.6);g.addColorStop(0,'rgba(180,50,255,.6)');g.addColorStop(1,'rgba(80,0,140,0)');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.6,0,Math.PI*2);c.fill()},
+  starstone:(c,s)=>{const h=s/2;c.fillStyle='#1a1a3a';c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill();for(let i=0;i<8;i++){const a=i*Math.PI/4,d=h*(.35+i%3*.12);c.fillStyle='rgba(180,190,255,'+(0.4+i%3*.15)+')';c.beginPath();c.arc(h+Math.cos(a)*d,h+Math.sin(a)*d,1.2+(i%3)*.8,0,Math.PI*2);c.fill()}},
+  soul_gem:(c,s)=>{const h=s/2;const g=c.createRadialGradient(h,h,1,h,h,h*.82);g.addColorStop(0,'#ff88aa');g.addColorStop(.4,'#cc1155');g.addColorStop(.8,'#550022');g.addColorStop(1,'#1a0008');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.82,0,Math.PI*2);c.fill();c.fillStyle='#0a0a0a';c.beginPath();c.arc(h,h,h*.33,0,Math.PI*2);c.fill()},
+  time_shard:(c,s)=>{const h=s/2;c.fillStyle='#aad4ff';c.beginPath();c.moveTo(h,h*.05);c.lineTo(h+h*.6,h*.4);c.lineTo(h+h*.25,h*.85);c.lineTo(h+h*.6,h*1.3);c.lineTo(h,s*.95);c.lineTo(h-h*.6,h*1.3);c.lineTo(h-h*.25,h*.85);c.lineTo(h-h*.6,h*.4);c.closePath();c.fill();const g=c.createRadialGradient(h,h*.85,1,h,h*.85,h*.26);g.addColorStop(0,'rgba(255,220,100,.9)');g.addColorStop(1,'rgba(255,150,50,0)');c.fillStyle=g;c.beginPath();c.arc(h,h*.85,h*.26,0,Math.PI*2);c.fill()},
+  rainbow_ore:(c,s)=>{const h=s/2;const cols=['#ff0044','#ff6600','#ffdd00','#00ff66','#00aaff','#aa44ff'];for(let i=0;i<6;i++){const a=i*Math.PI/3-Math.PI/6;c.fillStyle=cols[i];c.beginPath();c.moveTo(h,h);c.arc(h,h,h*.82,a,a+Math.PI/3);c.closePath();c.fill()}const g=c.createRadialGradient(h,h,1,h,h,h*.4);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.5,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.4,0,Math.PI*2);c.fill()},
+};
+function mkMC(id,sz){const oc=document.createElement('canvas');oc.width=oc.height=sz||32;(MDRAW[id]||((c,s)=>{c.fillStyle='#333';c.arc(s/2,s/2,s/2,0,Math.PI*2);c.fill()}))(oc.getContext('2d'),sz||32);return oc}
+const _MI={};function getMI(id,sz){const k=id+'_'+(sz||40);if(!_MI[k])_MI[k]=mkMC(id,sz||40).toDataURL();return _MI[k]}
+
+function drawPickCanvas(id,sz){
+  const oc=document.createElement('canvas');oc.width=oc.height=sz||44;
+  const c=oc.getContext('2d'),s=sz||44;
+  const P={
+    wood_pick:(c,s)=>{c.strokeStyle='#8B5E1A';c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.18,s*.82);c.lineTo(s*.72,s*.28);c.stroke();c.fillStyle='#8B5C26';c.beginPath();c.moveTo(s*.58,s*.08);c.lineTo(s*.9,s*.2);c.lineTo(s*.82,s*.46);c.lineTo(s*.5,s*.32);c.closePath();c.fill();c.fillStyle='#C4813A';c.beginPath();c.moveTo(s*.58,s*.14);c.lineTo(s*.72,s*.08);c.lineTo(s*.78,s*.22);c.lineTo(s*.62,s*.28);c.closePath();c.fill()},
+    stone_pick:(c,s)=>{c.strokeStyle='#524838';c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.18,s*.82);c.lineTo(s*.72,s*.28);c.stroke();c.fillStyle='#7a6e60';c.beginPath();c.moveTo(s*.54,s*.06);c.lineTo(s*.92,s*.2);c.lineTo(s*.84,s*.48);c.lineTo(s*.5,s*.3);c.closePath();c.fill();c.fillStyle='#a09080';c.beginPath();c.moveTo(s*.54,s*.13);c.lineTo(s*.72,s*.06);c.lineTo(s*.78,s*.2);c.lineTo(s*.6,s*.27);c.closePath();c.fill()},
+    iron_pick:(c,s)=>{c.strokeStyle='#4a5a6a';c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.16,s*.84);c.lineTo(s*.74,s*.26);c.stroke();c.fillStyle='#6080a0';c.beginPath();c.moveTo(s*.52,s*.05);c.lineTo(s*.94,s*.18);c.lineTo(s*.86,s*.5);c.lineTo(s*.46,s*.3);c.closePath();c.fill();c.fillStyle='#88b0d0';c.beginPath();c.moveTo(s*.52,s*.11);c.lineTo(s*.72,s*.05);c.lineTo(s*.8,s*.18);c.lineTo(s*.6,s*.26);c.closePath();c.fill()},
+    titanium_pick:(c,s)=>{c.strokeStyle='#2255aa';c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.14,s*.86);c.lineTo(s*.74,s*.26);c.stroke();const g=c.createLinearGradient(s*.5,s*.05,s*.95,s*.5);g.addColorStop(0,'#88ccff');g.addColorStop(1,'#1155aa');c.fillStyle=g;c.beginPath();c.moveTo(s*.5,s*.03);c.lineTo(s*.97,s*.16);c.lineTo(s*.88,s*.52);c.lineTo(s*.44,s*.28);c.closePath();c.fill();c.fillStyle='rgba(180,220,255,.6)';c.beginPath();c.ellipse(s*.63,s*.13,s*.1,s*.05,-.5,0,Math.PI*2);c.fill()},
+    uranium_pick:(c,s)=>{c.strokeStyle='#1a3a0a';c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.14,s*.86);c.lineTo(s*.74,s*.26);c.stroke();const g=c.createLinearGradient(s*.48,s*.03,s*.96,s*.52);g.addColorStop(0,'#a0ff50');g.addColorStop(.5,'#50b020');g.addColorStop(1,'#205a00');c.fillStyle=g;c.beginPath();c.moveTo(s*.48,s*.02);c.lineTo(s*.98,s*.16);c.lineTo(s*.88,s*.54);c.lineTo(s*.42,s*.26);c.closePath();c.fill();c.shadowBlur=8;c.shadowColor='#88ff20';c.fillStyle='rgba(160,255,60,.38)';c.beginPath();c.ellipse(s*.64,s*.14,s*.12,s*.06,-.5,0,Math.PI*2);c.fill();c.shadowBlur=0},
+    space_pick:(c,s)=>{c.strokeStyle='#180888';c.lineWidth=s*.1;c.lineCap='round';c.beginPath();c.moveTo(s*.12,s*.88);c.lineTo(s*.74,s*.26);c.stroke();const g=c.createLinearGradient(s*.46,s*.02,s*.97,s*.55);g.addColorStop(0,'#e8c0ff');g.addColorStop(.3,'#9050ff');g.addColorStop(1,'#12082a');c.fillStyle=g;c.beginPath();c.moveTo(s*.46,s*.01);c.lineTo(s*.99,s*.15);c.lineTo(s*.9,s*.55);c.lineTo(s*.4,s*.26);c.closePath();c.fill();c.shadowBlur=10;c.shadowColor='#c070ff';c.fillStyle='rgba(230,190,255,.5)';c.beginPath();c.ellipse(s*.64,s*.13,s*.12,s*.06,-.5,0,Math.PI*2);c.fill();c.shadowBlur=0},
+    atomic_pick:(c,s)=>{c.strokeStyle='#cc2200';c.lineWidth=s*.11;c.lineCap='round';c.beginPath();c.moveTo(s*.1,s*.9);c.lineTo(s*.74,s*.26);c.stroke();const g=c.createLinearGradient(s*.44,s*.01,s*.99,s*.57);g.addColorStop(0,'#ffff88');g.addColorStop(.2,'#ff8800');g.addColorStop(.5,'#ff2200');g.addColorStop(1,'#700000');c.fillStyle=g;c.beginPath();c.moveTo(s*.44,s*.01);c.lineTo(s*.99,s*.14);c.lineTo(s*.91,s*.56);c.lineTo(s*.38,s*.26);c.closePath();c.fill();c.shadowBlur=12;c.shadowColor='#ff3300';c.fillStyle='rgba(255,200,100,.8)';c.beginPath();c.ellipse(s*.63,s*.13,s*.1,s*.05,-.5,0,Math.PI*2);c.fill();c.shadowBlur=0},
+    blackhole_pick:(c,s)=>{const h=s/2;const g=c.createRadialGradient(h,h,1,h,h,h*.9);g.addColorStop(0,'#ffffff');g.addColorStop(.2,'#aa88ff');g.addColorStop(.5,'#440088');g.addColorStop(1,'#000000');c.fillStyle=g;c.beginPath();c.arc(h,h,h*.9,0,Math.PI*2);c.fill();for(let i=0;i<5;i++){const a=i*Math.PI*.4;c.strokeStyle='rgba(200,150,255,'+(0.3+i*.1)+')';c.lineWidth=1;c.beginPath();c.ellipse(h,h,h*(0.4+i*.1),h*.15,a,0,Math.PI*2);c.stroke()}c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.arc(h,h,h*.08,0,Math.PI*2);c.fill()},
+    magma_pick:(c,s)=>{c.strokeStyle='#aa1100';c.lineWidth=s*.11;c.lineCap='round';c.beginPath();c.moveTo(s*.1,s*.9);c.lineTo(s*.74,s*.26);c.stroke();const g=c.createLinearGradient(s*.44,s*.01,s*.99,s*.57);g.addColorStop(0,'#ffee00');g.addColorStop(.3,'#ff6600');g.addColorStop(.6,'#cc1100');g.addColorStop(1,'#440000');c.fillStyle=g;c.beginPath();c.moveTo(s*.44,s*.01);c.lineTo(s*.99,s*.14);c.lineTo(s*.91,s*.56);c.lineTo(s*.38,s*.26);c.closePath();c.fill();c.shadowBlur=16;c.shadowColor='#ff4400';for(let i=0;i<5;i++){const a=Math.PI/4+i*Math.PI*.2;c.fillStyle='rgba(255,100,0,.6)';c.beginPath();c.arc(s*.7+Math.cos(a)*s*.08,s*.3+Math.sin(a)*s*.08,s*.04,0,Math.PI*2);c.fill()}c.shadowBlur=0},
+    iron_drill:(c,s)=>{const h=s/2;c.fillStyle='#506070';c.beginPath();c.moveTo(h*.45,s*.08);c.lineTo(h*1.55,s*.08);c.lineTo(h*1.55,s*.72);c.lineTo(h*1.22,s*.92);c.lineTo(h*.78,s*.92);c.lineTo(h*.45,s*.72);c.closePath();c.fill();c.fillStyle='#7898b8';c.fillRect(h*.65,s*.08,h*.7,s*.14);c.fillStyle='#a8c4dc';c.beginPath();c.moveTo(h*.78,s*.9);c.lineTo(h*1.22,s*.9);c.lineTo(h,s);c.closePath();c.fill()},
+    titanium_drill:(c,s)=>{const h=s/2;const g=c.createLinearGradient(0,0,s,s);g.addColorStop(0,'#88c0ff');g.addColorStop(.5,'#2a68c8');g.addColorStop(1,'#081840');c.fillStyle=g;c.beginPath();c.moveTo(h*.38,s*.07);c.lineTo(h*1.62,s*.07);c.lineTo(h*1.62,s*.68);c.lineTo(h*1.28,s*.93);c.lineTo(h*.72,s*.93);c.lineTo(h*.38,s*.68);c.closePath();c.fill();c.fillStyle='#c8e8ff';c.beginPath();c.moveTo(h*.72,s*.91);c.lineTo(h*1.28,s*.91);c.lineTo(h,s);c.closePath();c.fill()},
+    space_drill:(c,s)=>{const h=s/2;const g=c.createLinearGradient(0,0,s,s);g.addColorStop(0,'#c898ff');g.addColorStop(.4,'#7038d8');g.addColorStop(1,'#1a0658');c.fillStyle=g;c.beginPath();c.moveTo(h*.28,s*.05);c.lineTo(h*1.72,s*.05);c.lineTo(h*1.72,s*.66);c.lineTo(h*1.32,s*.95);c.lineTo(h*.68,s*.95);c.lineTo(h*.28,s*.66);c.closePath();c.fill();c.shadowBlur=8;c.shadowColor='#9848ff';c.fillStyle='#e8b8ff';c.beginPath();c.moveTo(h*.68,s*.93);c.lineTo(h*1.32,s*.93);c.lineTo(h,s);c.closePath();c.fill();c.shadowBlur=0},
+    god_drill:(c,s)=>{const h=s/2;const g=c.createLinearGradient(0,0,s,s);g.addColorStop(0,'#ffff90');g.addColorStop(.25,'#ffaa00');g.addColorStop(.5,'#ff4400');g.addColorStop(.75,'#aa00ff');g.addColorStop(1,'#0044ff');c.fillStyle=g;c.beginPath();c.moveTo(h*.18,s*.03);c.lineTo(h*1.82,s*.03);c.lineTo(h*1.82,s*.64);c.lineTo(h*1.4,s*.97);c.lineTo(h*.6,s*.97);c.lineTo(h*.18,s*.64);c.closePath();c.fill();c.shadowBlur=14;c.shadowColor='#ffaa00';c.fillStyle='#fff8a0';c.beginPath();c.moveTo(h*.6,s*.95);c.lineTo(h*1.4,s*.95);c.lineTo(h,s);c.closePath();c.fill();c.shadowBlur=0},
+    blackhole_drill:(c,s)=>{const h=s/2;c.fillStyle='#000';c.beginPath();c.moveTo(h*.18,s*.03);c.lineTo(h*1.82,s*.03);c.lineTo(h*1.82,s*.64);c.lineTo(h*1.4,s*.97);c.lineTo(h*.6,s*.97);c.lineTo(h*.18,s*.64);c.closePath();c.fill();const g=c.createRadialGradient(h,h*.5,4,h,h*.5,h*.9);g.addColorStop(0,'rgba(180,100,255,.8)');g.addColorStop(.5,'rgba(80,0,200,.4)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.beginPath();c.moveTo(h*.18,s*.03);c.lineTo(h*1.82,s*.03);c.lineTo(h*1.82,s*.64);c.lineTo(h*1.4,s*.97);c.lineTo(h*.6,s*.97);c.lineTo(h*.18,s*.64);c.closePath();c.fill();for(let i=0;i<5;i++){const a=i*Math.PI*.4;c.strokeStyle='rgba(200,150,255,.4)';c.lineWidth=1;c.beginPath();c.ellipse(h,h*.5,h*(0.3+i*.1),h*.12,a,0,Math.PI*2);c.stroke()}c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.arc(h,h*.5,h*.06,0,Math.PI*2);c.fill()},
+    magma_drill:(c,s)=>{const h=s/2;const g=c.createLinearGradient(0,0,s,s);g.addColorStop(0,'#ffee00');g.addColorStop(.3,'#ff6600');g.addColorStop(.6,'#cc1100');g.addColorStop(1,'#440000');c.fillStyle=g;c.beginPath();c.moveTo(h*.18,s*.03);c.lineTo(h*1.82,s*.03);c.lineTo(h*1.82,s*.64);c.lineTo(h*1.4,s*.97);c.lineTo(h*.6,s*.97);c.lineTo(h*.18,s*.64);c.closePath();c.fill();c.shadowBlur=18;c.shadowColor='#ff4400';for(let i=0;i<6;i++){const x=h*.3+i*h*.24,y=s*.3+Math.sin(i*1.2)*s*.1;c.fillStyle='rgba(255,'+(100+i*20)+',0,.7)';c.beginPath();c.arc(x,y,s*.055,0,Math.PI*2);c.fill()}c.shadowBlur=0;c.fillStyle='rgba(255,220,0,.6)';c.beginPath();c.moveTo(h*.6,s*.95);c.lineTo(h*1.4,s*.95);c.lineTo(h,s);c.closePath();c.fill()},
+  };
+  if(P[id])P[id](c,s);
+  return oc;
+}
+const _EI={};function getEI(id,sz){const k=id+'_'+(sz||44);if(!_EI[k])_EI[k]=drawPickCanvas(id,sz||44).toDataURL();return _EI[k]}
+
+// ══════════════════════════════════════════════════════
+// 지구 층 정의 (실제 지구 기반)
+// ══════════════════════════════════════════════════════
+const LAYERS=[
+  {name:'표토층',bg1:'#2d1a0a',bg2:'#4a2e12',accent:'#8B6040',desc:'지표면 가까이. 흙과 모래로 이루어진 층.',ore:3},
+  {name:'퇴적암층',bg1:'#3a2a18',bg2:'#5a4228',accent:'#A08060',desc:'수천만 년간 쌓인 퇴적암 지층.',ore:6},
+  {name:'지각층',bg1:'#1a1a2a',bg2:'#2a2a4a',accent:'#6060A0',desc:'지구 지각. 화강암과 현무암으로 구성.',ore:12},
+  {name:'상부 맨틀',bg1:'#2a1a0a',bg2:'#5a2a0a',accent:'#C05020',desc:'반용융 상태의 암석이 흐르는 층.',ore:25},
+  {name:'하부 맨틀',bg1:'#3a0a0a',bg2:'#6a0a0a',accent:'#E04020',desc:'극한의 압력. 광물이 변형되기 시작.',ore:50},
+  {name:'D층 경계',bg1:'#1a0a2a',bg2:'#3a0a5a',accent:'#8020C0',desc:'맨틀과 핵의 경계. 이상한 파동이 감지된다.',ore:100},
+  {name:'외핵',bg1:'#0a0a1a',bg2:'#0a1a3a',accent:'#2060E0',desc:'액체 철과 니켈. 지구 자기장의 근원.',ore:200},
+  {name:'내핵',bg1:'#0a0a0a',bg2:'#1a0a0a',accent:'#E0A000',desc:'고체 철. 지구의 심장. 무언가 기다리고 있다.',ore:400},
+  // 9번째 - 핵 (special)
+  {name:'지구의 핵',bg1:'#000000',bg2:'#1a0000',accent:'#FF2200',desc:'지구의 핵. 100번 채굴하면 지구가 열린다.',ore:1000,isNuclear:true},
+];
+
+const MINERALS=[
+  {id:'coal',name:'석탄',rare:'c',desc:'태고의 압력으로 형성된 연료.',buff:'DPS +5%',bS:'dps_pct',bV:.05,mB:2,gV:1},
+  {id:'iron',name:'철광석',rare:'c',desc:'붉은 토양의 기초 금속.',buff:'파워 +3',bS:'power',bV:3,mB:2,gV:1},
+  {id:'copper',name:'구리',rare:'c',desc:'전도성 높은 따뜻한 금속.',buff:'젬드롭 +3%',bS:'gem_drop',bV:.03,mB:2,gV:1},
+  {id:'quartz',name:'수정',rare:'c',desc:'열과 압력이 만든 투명 결정.',buff:'콤보유지 +0.5s',bS:'combo_time',bV:.5,mB:2,gV:1},
+  {id:'salt',name:'암염',rare:'c',desc:'고대 바다가 남긴 소금.',buff:'광석 +5%',bS:'ore_pct',bV:.05,mB:2,gV:1},
+  {id:'silver',name:'은광석',rare:'uc',desc:'달빛을 닮은 귀금속.',buff:'가챠비용 -3%',bS:'gacha_disc',bV:.03,mB:4,gV:3},
+  {id:'zinc',name:'아연',rare:'uc',desc:'8각형 결정의 청회색 금속.',buff:'파워 +8',bS:'power',bV:8,mB:4,gV:3},
+  {id:'tin',name:'주석',rare:'uc',desc:'청동 합금의 핵심.',buff:'DPS +8%',bS:'dps_pct',bV:.08,mB:4,gV:3},
+  {id:'marble',name:'대리석',rare:'uc',desc:'석회암이 변성된 건축재.',buff:'콤보max +1',bS:'combo_max',bV:1,mB:4,gV:3},
+  {id:'gold',name:'금광석',rare:'ra',desc:'귀금속의 왕.',buff:'젬드롭 +10%',bS:'gem_drop',bV:.1,mB:10,gV:10},
+  {id:'ruby',name:'루비',rare:'ra',desc:'붉은 강옥.',buff:'파워 +25',bS:'power',bV:25,mB:10,gV:10},
+  {id:'sapphire',name:'사파이어',rare:'ra',desc:'파란 강옥.',buff:'DPS +15%',bS:'dps_pct',bV:.15,mB:10,gV:10},
+  {id:'emerald',name:'에메랄드',rare:'ra',desc:'녹색 베릴.',buff:'광석 +20%',bS:'ore_pct',bV:.2,mB:10,gV:10},
+  {id:'platinum',name:'플래티넘',rare:'ep',desc:'가장 귀한 금속.',buff:'파워 +60',bS:'power',bV:60,mB:40,gV:50},
+  {id:'mithril',name:'미스릴',rare:'ep',desc:'전설의 청백색 금속.',buff:'DPS +30%',bS:'dps_pct',bV:.3,mB:40,gV:50},
+  {id:'obsidian',name:'흑요석',rare:'ep',desc:'화산 유리.',buff:'콤보유지 +2s',bS:'combo_time',bV:2,mB:40,gV:50},
+  {id:'dragon_ore',name:'용의 광석',rare:'le',desc:'용의 숨결로 단련된 전설.',buff:'파워 x1.5',bS:'power_mult',bV:.5,mB:200,gV:300},
+  {id:'void_crystal',name:'공허 결정',rare:'le',desc:'차원 균열의 암흑 결정.',buff:'DPS x1.5',bS:'dps_mult',bV:.5,mB:200,gV:300},
+  {id:'starstone',name:'별돌',rare:'le',desc:'운석의 심장부.',buff:'광석 x2',bS:'ore_mult',bV:1,mB:200,gV:300},
+  {id:'soul_gem',name:'영혼의 보석',rare:'my',desc:'살아있는 광물. 채굴자를 기억한다.',buff:'가챠비용 -30%',bS:'gacha_disc',bV:.3,mB:1000,gV:1000},
+  {id:'time_shard',name:'시간 파편',rare:'my',desc:'과거와 미래가 응축된 결정.',buff:'DPS x2',bS:'dps_mult',bV:1,mB:1000,gV:1000},
+  {id:'rainbow_ore',name:'레인보우 오어',rare:'rb',desc:'6빛 프리즘 결정. 전설.',buff:'모든 스탯 x3',bS:'all_mult',bV:2,mB:9999,gV:9999},
+];
+
+// 모든 광물 ID 목록 (블랙홀 재료용)
+const ALL_MINERAL_IDS=MINERALS.map(m=>m.id);
+
+const PICKS=[
+  {id:'wood_pick',  name:'나무 곡괭이', power:1,    oreCost:0,    gemCost:0,   recipe:null,                                   desc:'기본 지급',     effectColor:'#8B6040', effectType:'dust'},
+  {id:'stone_pick', name:'돌 곡괭이',   power:5,    oreCost:80,   gemCost:0,   recipe:null,                                   desc:'광석 80',       effectColor:'#A0A080', effectType:'dust'},
+  {id:'iron_pick',  name:'철 곡괭이',   power:15,   oreCost:300,  gemCost:0,   recipe:{iron:3,coal:2},                        desc:'철x3 석탄x2',   effectColor:'#7090b0', effectType:'spark'},
+  {id:'titanium_pick',name:'티타늄 곡괭이',power:50,oreCost:2000, gemCost:5,   recipe:{silver:3,iron:5},                      desc:'은x3 철x5',     effectColor:'#44aaff', effectType:'spark'},
+  {id:'uranium_pick',name:'우라늄 곡괭이',power:180,oreCost:15000,gemCost:20,  recipe:{gold:2,emerald:1,iron:8},              desc:'금x2 에메x1 철x8',effectColor:'#88ff20',effectType:'glow'},
+  {id:'space_pick', name:'우주 곡괭이', power:700,  oreCost:80000,gemCost:60,  recipe:{mithril:2,sapphire:2,platinum:1},      desc:'미스릴x2 사파x2 플x1',effectColor:'#cc66ff',effectType:'glow'},
+  {id:'atomic_pick',name:'원자 곡괭이', power:3000, oreCost:400000,gemCost:150,recipe:{dragon_ore:1,void_crystal:1,soul_gem:1,obsidian:3},desc:'용x1 공허x1 영혼x1 흑요x3',effectColor:'#ff4400',effectType:'burst'},
+  {id:'blackhole_pick',name:'블랙홀 곡괭이',power:99999,oreCost:999999,gemCost:999,recipe:Object.fromEntries(ALL_MINERAL_IDS.map(id=>[id,1])),desc:'모든 광물 1개씩',effectColor:'#aa44ff',effectType:'blackhole'},
+  {id:'magma_pick', name:'마그마 곡괭이',power:50000,oreCost:500000,gemCost:500,recipe:null, locked:true,               desc:'딥코어 챌린지 클리어 보상',effectColor:'#ff6600',effectType:'magma'},
+];
+const DRILLS=[
+  {id:'iron_drill',   name:'철 드릴',     dps:10,   oreCost:200,   gemCost:0,  recipe:{iron:5,coal:3},                            desc:'철x5 석탄x3',   effectColor:'#7090b0',effectType:'spark'},
+  {id:'titanium_drill',name:'티타늄 드릴',dps:40,   oreCost:3000,  gemCost:8,  recipe:{silver:4,zinc:3},                           desc:'은x4 아연x3',   effectColor:'#44aaff',effectType:'spark'},
+  {id:'space_drill',  name:'우주 드릴',   dps:200,  oreCost:50000, gemCost:50, recipe:{mithril:3,ruby:2,platinum:1},                desc:'미스릴x3 루비x2 플x1',effectColor:'#cc66ff',effectType:'glow'},
+  {id:'god_drill',    name:'갓 드릴',     dps:1000, oreCost:300000,gemCost:200,recipe:{dragon_ore:1,time_shard:1,starstone:2},      desc:'용x1 시간x1 별x2',effectColor:'#ffaa00',effectType:'burst'},
+  {id:'blackhole_drill',name:'블랙홀 드릴',dps:99999,oreCost:999999,gemCost:999,recipe:Object.fromEntries(ALL_MINERAL_IDS.map(id=>[id,1])),desc:'모든 광물 1개씩',effectColor:'#aa44ff',effectType:'blackhole'},
+  {id:'magma_drill',  name:'마그마 드릴', dps:25000,oreCost:500000,gemCost:500,recipe:null,locked:true,                            desc:'딥코어 챌린지 클리어 보상',effectColor:'#ff6600',effectType:'magma'},
+];
+
+const UPGRADES={
+  engine:[
+    {id:'eng1',name:'증기 엔진',  desc:'DPS +5',    ico:'💨',baseCost:300, costMult:1.5,maxLv:20,stat:'dps',val:5},
+    {id:'eng2',name:'전기 모터',  desc:'DPS +20',   ico:'⚡',baseCost:3000,costMult:1.6,maxLv:15,stat:'dps',val:20},
+    {id:'eng3',name:'핵융합 코어',desc:'DPS +100',  ico:'☢',baseCost:30000,costMult:1.8,maxLv:10,stat:'dps',val:100},
+    {id:'eng4',name:'콤보 유지기',desc:'콤보유지 +2s',ico:'🔥',baseCost:1200,costMult:1.4,maxLv:15,stat:'combo_time',val:2},
+    {id:'eng5',name:'파워 부스터',desc:'파워 +50',   ico:'💪',baseCost:2000,costMult:1.5,maxLv:20,stat:'power_flat',val:50},
+  ],
+  alch:[
+    {id:'alch1',name:'광석 정제', desc:'젬 교환 +10%',ico:'⚗',baseCost:800,costMult:1.4,maxLv:20,stat:'gem_rate',val:.1},
+    {id:'alch2',name:'보석 연마', desc:'가챠 -5%',   ico:'💎',baseCost:3000,costMult:1.7,maxLv:10,stat:'gacha_disc',val:.05},
+    {id:'alch3',name:'심도 확장', desc:'광석 보너스 +50%',ico:'📡',baseCost:5000,costMult:1.8,maxLv:15,stat:'depth_bonus',val:.5},
+    {id:'alch4',name:'신성한 증류',desc:'레전더리/미스틱/레인보우 확률 ↑',ico:'✨',baseCost:20000,costMult:2.2,maxLv:10,stat:'le_bonus',val:.001},
+  ]
+};
+
+const ACHIEVEMENTS=[
+  {id:'mine100',name:'초보 광부',desc:'100번 채굴',icon:'⛏',target:100,stat:'totalMines',val:1},
+  {id:'mine1000',name:'숙련 광부',desc:'1000번 채굴',icon:'🔨',target:1000,stat:'totalMines',val:2},
+  {id:'ore10k',name:'광석 수집가',desc:'광석 10,000개',icon:'🪨',target:10000,stat:'totalOre',val:3},
+  {id:'layer3',name:'맨틀 돌파',desc:'3층 도달',icon:'🔥',target:3,stat:'maxLayer',val:5},
+  {id:'layer6',name:'핵 근처',desc:'6층 도달',icon:'☢',target:6,stat:'maxLayer',val:15},
+  {id:'layer8',name:'내핵 도달',desc:'8층 도달',icon:'🌏',target:8,stat:'maxLayer',val:50},
+  {id:'gacha10',name:'행운의 시작',desc:'가챠 10회',icon:'🎰',target:10,stat:'totalGacha',val:2},
+  {id:'gacha100',name:'가챠 중독자',desc:'가챠 100회',icon:'💸',target:100,stat:'totalGacha',val:5},
+  {id:'combo10',name:'연속 채굴',desc:'콤보 10',icon:'⚡',target:10,stat:'maxCombo',val:3},
+  {id:'codex_half',name:'반쪽 도감',desc:'도감 50%',icon:'📖',target:11,stat:'codexCount',val:10},
+  {id:'codex_all',name:'광물 박사',desc:'모든 광물 수집',icon:'🎓',target:MINERALS.length,stat:'codexCount',val:100},
+  {id:'le_get',name:'전설 획득',desc:'레전더리 수집',icon:'⭐',target:1,stat:'leCount',val:20},
+  {id:'rb_get',name:'레인보우 전설',desc:'레인보우 획득',icon:'🌈',target:1,stat:'rbCount',val:9999},
+];
+
+// ══════════════════════════════════════════════════════
+// 게임 상태
+// ══════════════════════════════════════════════════════
+let G={
+  ore:0,gem:0,totalOre:0,totalMines:0,
+  baseDps:0,basePowerFlat:0,combo:1,comboTimer:0,maxCombo:1,comboTimeMax:3,
+  layerIdx:0,maxLayer:0,
+  hitCount:0,
+  floorCount:0,
+  blockHP:0,
+  blockMaxHP:0,
+  nuclearHits:0,
+  upgrades:{},collection:{},
+  codexCount:0,leCount:0,myCount:0,rbCount:0,
+  gachaPity:{le:0,my:0},totalGacha:0,achievements:{},playTime:0,
+  equippedPick:'wood_pick',equippedDrill:null,
+  ownedPicks:['wood_pick'],ownedDrills:[],
+  autoGachaOn:false,autoGachaTimer:0,
+  endingShown:false,endingDone:false,
+  deepCoreUnlocked:false,deepCoreDone:false,
+};
+Object.values(UPGRADES).flat().forEach(u=>G.upgrades[u.id]=0);
+
+function getBuffs(){
+  let power=0,dps_pct=0,dps_mult=0,power_mult=0,ore_pct=0,ore_mult=0,combo_time=0,combo_max=0,gem_drop=0,gacha_disc=0,all_mult=0;
+  MINERALS.forEach(m=>{
+    if(!G.collection[m.id])return;
+    if(m.bS==='power')power+=m.bV;if(m.bS==='dps_pct')dps_pct+=m.bV;if(m.bS==='dps_mult')dps_mult+=m.bV;if(m.bS==='power_mult')power_mult+=m.bV;if(m.bS==='ore_pct')ore_pct+=m.bV;if(m.bS==='ore_mult')ore_mult+=m.bV;if(m.bS==='combo_time')combo_time+=m.bV;if(m.bS==='combo_max')combo_max+=m.bV;if(m.bS==='gem_drop')gem_drop+=m.bV;if(m.bS==='gacha_disc')gacha_disc+=m.bV;if(m.bS==='all_mult')all_mult+=m.bV;
+  });
+  return{power,dps_pct,dps_mult,power_mult,ore_pct,ore_mult,combo_time,combo_max,gem_drop,gacha_disc,all_mult};
+}
+function recompute(){
+  let upgDps=0,upgCT=0,upgDB=0,upgGR=1,upgGD=0,upgLB=0,upgPF=0;
+  Object.values(UPGRADES).flat().forEach(u=>{
+    const lv=G.upgrades[u.id]||0;if(!lv)return;
+    if(u.stat==='dps')upgDps+=u.val*lv;if(u.stat==='combo_time')upgCT+=u.val*lv;if(u.stat==='depth_bonus')upgDB+=u.val*lv;if(u.stat==='gem_rate')upgGR+=u.val*lv;if(u.stat==='gacha_disc')upgGD+=u.val*lv;if(u.stat==='le_bonus')upgLB+=u.val*lv;if(u.stat==='power_flat')upgPF+=u.val*lv;
+  });
+  const drill=DRILLS.find(d=>d.id===G.equippedDrill)||null;
+  G.baseDps=(drill?drill.dps:0)+upgDps;G.basePowerFlat=upgPF;
+  G.comboTimeMax=3+upgCT;G._depthBonus=upgDB;G._gemRate=upgGR;G._upgGD=upgGD;G._leBonus=upgLB;
+}
+function getPick(){return PICKS.find(p=>p.id===G.equippedPick)||PICKS[0]}
+function getEffPow(){const b=getBuffs(),p=getPick();let v=(p.power+b.power+G.basePowerFlat)*(1+b.power_mult);if(b.all_mult)v*=(1+b.all_mult);return Math.ceil(v)}
+function getEffDps(){const b=getBuffs();let v=G.baseDps*(1+b.dps_pct)*(1+b.dps_mult);if(b.all_mult)v*=(1+b.all_mult);return Math.ceil(v)}
+function getEffOre(base){const b=getBuffs();let v=base*(1+b.ore_pct)*(1+(G._depthBonus||0))*(1+b.ore_mult);if(b.all_mult)v*=(1+b.all_mult);return Math.ceil(v)}
+function getGemDrop(){const b=getBuffs();return .08+b.gem_drop}
+function getCTMax(){return G.comboTimeMax+getBuffs().combo_time}
+function getCMax(){return 10+getBuffs().combo_max}
+function getGachaCost(n){const b=getBuffs();const disc=Math.min((G._upgGD||0)+b.gacha_disc,.55);return Math.floor((n===1?80:700)*(1-disc))}
+
+function getBlockHP(){
+  // 지층·블록번호에 따라 고정 HP 계산
+  const base = 50 * Math.pow(3, G.layerIdx);
+  const growth = (G.floorCount / 99) * base * 3;
+  return Math.ceil(base + growth);
+}
+
+function initBlock(){
+  // 새 블록 시작할 때 반드시 이 함수 호출
+  G.blockMaxHP = getBlockHP();
+  G.blockHP = G.blockMaxHP;
+}
+
+function saveGame(){localStorage.setItem('gwangjil_v4',JSON.stringify(G));showToast('💾 저장 완료!')}
+function loadGame(){
+  if(location.search.includes('reset='))return; // 리셋 직후엔 로드 안 함
+  const d=localStorage.getItem('gwangjil_v4');
+  if(!d)return;
+  try{const s=JSON.parse(d);Object.assign(G,s);recompute();}catch(e){}
+}
+function confirmReset(){
+  document.getElementById('reset-modal').style.display='flex';
+}
+function doReset(){
+  window.removeEventListener('beforeunload', _autoSave);
+  // 모든 버전 키 삭제
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('gwangjil'))localStorage.removeItem(k);
+  }
+  localStorage.clear();
+  location.href=location.href.split('?')[0]+'?reset='+Date.now();
+}
+function cancelReset(){
+  document.getElementById('reset-modal').style.display='none';
+}
+
+// ══════════════════════════════════════════════════════
+// 채굴 캔버스
+// ══════════════════════════════════════════════════════
+const mCvs=document.getElementById('mine-canvas');
+const mCtx=mCvs.getContext('2d');
+let mParts=[],shX=0,shY=0,impactA=0,impactX=0,impactY=0,crackLines=[];
+
+function resizeMine(){
+  const w=mCvs.parentElement.clientWidth;
+  mCvs.width=w;mCvs.height=Math.min(w*.55,200);
+}
+resizeMine();window.addEventListener('resize',resizeMine);
+
+mCvs.addEventListener('click',e=>{
+  const r=mCvs.getBoundingClientRect();
+  doMine((e.clientX-r.left)*(mCvs.width/r.width),(e.clientY-r.top)*(mCvs.height/r.height));
+});
+mCvs.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const r=mCvs.getBoundingClientRect(),t=e.touches[0];
+  doMine((t.clientX-r.left)*(mCvs.width/r.width),(t.clientY-r.top)*(mCvs.height/r.height));
+},{passive:false});
+
+function doMine(x,y){
+  if(mgRunning)return;
+  const layer=LAYERS[G.layerIdx];
+  const isNuclear=layer.isNuclear;
+
+  if(isNuclear){
+    const pow = getEffPow();
+    const dmg = Math.ceil(pow * G.combo);
+    const oreGain = getEffOre(layer.ore);
+    G.ore += oreGain; G.totalOre += oreGain; G.totalMines++;
+    spawnEffect(x,y,'#FF2200','burst');
+    shX=(Math.random()-.5)*12; shY=(Math.random()-.5)*12;
+    spawnFloat('+'+fmtNum(oreGain),x,y,'#ff4400');
+    impactA=1; impactX=x; impactY=y;
+    crackLines=[];for(let i=0;i<8;i++){const a=Math.random()*Math.PI*2,len=30+Math.random()*50;crackLines.push({x1:x,y1:y,x2:x+Math.cos(a)*len,y2:y+Math.sin(a)*len,life:1})}
+
+    // 블록 HP 시스템 (핵도 동일)
+    if(!G.blockHP || !G.blockMaxHP) initBlock();
+    G.blockHP -= dmg;
+    if(G.blockHP <= 0){
+      G.nuclearHits = Math.min(G.nuclearHits + 1, 100);
+      initBlock();
+      if(G.nuclearHits>=100&&!G.endingShown){
+        G.endingShown=true;
+        setTimeout(showEnding,1000);
+      }
+    }
+    const nPct = Math.min(G.nuclearHits/100*100, 100);
+    document.getElementById('nuc-fill').style.width=nPct+'%';
+    document.getElementById('nuc-count').textContent=G.nuclearHits+' / 100';
+    updateMineUI(); return;
+  }
+
+  const pow = getEffPow();
+  const dmg = Math.ceil(pow * G.combo);
+  const oreGain = getEffOre(Math.ceil(dmg * (layer.ore / 100)));
+  G.ore += oreGain; G.totalOre += oreGain; G.totalMines++;
+
+  // 현재 블록 HP 초기화
+  if(G.blockHP <= 0 || !G.blockMaxHP) initBlock();
+  G.blockHP -= dmg;
+
+  // 콤보
+  G.comboTimer = getCTMax();
+  G.combo = Math.min(+(G.combo+.12).toFixed(2), getCMax());
+  if(G.combo > G.maxCombo) G.maxCombo = G.combo;
+
+  // 이펙트
+  const pick = getPick();
+  const ec = pick.effectColor || '#e8b84a';
+  const et = pick.effectType || 'dust';
+  spawnEffect(x, y, ec, et);
+  impactA = 1; impactX = x; impactY = y;
+  shX = (Math.random()-.5)*(6+G.combo*1.5);
+  shY = (Math.random()-.5)*(6+G.combo*1.5);
+
+  // 크랙라인
+  crackLines = [];
+  const nc = 3 + Math.floor(G.combo*0.8);
+  for(let i=0;i<nc&&i<10;i++){
+    const a=Math.random()*Math.PI*2, len=(15+Math.random()*30)*(G.combo*.25+.75);
+    crackLines.push({x1:x,y1:y,x2:x+Math.cos(a)*len,y2:y+Math.sin(a)*len,life:1});
+  }
+
+  spawnFloat('+'+fmtNum(oreGain), x, y, ec);
+  if(Math.random() < getGemDrop()){
+    const gv = Math.ceil(G._gemRate||1); G.gem += gv;
+    spawnFloat('+'+gv+'💎', x, y-22, '#3de8c4');
+  }
+
+  // 블록 HP 0 이하 → 블록 파괴
+  if(G.blockHP <= 0){
+    G.floorCount++;
+    // 블록 파괴 시 30% 확률로 젬 드롭
+    if(Math.random() < 0.30){ const g=(G.layerIdx+1)*2; G.gem+=g; spawnFloat('+'+g+'💎', x, y-40, '#3de8c4'); }
+    else spawnFloat('💥 파괴!', x, y-40, '#ff8800');
+    if(G.floorCount >= 100){
+      advanceLayer();
+      return;
+    }
+    initBlock();
+  }
+  checkAchievements(); updateMineUI();
+}
+
+function advanceLayer(){
+  G.hitCount=0; G.floorCount=0; G.blockHP=0; G.blockMaxHP=0;
+  G.gem+=(G.layerIdx+1)*80;
+  showToast('🎉 지층 돌파! +'+(G.layerIdx+1)*20+'💎');
+  G.layerIdx=Math.min(G.layerIdx+1,LAYERS.length-1);
+  if(G.layerIdx>G.maxLayer)G.maxLayer=G.layerIdx;
+  if(G.layerIdx===8){
+    document.getElementById('nuclear-section').classList.add('show');
+    showToast('☢ 지구의 핵에 도달했습니다!');
+  }
+  if(G.layerIdx>=8)G.deepCoreUnlocked=true;
+  checkAchievements();updateMineUI();buildShop();
+}
+
+function resetDepth(){
+  G.layerIdx=0; G.hitCount=0; G.floorCount=0; G.blockHP=0; G.blockMaxHP=0;
+  document.getElementById('nuclear-section').classList.remove('show');
+  showToast('↑ 표토층으로 돌아왔습니다');
+  updateMineUI();
+}
+
+function spawnEffect(x,y,col,type){
+  if(type==='blackhole'){
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI*2/12;
+      const spd=2+Math.random()*3;
+      mParts.push({x:x+Math.cos(a)*20,y:y+Math.sin(a)*20,vx:-Math.cos(a)*spd*.8,vy:-Math.sin(a)*spd*.8,r:2+Math.random()*3,color:'rgba(180,100,255,.9)',life:25+Math.random()*15,maxLife:40,spiral:true,ox:x,oy:y,angle:a,radius:20});
+    }
+  }else if(type==='burst'){
+    for(let i=0;i<10;i++){mParts.push({x,y,vx:(Math.random()-.5)*7,vy:-Math.random()*6-3,r:3+Math.random()*4,color:col,life:22+Math.random()*12,maxLife:34})}
+  }else if(type==='glow'){
+    for(let i=0;i<7;i++){mParts.push({x:x+(Math.random()-.5)*25,y,vx:(Math.random()-.5)*3,vy:-Math.random()*4-2,r:3+Math.random()*4,color:col,life:20+Math.random()*12,maxLife:32,glow:true})}
+  }else if(type==='magma'){
+    for(let i=0;i<8;i++){
+      const a=Math.random()*Math.PI*2;
+      mParts.push({x,y,vx:Math.cos(a)*3,vy:Math.sin(a)*3-4,r:3+Math.random()*4,color:i%2?'#ff4400':'#ffaa00',life:22+Math.random()*12,maxLife:34,glow:true});
+    }
+  }else{
+    const cols=[col,'rgba(255,255,255,.7)','rgba(255,220,80,.8)'];
+    for(let i=0;i<6;i++){mParts.push({x:x+(Math.random()-.5)*25,y,vx:(Math.random()-.5)*4,vy:-Math.random()*5-2,r:2.5+Math.random()*3,color:cols[i%cols.length],life:18+Math.random()*12,maxLife:30})}
+  }
+}
+
+function drawMine(){
+  const W=mCvs.width,H=mCvs.height;
+  const ctx=mCtx;
+  const layer=LAYERS[G.layerIdx];
+  const t=Date.now();
+  ctx.save();
+  if(shX||shY)ctx.translate(shX,shY);
+
+  // 배경
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,layer.bg1);bg.addColorStop(1,layer.bg2);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // 텍스처 (각 층마다 다름)
+  if(layer.isNuclear){
+    // 핵: 방사능 파동
+    for(let i=0;i<5;i++){
+      const r=((t*0.001+i*.4)%1)*Math.min(W,H)*.6;
+      ctx.strokeStyle='rgba(255,50,0,'+(0.15-r/Math.min(W,H)*.15)+')';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.stroke();
+    }
+  }else if(G.layerIdx>=6){
+    // 외핵/내핵: 액체 흐름
+    for(let i=0;i<3;i++){
+      const y=H/2+Math.sin(t*.001+i*1.2)*H*.2;
+      const g=ctx.createLinearGradient(0,y-20,0,y+20);
+      g.addColorStop(0,'transparent');g.addColorStop(.5,layer.accent+'33');g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.fillRect(0,y-20,W,40);
+    }
+  }else if(G.layerIdx>=3){
+    // 맨틀: 용암 균열
+    for(let i=0;i<4;i++){
+      const x1=(i*W*.25+t*.02)%W,alpha=0.06+Math.sin(t*.002+i)*0.04;
+      ctx.strokeStyle=layer.accent+Math.floor(alpha*255).toString(16).padStart(2,'0');ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(x1,0);ctx.bezierCurveTo(x1+30,H*.3,x1-30,H*.6,x1+20,H);ctx.stroke();
+    }
+  }else{
+    // 지표 근처: 암석 벽돌
+    const ts=32;
+    for(let r=0;r<=Math.ceil(H/ts);r++){
+      for(let cc=0;cc<=Math.ceil(W/ts);cc++){
+        const ox=(r%2)*(ts/2),x=cc*ts+ox-ts/2,y=r*ts;
+        const seed=(cc*71+r*37)%19;
+        ctx.fillStyle='rgba(255,255,255,'+(0.03+seed*.003)+')';ctx.fillRect(x,y,ts-1.5,ts-1.5);
+      }
+    }
+  }
+
+  // 크랙 라인
+  crackLines=crackLines.filter(l=>l.life>0);
+  crackLines.forEach(l=>{
+    ctx.globalAlpha=l.life;ctx.strokeStyle=layer.accent;ctx.lineWidth=1.8;
+    ctx.shadowBlur=8;ctx.shadowColor=layer.accent;
+    ctx.beginPath();ctx.moveTo(l.x1,l.y1);ctx.lineTo(l.x2,l.y2);ctx.stroke();
+    ctx.shadowBlur=0;l.life-=.14;
+  });
+  ctx.globalAlpha=1;
+
+  // 임팩트 링
+  if(impactA>0){
+    ctx.globalAlpha=impactA*.8;ctx.strokeStyle=layer.accent;ctx.lineWidth=2.5;
+    ctx.shadowBlur=12;ctx.shadowColor=layer.accent;
+    ctx.beginPath();ctx.arc(impactX,impactY,H*(1-impactA)*.5,0,Math.PI*2);ctx.stroke();
+    ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(impactX,impactY,H*(1-impactA)*.28,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;ctx.globalAlpha=1;impactA=Math.max(0,impactA-.065);
+  }
+
+  // HP 바 (히트 진행)
+  if(!layer.isNuclear){
+    const hpR=G.hitCount/100;
+    const bx=W/2-80,by=H-15,bw=160,bh=7;
+    ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(bx,by,bw,bh);
+    const hg=ctx.createLinearGradient(bx,0,bx+bw,0);
+    if(hpR<.5){hg.addColorStop(0,layer.accent);hg.addColorStop(1,layer.accent+'aa');}
+    else{hg.addColorStop(0,layer.accent);hg.addColorStop(1,'#ffffff');}
+    ctx.fillStyle=hg;ctx.fillRect(bx,by,bw*hpR,bh);
+    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,bh);
+  }
+
+  // 파티클
+  mParts=mParts.filter(p=>p.life>0);
+  mParts.forEach(p=>{
+    ctx.globalAlpha=p.life/p.maxLife;
+    if(p.glow){ctx.shadowBlur=8;ctx.shadowColor=p.color;}
+    ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    if(p.spiral){
+      p.angle+=.15;p.radius*=.92;
+      p.x=p.ox+Math.cos(p.angle)*p.radius;p.y=p.oy+Math.sin(p.angle)*p.radius;
+    }else{p.x+=p.vx;p.y+=p.vy;p.vy+=.22;}
+    p.life--;
+  });
+  ctx.globalAlpha=1;
+
+  // 장착 장비
+  const pulse=1+Math.sin(t*.005)*.04;
+  const tz=Math.min(W*.12,48);
+  const haloG=ctx.createRadialGradient(W/2,H/2,4,W/2,H/2,tz*1.8);
+  const pick=getPick();
+  haloG.addColorStop(0,(pick.effectColor||layer.accent)+'44');haloG.addColorStop(1,'transparent');
+  ctx.fillStyle=haloG;ctx.beginPath();ctx.arc(W/2,H/2,tz*1.8,0,Math.PI*2);ctx.fill();
+
+  if(pick.effectType==='blackhole'){
+    // 블랙홀 회전 링
+    ctx.strokeStyle='rgba(200,150,255,0.3)';ctx.lineWidth=1;
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(W/2,H/2,tz*(0.8+i*.3),tz*.3,t*.001*(i+1),0,Math.PI*2);ctx.stroke();}
+  }
+
+  const pImg=drawPickCanvas(G.equippedPick,Math.floor(tz*2));
+  ctx.save();ctx.translate(W/2,H/2);ctx.scale(pulse,pulse);
+  ctx.drawImage(pImg,-pImg.width/2,-pImg.height/2);
+  if(G.equippedDrill){
+    const dImg=drawPickCanvas(G.equippedDrill,Math.floor(tz*1.1));
+    ctx.drawImage(dImg,-dImg.width/2+tz*1.4,-dImg.height/2+tz*.3);
+  }
+  ctx.restore();
+
+  ctx.restore();
+  shX*=.6;shY*=.6;if(Math.abs(shX)<.1)shX=0;if(Math.abs(shY)<.1)shY=0;
+}
+
+function spawnFloat(text,cx,cy,color){
+  const rect=mCvs.getBoundingClientRect();
+  const el=document.createElement('div');el.className='float-txt';el.textContent=text;
+  el.style.cssText='left:'+(rect.left+cx*(rect.width/mCvs.width))+'px;top:'+(rect.top+cy*(rect.height/mCvs.height))+'px;color:'+color+';position:fixed';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),950);
+}
+
+// ══════════════════════════════════════════════════════
+// 상점
+// ══════════════════════════════════════════════════════
+function canCraft(recipe){if(!recipe)return true;return Object.entries(recipe).every(([id,cnt])=>(G.collection[id]?.count||0)>=cnt)}
+function doCraft(recipe){if(!recipe)return;Object.entries(recipe).forEach(([id,cnt])=>{G.collection[id].count-=cnt})}
+
+function buildShopItems(items,containerId,isEquipped,getEquipped,setEquipped,ownedArr){
+  const el=document.getElementById(containerId);el.innerHTML='';
+  items.forEach(item=>{
+    if(item.locked&&!ownedArr.includes(item.id))return;// 잠긴 아이템은 숨김 (보상으로만)
+    const owned=ownedArr.includes(item.id);
+    const equipped=getEquipped()===item.id;
+    const canBuy=!owned&&(item.oreCost>0||item.gemCost>0)&&G.ore>=(item.oreCost||0)&&G.gem>=(item.gemCost||0)&&canCraft(item.recipe);
+    const craftOnly=!owned&&!item.oreCost&&!item.gemCost&&item.recipe&&canCraft(item.recipe);
+    const locked2=!owned&&!canBuy&&!craftOnly;
+
+    const div=document.createElement('div');
+    div.className='shop-item'+(equipped?' equipped-item':owned?' owned':'')+(locked2?' locked-item':'');
+
+    const img=document.createElement('img');img.src=getEI(item.id,40);img.width=img.height=40;
+    const wrap=document.createElement('div');wrap.className='shop-cv';wrap.appendChild(img);
+
+    let recipeHTML='';
+    if(!owned&&item.recipe){
+      recipeHTML='<div class="recipe-row">';
+      const entries=Object.entries(item.recipe);
+      // 블랙홀은 너무 많으므로 줄임
+      const show=entries.slice(0,8);
+      show.forEach(([id,cnt])=>{
+        const have=G.collection[id]?.count||0,ok=have>=cnt;
+        const mn=MINERALS.find(m=>m.id===id);
+        recipeHTML+=`<span class="recipe-chip ${ok?'ok':'ng'}">${mn?mn.name.substring(0,3):id} ${have}/${cnt}</span>`;
+      });
+      if(entries.length>8)recipeHTML+=`<span class="recipe-chip">+${entries.length-8}개</span>`;
+      recipeHTML+='</div>';
+    }
+
+    let costTxt='';
+    if(!owned){
+      if(item.oreCost||item.gemCost)costTxt=(item.oreCost?'⛏'+fmtNum(item.oreCost):'')+( item.gemCost?' 💎'+item.gemCost:'');
+      else if(item.recipe)costTxt='재료 제작';
+      else costTxt='무료';
+    }
+
+    let badge='',badgeCls='';
+    if(equipped){badge='장착중';badgeCls='badge-eq';}
+    else if(owned){badge='보유';badgeCls='badge-own';}
+    else if(locked2){badge='부족';badgeCls='badge-lock';}
+
+    const statKey=item.power?'파워 '+item.power:'DPS '+item.dps;
+    div.innerHTML=`<div class="shop-info"><div class="shop-name">${item.name}</div><div class="shop-stat">${statKey}</div><div class="shop-cost">${costTxt}</div>${recipeHTML}</div>${badge?`<span class="shop-badge ${badgeCls}">${badge}</span>`:''}`;
+    div.prepend(wrap);
+
+    if(!locked2){
+      div.onclick=()=>{
+        if(!owned){
+          if(item.oreCost&&G.ore<item.oreCost){showToast('광석 부족!');return;}
+          if(item.gemCost&&G.gem<item.gemCost){showToast('💎 젬 부족!');return;}
+          if(item.recipe&&!canCraft(item.recipe)){showToast('재료 부족!');return;}
+          if(item.oreCost)G.ore-=item.oreCost;
+          if(item.gemCost)G.gem-=item.gemCost;
+          if(item.recipe)doCraft(item.recipe);
+          ownedArr.push(item.id);showToast('🔓 '+item.name+' 획득!');
+        }
+        if(equipped){setEquipped(null);}else{setEquipped(item.id);}
+        recompute();updateMineUI();buildShop();
+        const drn=G.equippedDrill?DRILLS.find(d=>d.id===G.equippedDrill)?.name:'없음';
+        document.getElementById('eq-hud').textContent='⚒ '+getPick().name+' | 🔩 '+drn;
+        flashEffect(item.effectColor||'#e8b84a');
+        showToast((equipped?'해제: ':'장착: ')+item.name);
+      };
+    }
+    el.appendChild(div);
+  });
+}
+
+function buildShop(){
+  buildShopItems(PICKS,'shop-picks',null,()=>G.equippedPick,(v)=>{G.equippedPick=v||'wood_pick'},G.ownedPicks);
+  buildShopItems(DRILLS,'shop-drills',null,()=>G.equippedDrill,(v)=>{G.equippedDrill=v},G.ownedDrills);
+}
+
+// ══════════════════════════════════════════════════════
+// 강화
+// ══════════════════════════════════════════════════════
+function getUC(u){return Math.floor(u.baseCost*Math.pow(u.costMult,G.upgrades[u.id]||0))}
+function buildUpgrades(){
+  ['engine','alch'].forEach(cat=>{
+    const el=document.getElementById('upg-'+cat);el.innerHTML='';
+    UPGRADES[cat].forEach(u=>{
+      const lv=G.upgrades[u.id]||0,cost=getUC(u),isMax=lv>=u.maxLv,can=G.ore>=cost;
+      const btn=document.createElement('div');btn.className='upg-btn'+(isMax?' max':can?' can':'');
+      btn.innerHTML=`<div class="upg-ico">${u.ico}</div><div class="upg-left"><div class="upg-name">${u.name}</div><div class="upg-desc">${u.desc}</div></div><div class="upg-right"><div class="upg-cost">${isMax?'MAX':'⛏'+fmtNum(cost)}</div><div class="upg-lv">Lv${lv}/${u.maxLv}</div></div>`;
+      if(!isMax)btn.onclick=()=>{
+        const lv2=G.upgrades[u.id]||0;if(lv2>=u.maxLv)return;
+        const c2=getUC(u);if(G.ore<c2){showToast('광석 부족!');return;}
+        G.ore-=c2;G.upgrades[u.id]=lv2+1;recompute();buildUpgrades();updateMineUI();
+        flashEffect('#3de8c4');showToast('✅ '+u.name+' Lv'+(lv2+1));
+      };
+      el.appendChild(btn);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// 가챠 & 오토가챠
+// ══════════════════════════════════════════════════════
+function rollOne(){
+  G.gachaPity.le++;G.gachaPity.my++;G.totalGacha++;
+  let rare;
+  if(G.gachaPity.my>=200){rare='my';G.gachaPity.my=0;G.gachaPity.le=0;}
+  else if(G.gachaPity.le>=80){rare='le';G.gachaPity.le=0;}
+  else{
+    const r=Math.random(),lb=G._leBonus||0;
+    if(r<.0001+lb*.1){rare='rb';G.gachaPity.le=0;G.gachaPity.my=0;}
+    else if(r<.006+lb*.5){rare='my';G.gachaPity.my=0;G.gachaPity.le=0;}
+    else if(r<.026+lb){rare='le';G.gachaPity.le=0;}
+    else if(r<.076){rare='ep';}
+    else if(r<.226){rare='ra';}
+    else if(r<.506){rare='uc';}
+    else{rare='c';}
+  }
+  const pool=MINERALS.filter(m=>m.rare===rare);
+  const m=pool[Math.floor(Math.random()*pool.length)];
+  const isNew=!G.collection[m.id];
+  if(!G.collection[m.id]){G.collection[m.id]={count:0,first:Date.now()};G.codexCount++;}
+  G.collection[m.id].count++;
+  if(rare==='le')G.leCount++;if(rare==='my')G.myCount++;if(rare==='rb')G.rbCount++;
+  G.ore+=m.mB;
+  return{...m,isNew};
+}
+function doGacha(n,silent){
+  const cost=getGachaCost(n);if(G.gem<cost){if(!silent)showToast('💎 젬 부족!');return false;}
+  G.gem-=cost;const res=[];for(let i=0;i<n;i++)res.push(rollOne());
+  checkAchievements();if(!silent)showResult(res);
+  updateGachaUI();buildCodex();updateBuffs();
+  if(document.getElementById('tab-shop').classList.contains('on'))buildShop();
+  return true;
+}
+function toggleAutoGacha(){
+  G.autoGachaOn=!G.autoGachaOn;
+  document.getElementById('auto-gacha-toggle').classList.toggle('on',G.autoGachaOn);
+  if(G.autoGachaOn)showToast('🤖 오토가챠 ON');else showToast('오토가챠 OFF');
+}
+function showResult(results){
+  const rn={c:'커먼',uc:'언커먼',ra:'레어',ep:'에픽',le:'레전더리',my:'미스틱',rb:'🌈 레인보우'};
+  const best=results.reduce((a,b)=>({c:0,uc:1,ra:2,ep:3,le:4,my:5,rb:6}[a.rare]>({c:0,uc:1,ra:2,ep:3,le:4,my:5,rb:6}[b.rare])?a:b));
+  document.getElementById('result-title').textContent=best.rare==='rb'?'🌈 레인보우!!!':results.length>1?results.length+'연 결과':'뽑기 결과';
+  const grid=document.getElementById('result-grid');grid.innerHTML='';
+  results.forEach(m=>{
+    const card=document.createElement('div');card.className='rcard '+m.rare+(m.isNew?' new':'');
+    card.innerHTML=`<img src="${getMI(m.id,48)}" width="38" height="38" style="display:block;margin:0 auto 4px"><div class="rname">${m.name}</div><div class="rrare">${rn[m.rare]}</div>`;
+    grid.appendChild(card);
+  });
+  document.getElementById('result-overlay').classList.add('show');
+}
+function closeResult(e){if(!e||e.target.id==='result-overlay'||e.target.id==='result-close')document.getElementById('result-overlay').classList.remove('show')}
+
+// ══════════════════════════════════════════════════════
+// 미니게임 (챌린지 / 딥코어)
+// ══════════════════════════════════════════════════════
+let mgRunning=false,mgPl,mgObs,mgGems,mgScore,mgHp,mgTime,mgRAF,mgTX=null,mgIsDeep=false;
+const mgCvs=document.getElementById('mg-canvas');const mgC=mgCvs.getContext('2d');
+let mgHitFlash=0; // 피격 이펙트
+
+function startMinigame(isDeep){
+  mgIsDeep=!!isDeep;
+  document.getElementById('mg-title').textContent=isDeep?'☢ 딥코어 챌린지':'⚡ 층 돌파 챌린지';
+  document.getElementById('minigame-overlay').classList.add('show');
+  mgRunning=true;mgPl={x:160,y:340,spd:6};mgObs=[];mgGems=[];
+  mgScore=0;mgHp=isDeep?7:5;mgTime=isDeep?60:45;mgHitFlash=0;
+  let last=Date.now();
+  mgCvs.addEventListener('touchmove',mgTM,{passive:false});
+  mgCvs.addEventListener('mousemove',mgMM);
+
+  function loop(){
+    if(!mgRunning)return;
+    const now=Date.now(),dt=(now-last)/1000;last=now;
+    mgTime-=dt;if(mgTime<=0||mgHp<=0){mgEnd();return;}
+    if(mgTX!==null){const dx=mgTX-mgPl.x;if(Math.abs(dx)>2)mgPl.x+=Math.sign(dx)*Math.min(Math.abs(dx)*.18,mgPl.spd);}
+    mgPl.x=Math.max(14,Math.min(306,mgPl.x));
+
+    const spawnRate=isDeep?.012+mgScore*.0001:.015+mgScore*.00012;
+    const obsSpd=isDeep?1+Math.random()*.8:1+Math.random()*.9;
+    if(Math.random()<spawnRate)mgObs.push({x:Math.random()*280+20,y:-20,vy:obsSpd,r:isDeep?7+Math.random()*5:6+Math.random()*5,type:isDeep&&Math.random()<.15?'big':'normal'});
+    if(Math.random()<.03)mgGems.push({x:Math.random()*280+20,y:-14,vy:1.1+Math.random()*.7});
+    // 딥코어: 추적 운석 (낮은 확률)
+    if(isDeep&&Math.random()<.005)mgObs.push({x:mgPl.x+(Math.random()-.5)*100,y:-30,vy:1.5,r:10,type:'tracker',targetX:mgPl.x});
+
+    mgObs.forEach(o=>{
+      o.y+=o.vy;
+      if(o.type==='tracker')o.x+=(mgPl.x-o.x)*.02;
+    });
+    mgGems.forEach(g=>g.y+=g.vy);
+    mgObs=mgObs.filter(o=>o.y<415);mgGems=mgGems.filter(g=>g.y<415);
+
+    mgObs.forEach((o,i)=>{
+      if(Math.abs(o.x-mgPl.x)<o.r+7&&Math.abs(o.y-mgPl.y)<o.r+7){
+        mgHp--;mgObs.splice(i,1);mgHitFlash=1; // 피격!
+      }
+    });
+    mgGems.forEach((g,i)=>{if(Math.abs(g.x-mgPl.x)<16&&Math.abs(g.y-mgPl.y)<16){mgScore+=isDeep?20:10;mgGems.splice(i,1);}});
+    mgScore+=dt*(isDeep?8:5);
+    if(mgHitFlash>0)mgHitFlash=Math.max(0,mgHitFlash-.15);
+
+    // DRAW
+    const bg=mgC.createLinearGradient(0,0,0,400);
+    if(isDeep){bg.addColorStop(0,'#0a0000');bg.addColorStop(1,'#200000');}
+    else{bg.addColorStop(0,'#07070d');bg.addColorStop(1,'#0d0a18');}
+    mgC.fillStyle=bg;mgC.fillRect(0,0,320,400);
+
+    // 피격 플래시
+    if(mgHitFlash>0){
+      mgC.fillStyle='rgba(255,30,30,'+mgHitFlash*.6+')';mgC.fillRect(0,0,320,400);
+      // 피격 이펙트 (화면 테두리)
+      mgC.strokeStyle='rgba(255,50,50,'+mgHitFlash+')';mgC.lineWidth=8;mgC.strokeRect(4,4,312,392);
+    }
+
+    // 별
+    for(let i=0;i<28;i++){mgC.fillStyle='rgba(255,255,255,'+(isDeep?.2:0.08+i%3*.08)+')';mgC.fillRect((i*79+Math.floor(now/300)*.5)%320,(i*61)%400,i%2+1,i%2+1);}
+    if(isDeep){// 딥코어: 용암 흐름
+      for(let i=0;i<3;i++){const y=(now*.03+i*130)%420-10;mgC.fillStyle='rgba(255,80,0,.06)';mgC.fillRect(0,y,320,8);}
+    }
+
+    mgObs.forEach(o=>{
+      const isT=o.type==='tracker';
+      const g=mgC.createRadialGradient(o.x-o.r*.3,o.y-o.r*.3,1,o.x,o.y,o.r);
+      if(isT){g.addColorStop(0,'#ff2200');g.addColorStop(1,'#660000');}
+      else{g.addColorStop(0,'#885533');g.addColorStop(.5,'#553311');g.addColorStop(1,'#221108');}
+      mgC.fillStyle=g;mgC.beginPath();mgC.arc(o.x,o.y,o.r,0,Math.PI*2);mgC.fill();
+      if(isT){mgC.strokeStyle='rgba(255,50,50,.5)';mgC.lineWidth=2;mgC.beginPath();mgC.arc(o.x,o.y,o.r+4,0,Math.PI*2);mgC.stroke();}
+    });
+    mgGems.forEach(g=>{
+      const gg=mgC.createRadialGradient(g.x-3,g.y-3,1,g.x,g.y,10);gg.addColorStop(0,'#aaffee');gg.addColorStop(1,'#0088aa');
+      mgC.fillStyle=gg;mgC.beginPath();mgC.moveTo(g.x,g.y-10);mgC.lineTo(g.x+7,g.y-3);mgC.lineTo(g.x+7,g.y+4);mgC.lineTo(g.x,g.y+10);mgC.lineTo(g.x-7,g.y+4);mgC.lineTo(g.x-7,g.y-3);mgC.closePath();mgC.fill();
+    });
+
+    const pImg=drawPickCanvas(G.equippedPick,30);
+    const pg=mgC.createRadialGradient(mgPl.x,mgPl.y,2,mgPl.x,mgPl.y,18);pg.addColorStop(0,'rgba(61,232,196,.22)');pg.addColorStop(1,'transparent');
+    mgC.fillStyle=pg;mgC.beginPath();mgC.arc(mgPl.x,mgPl.y,18,0,Math.PI*2);mgC.fill();
+    mgC.drawImage(pImg,mgPl.x-15,mgPl.y-15);
+
+    document.getElementById('mg-hp').textContent='❤'.repeat(Math.max(0,mgHp))+'🖤'.repeat(Math.max(0,5-mgHp));
+    document.getElementById('mg-score').textContent=Math.floor(mgScore)+'점';
+    document.getElementById('mg-time').textContent=Math.ceil(mgTime)+'s';
+    mgRAF=requestAnimationFrame(loop);
+  }
+  mgRAF=requestAnimationFrame(loop);
+}
+function mgTM(e){e.preventDefault();const r=mgCvs.getBoundingClientRect();mgTX=(e.touches[0].clientX-r.left)*(320/r.width);}
+function mgMM(e){const r=mgCvs.getBoundingClientRect();mgTX=(e.clientX-r.left)*(320/r.width);}
+function mgEnd(){
+  mgRunning=false;cancelAnimationFrame(mgRAF);
+  mgCvs.removeEventListener('touchmove',mgTM);mgCvs.removeEventListener('mousemove',mgMM);
+  const sv=Math.floor(mgScore),gr=Math.floor(sv/10),or=sv*5;
+  G.gem+=gr;G.ore+=or;
+  const cleared=mgHp>0;
+
+  // 딥코어 클리어 시 마그마 장비 지급
+  if(mgIsDeep&&cleared&&!G.deepCoreDone){
+    G.deepCoreDone=true;
+    if(!G.ownedPicks.includes('magma_pick'))G.ownedPicks.push('magma_pick');
+    if(!G.ownedDrills.includes('magma_drill'))G.ownedDrills.push('magma_drill');
+    showToast('🔥 마그마 곡괭이 & 드릴 획득!');
+  }
+
+  mgC.fillStyle='rgba(0,0,0,.88)';mgC.fillRect(0,0,320,400);
+  mgC.fillStyle=cleared?'#e8b84a':'#ff4444';mgC.font='bold 22px sans-serif';mgC.textAlign='center';
+  mgC.fillText(cleared?'🎉 클리어!':'💀 실패',160,148);
+  if(mgIsDeep&&cleared&&!G.deepCoreDone){mgC.fillStyle='#ff6600';mgC.font='14px sans-serif';mgC.fillText('🔥 마그마 장비 획득!',160,178);}
+  mgC.fillStyle='#e2e2f2';mgC.font='15px sans-serif';mgC.fillText('점수: '+sv,160,mgIsDeep&&cleared?208:182);
+  mgC.fillStyle='#3de8c4';mgC.fillText('+'+gr+'💎  +'+fmtNum(or)+'광석',160,mgIsDeep&&cleared?232:210);
+
+  setTimeout(()=>{document.getElementById('minigame-overlay').classList.remove('show');showToast('챌린지 완료! +'+gr+'💎');updateMineUI();buildShop();},2000);
+}
+function closeMinigame(){
+  mgRunning=false;cancelAnimationFrame(mgRAF);
+  mgCvs.removeEventListener('touchmove',mgTM);mgCvs.removeEventListener('mousemove',mgMM);
+  document.getElementById('minigame-overlay').classList.remove('show');
+}
+
+// 딥코어 챌린지 버튼
+function openDeepCore(){startMinigame(true)}
+
+// ══════════════════════════════════════════════════════
+// 엔딩
+// ══════════════════════════════════════════════════════
+function showEnding(){
+  document.getElementById('ending-minerals').textContent=G.codexCount;
+  document.getElementById('ending-mines').textContent=fmtNum(G.totalMines);
+  document.getElementById('ending-time').textContent=Math.floor(G.playTime/60)+'분';
+  document.getElementById('ending-overlay').classList.add('show');
+  G.endingDone=true;
+  saveGame();
+}
+function continueAfterEnding(){
+  document.getElementById('ending-overlay').classList.remove('show');
+  showToast('계속 즐겨보세요!');
+}
+
+// ══════════════════════════════════════════════════════
+// 도감
+// ══════════════════════════════════════════════════════
+function buildCodex(){
+  ['c','uc','ra','ep','le','my'].forEach(rare=>{
+    const pool=rare==='my'?MINERALS.filter(m=>m.rare==='my'||m.rare==='rb'):MINERALS.filter(m=>m.rare===rare);
+    const el=document.getElementById('codex-'+rare);el.innerHTML='';
+    pool.forEach(m=>{
+      const got=!!G.collection[m.id];
+      const div=document.createElement('div');div.className='codex-item '+(got?'got '+m.rare:'');
+      if(got){div.innerHTML=`<img src="${getMI(m.id,40)}" width="30" height="30" style="display:block;margin:0 auto 2px"><div class="codex-name">${m.name}</div><div class="buff-badge">${m.buff.substring(0,11)}</div>`;div.onclick=()=>openCD(m);}
+      else{div.innerHTML=`<span style="font-size:18px;display:block;text-align:center;opacity:.2">?</span><div class="codex-name" style="color:var(--text3)">???</div>`;}
+      el.appendChild(div);
+    });
+  });
+  document.getElementById('codex-count').textContent=G.codexCount+'/'+MINERALS.length;
+}
+function openCD(m){
+  const rn={c:'커먼',uc:'언커먼',ra:'레어',ep:'에픽',le:'레전더리',my:'미스틱',rb:'🌈 레인보우'};
+  const rc={c:'var(--c)',uc:'var(--uc)',ra:'var(--ra)',ep:'var(--ep)',le:'var(--le)',my:'var(--my)',rb:'#fff'};
+  const img=document.createElement('img');img.src=getMI(m.id,72);img.width=img.height=60;img.style='display:block;margin:0 auto';
+  document.getElementById('cd-icon-wrap').innerHTML='';document.getElementById('cd-icon-wrap').appendChild(img);
+  document.getElementById('cd-name').textContent=m.name;document.getElementById('cd-name').style.color=rc[m.rare];
+  document.getElementById('cd-rare').textContent=rn[m.rare];document.getElementById('cd-rare').style.color=rc[m.rare];
+  document.getElementById('cd-desc').textContent=m.desc;
+  document.getElementById('cd-buff').textContent='✦ 버프: '+m.buff;
+  document.getElementById('cd-stats').innerHTML=`<div class="cd-stat"><div class="cd-stat-l">보유 수</div><div class="cd-stat-v">${G.collection[m.id]?.count||0}</div></div><div class="cd-stat"><div class="cd-stat-l">채굴 보너스</div><div class="cd-stat-v">+${m.mB}</div></div>`;
+  document.getElementById('codex-detail').classList.add('show');
+}
+function closeCD(e){if(!e||e.target.id==='codex-detail'||e.target.id==='cd-close')document.getElementById('codex-detail').classList.remove('show')}
+
+// ══════════════════════════════════════════════════════
+// 업적
+// ══════════════════════════════════════════════════════
+function checkAchievements(){
+  const sm={totalMines:G.totalMines,totalOre:G.totalOre,maxLayer:G.maxLayer+1,totalGacha:G.totalGacha,maxCombo:G.maxCombo,codexCount:G.codexCount,leCount:G.leCount,rbCount:G.rbCount};
+  ACHIEVEMENTS.forEach(a=>{if(G.achievements[a.id])return;if((sm[a.stat]||0)>=a.target){G.achievements[a.id]=true;showToast('🏆 '+a.name+'!');G.gem+=a.val;}});
+}
+function buildAchievements(){
+  const sm={totalMines:G.totalMines,totalOre:G.totalOre,maxLayer:G.maxLayer+1,totalGacha:G.totalGacha,maxCombo:G.maxCombo,codexCount:G.codexCount,leCount:G.leCount,rbCount:G.rbCount};
+  const list=document.getElementById('ach-list');list.innerHTML='';
+  ACHIEVEMENTS.forEach(a=>{
+    const done=G.achievements[a.id],cur=Math.min(sm[a.stat]||0,a.target);
+    const div=document.createElement('div');div.className='ach-item'+(done?' done':'');
+    div.innerHTML=`<div class="ach-ico">${a.icon}</div><div class="ach-info"><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div><div class="ach-prog"><div class="ach-prog-fill" style="width:${cur/a.target*100}%"></div></div></div><div class="ach-badge">${done?'✅':fmtNum(cur)+'/'+fmtNum(a.target)}<br>${done?'+'+a.val+'💎':''}</div>`;
+    list.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// UI
+// ══════════════════════════════════════════════════════
+function fmtNum(n){if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n)+''}
+function fmtTime(s){if(s<60)return s+'초';if(s<3600)return Math.floor(s/60)+'분';return Math.floor(s/3600)+'h'+Math.floor((s%3600)/60)+'m'}
+
+function updateMineUI(){
+  const layer=LAYERS[G.layerIdx];
+  document.getElementById('hs-layer').textContent=(G.layerIdx+1)+'/9';
+  document.getElementById('hs-ore').textContent=fmtNum(G.ore);
+  document.getElementById('hs-gem').textContent=fmtNum(G.gem);
+  document.getElementById('mi-ore').textContent=fmtNum(G.ore);
+  document.getElementById('mi-dps').textContent=fmtNum(getEffDps())+'/s';
+  document.getElementById('mi-power').textContent=fmtNum(getEffPow());
+  document.getElementById('mi-combo').textContent='x'+G.combo.toFixed(1);
+  document.getElementById('layer-hud-name').textContent=layer.name;
+  document.getElementById('hit-count').textContent=layer.isNuclear?G.nuclearHits:G.hitCount;
+
+  if(layer.isNuclear){
+    document.getElementById('layer-full-name').textContent='☢ 지구의 핵';
+    document.getElementById('hit-prog-text').textContent=G.nuclearHits+'/100';
+    document.getElementById('hit-prog-fill').style.width=(G.nuclearHits)+'%';
+    document.getElementById('floor-prog-text').textContent='핵';
+    document.getElementById('floor-prog-fill').style.width='100%';
+  } else {
+    const maxHP = G.blockMaxHP || getBlockHP();
+    const curHP = Math.max(0, G.blockHP);
+    document.getElementById('layer-full-name').textContent=(G.layerIdx+1)+'층 '+(G.floorCount+1)+'번째 블록 — '+layer.name;
+    document.getElementById('hit-prog-text').textContent=Math.ceil(curHP)+'/'+maxHP;
+    document.getElementById('hit-prog-fill').style.width=((maxHP-curHP)/maxHP*100)+'%';
+    document.getElementById('floor-prog-text').textContent=G.floorCount+'/100';
+    document.getElementById('floor-prog-fill').style.width=G.floorCount+'%';
+  }
+
+  const ch=document.getElementById('combo-hud');
+  if(G.combo>2){ch.textContent='COMBO x'+G.combo.toFixed(1);ch.style.opacity='1';}else{ch.style.opacity='0';}
+  const drn=G.equippedDrill?DRILLS.find(d=>d.id===G.equippedDrill)?.name:'없음';
+  document.getElementById('eq-hud').textContent='⚒ '+getPick().name+' | 🔩 '+drn;
+  // 딥코어 버튼
+  const cb=document.getElementById('challenge-btn');
+  if(G.layerIdx>=8){cb.textContent='☢ 딥코어 챌린지';cb.onclick=()=>openDeepCore();}
+  else{cb.textContent='⚡ 층 돌파 챌린지';cb.onclick=()=>startMinigame(false);}
+}
+function updateGachaUI(){
+  document.getElementById('g1-cost').textContent='💎 '+getGachaCost(1);
+  document.getElementById('g10-cost').textContent='💎 '+getGachaCost(10);
+  document.getElementById('pity-le-val').textContent=G.gachaPity.le+'/80';
+  document.getElementById('pity-le-fill').style.width=(G.gachaPity.le/80*100)+'%';
+  document.getElementById('pity-my-val').textContent=G.gachaPity.my+'/200';
+  document.getElementById('pity-my-fill').style.width=(G.gachaPity.my/200*100)+'%';
+  document.getElementById('g-total').textContent=fmtNum(G.totalGacha);
+  document.getElementById('g-le').textContent=fmtNum(G.leCount);
+  document.getElementById('g-my').textContent=fmtNum(G.myCount);
+  document.getElementById('g-rb').textContent=fmtNum(G.rbCount);
+}
+function updateBuffs(){
+  const wrap=document.getElementById('active-buffs-wrap');
+  const active=MINERALS.filter(m=>G.collection[m.id]).slice(-5);
+  wrap.innerHTML=active.map(m=>'<span class="buff-tag">'+m.buff+'</span>').join('');
+}
+function updateStatsUI(){
+  document.getElementById('st-layer').textContent=(G.maxLayer+1)+'층';
+  document.getElementById('st-mine').textContent=fmtNum(G.totalMines);
+  document.getElementById('st-ore').textContent=fmtNum(G.totalOre);
+  document.getElementById('st-combo').textContent='x'+G.maxCombo.toFixed(1);
+  document.getElementById('st-gacha').textContent=fmtNum(G.totalGacha);
+  document.getElementById('st-time').textContent=fmtTime(Math.floor(G.playTime));
+}
+function flashEffect(col){
+  const fl=document.getElementById('flash-overlay');
+  fl.style.background=col||'#e8b84a';fl.style.opacity='.18';
+  setTimeout(()=>{fl.style.opacity='0'},110);
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  document.getElementById('page-'+name).classList.add('on');
+  if(name==='shop')buildShop();if(name==='upgrade')buildUpgrades();
+  if(name==='codex')buildCodex();if(name==='stats'){buildAchievements();updateStatsUI();}
+}
+
+let _tt;
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2200)}
+
+// ══════════════════════════════════════════════════════
+// 게임 루프
+// ══════════════════════════════════════════════════════
+let lastTick=Date.now();
+let autoGachaTimer=0;
+function gameTick(){
+  const now=Date.now(),dt=(now-lastTick)/1000;lastTick=now;
+  G.playTime+=dt;
+
+  // 드릴 자동채굴
+  if(G.equippedDrill && getEffDps()>0){
+    const layer=LAYERS[G.layerIdx];
+    if(!layer.isNuclear){
+      const dps = getEffDps();
+      const ore = getEffOre(dps * G.combo * (1+(G._depthBonus||0)) * dt * (layer.ore/100));
+      G.ore += ore; G.totalOre += ore;
+      // DPS로 블록 HP 깎기 — 클릭이 주력, 드릴은 보조 (÷50)
+      if(G.blockHP <= 0 || !G.blockMaxHP) initBlock();
+      G.blockHP -= (dps / 50) * G.combo * dt;
+      if(G.blockHP <= 0){
+        G.floorCount++;
+        if(G.floorCount >= 100){ G.floorCount=0; advanceLayer(); return; }
+        initBlock();
+      }
+      updateMineUI();
+    }
+  }
+
+  // 콤보 감소
+  if(G.comboTimer>0){G.comboTimer-=dt;if(G.comboTimer<=0)G.combo=Math.max(1,+(G.combo-.5).toFixed(2));}
+
+  // 오토 가챠 (1초마다 x1, silent)
+  if(G.autoGachaOn){
+    autoGachaTimer+=dt;
+    if(autoGachaTimer>=1){
+      autoGachaTimer=0;
+      const cost=getGachaCost(1);
+      if(G.gem>=cost){
+        G.gem-=cost;
+        const r=rollOne();
+        checkAchievements();
+        updateGachaUI();
+        // 도감/상점은 현재 탭일 때만 갱신
+        if(document.getElementById('tab-codex').classList.contains('on'))buildCodex();
+        if(document.getElementById('tab-shop').classList.contains('on'))buildShop();
+        updateBuffs();
+      }
+    }
+  }
+
+  if(Math.floor(G.playTime)%30===0&&Math.floor(G.playTime)>0&&dt<.2)saveGame();
+}
+
+function renderLoop(){drawMine();requestAnimationFrame(renderLoop)}
+
+// INIT
+loadGame();
+if(!G.blockMaxHP) initBlock(); // 블록 HP 초기화
+recompute();
+updateMineUI();updateGachaUI();buildCodex();buildUpgrades();buildShop();updateBuffs();
+if(G.layerIdx>=8)document.getElementById('nuclear-section').classList.add('show');
+setInterval(gameTick,100);
+renderLoop();
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
+const _autoSave=()=>saveGame();
+window.addEventListener('beforeunload',_autoSave);
+</script>
+</body>
+</html>

@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>WORLD BREAKER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&display=swap');
+
+:root {
+  --gold: #f0c040;
+  --cyan: #00e5ff;
+  --red: #ff3b3b;
+  --purple: #c86bff;
+  --green: #39ff6e;
+  --panel: #0d0f1e;
+  --border: rgba(255,255,255,0.08);
+  --nav-h: 60px;
+  --topbar-h: 52px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: #060810;
+  color: #e8e8f0;
+  font-family: 'Noto Sans KR', sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+}
+
+/* ─── LOADING ─── */
+#loading {
+  position: fixed; inset:0;
+  background: #060810;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 999;
+  transition: opacity 0.5s;
+}
+#loading h1 {
+  font-family: 'Black Han Sans';
+  font-size: 2.2rem;
+  color: var(--gold);
+  text-shadow: 0 0 30px #f0c04088;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+}
+#loading p { color: #666; font-size: 0.8rem; }
+.load-bar { width:200px; height:3px; background:#1a1a2a; border-radius:2px; margin-top:1.2rem; overflow:hidden; }
+.load-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--cyan)); animation:loadA 1.8s ease forwards; }
+@keyframes loadA { from{width:0} to{width:100%} }
+
+/* ─── LAYOUT ─── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* ─── TOPBAR ─── */
+#topbar {
+  height: var(--topbar-h);
+  background: rgba(6,8,16,0.98);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.logo {
+  font-family: 'Black Han Sans';
+  font-size: 0.95rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.top-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+}
+.bar-row .icon { flex-shrink: 0; }
+.bar-track { flex: 1; height: 5px; background:#1a1a2a; border-radius:3px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:3px; transition:width 0.4s; }
+.bar-fill.hp { background:linear-gradient(90deg,#ff4444,#ff8888); }
+.bar-fill.mp { background:linear-gradient(90deg,#0088ff,#00ddff); }
+.bar-val { font-size: 0.6rem; color:#aaa; white-space:nowrap; flex-shrink:0; }
+.top-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.top-stat {
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+.top-stat .v { font-weight:700; }
+.top-stat.lv .v { color: var(--green); }
+.top-stat.gold .v { color: var(--gold); }
+
+/* ─── CONTENT AREA ─── */
+#content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── TABS ─── */
+.tab-pane {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: none;
+  padding-bottom: 8px;
+}
+.tab-pane.active { display: block; }
+
+/* ─── BOTTOM NAV ─── */
+#bottom-nav {
+  height: var(--nav-h);
+  background: rgba(6,8,16,0.98);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 0.6rem;
+  font-family: 'Noto Sans KR';
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-btn .nav-icon { font-size: 1.3rem; }
+.nav-btn.active { color: var(--gold); background: rgba(240,192,64,0.07); }
+
+/* ─── MAP TAB ─── */
+#map-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #04050d;
+  cursor: grab;
+}
+#map-wrap:active { cursor: grabbing; }
+#map-container {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+#world-map {
+  display: block;
+  width: 700px;
+  height: 700px;
+}
+.zone-hot {
+  position: absolute;
+  transform: translate(-50%,-50%);
+  cursor: pointer;
+  z-index: 10;
+  padding: 8px;
+}
+.zone-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: rgba(0,0,0,0.5);
+  transition: transform 0.2s;
+  box-shadow: 0 0 8px currentColor;
+  animation: pulse2 2s infinite;
+}
+@keyframes pulse2 {
+  0%,100%{opacity:1} 50%{opacity:0.6}
+}
+.zone-hot:active .zone-dot { transform: scale(1.5); }
+.zone-label {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  top: 30px;
+  white-space: nowrap;
+  font-size: 0.6rem;
+  font-family: 'Black Han Sans';
+  color: #fff;
+  background: rgba(0,0,0,0.8);
+  padding: 1px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+#player-marker {
+  position: absolute;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid #fff;
+  box-shadow: 0 0 12px var(--gold);
+  transform: translate(-50%,-50%);
+  z-index: 20;
+  transition: left 0.5s ease, top 0.5s ease;
+  pointer-events: none;
+}
+/* minimap */
+#minimap {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 90px; height: 90px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 30;
+  pointer-events: none;
+}
+#minimap img { width:100%; height:100%; object-fit:cover; }
+#mm-player {
+  position: absolute;
+  width:5px; height:5px;
+  background:var(--gold);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 4px var(--gold);
+}
+
+/* ─── ZONE PANEL TAB ─── */
+#zone-tab {
+  padding: 14px;
+}
+.section-title {
+  font-family: 'Black Han Sans';
+  font-size: 0.65rem;
+  color: #555;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+.zone-header-big {
+  font-family: 'Black Han Sans';
+  font-size: 1.3rem;
+  margin-bottom: 4px;
+}
+.zone-danger-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+  margin-bottom: 8px;
+}
+.d0{color:var(--green);border-color:var(--green);}
+.d1{color:#aaffaa;border-color:#aaffaa;}
+.d2{color:var(--gold);border-color:var(--gold);}
+.d3{color:#ffaa44;border-color:#ffaa44;}
+.d4{color:var(--red);border-color:var(--red);}
+.d5{color:var(--purple);border-color:var(--purple);}
+.zone-desc { font-size:0.75rem; color:#999; line-height:1.6; margin-bottom:14px; }
+.enemy-card {
+  display: flex; justify-content:space-between; align-items:center;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 7px;
+  border-left: 2px solid transparent;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+}
+.enemy-card.elite { border-left-color:var(--gold); }
+.enemy-card.boss { border-left-color:var(--red); }
+.enemy-lv { color:#666; font-size:0.65rem; }
+.shop-card {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:9px 10px;
+  background:rgba(255,255,255,0.03);
+  border-radius:7px;
+  margin-bottom:6px;
+  font-size:0.75rem;
+  cursor:pointer;
+  transition:background 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.shop-card:active { background:rgba(240,192,64,0.1); }
+.shop-price { color:var(--gold); font-size:0.7rem; }
+
+/* ─── ACTION TAB ─── */
+#action-tab {
+  padding: 14px;
+}
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.act-btn {
+  padding: 14px 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  color: #e8e8f0;
+  font-family: 'Noto Sans KR';
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; flex-direction:column; align-items:center; gap:5px;
+  -webkit-tap-highlight-color:transparent;
+}
+.act-btn .btn-icon { font-size: 1.4rem; }
+.act-btn:active { transform:scale(0.96); background:rgba(240,192,64,0.1); border-color:var(--gold); color:var(--gold); }
+.act-btn.danger:active { background:rgba(255,59,59,0.1); border-color:var(--red); color:var(--red); }
+.act-btn.special:active { background:rgba(200,107,255,0.1); border-color:var(--purple); color:var(--purple); }
+/* log */
+#action-log {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  height: 200px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.log-entry { font-size:0.7rem; line-height:1.7; animation:fadeIn 0.3s ease; }
+.log-entry.info { color:#888; }
+.log-entry.combat { color:#ff8888; }
+.log-entry.loot { color:var(--gold); }
+.log-entry.event { color:var(--cyan); }
+.log-entry.system { color:var(--green); }
+.log-entry.danger { color:var(--red); font-weight:700; }
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* ─── CHAR TAB ─── */
+#char-tab {
+  padding: 14px;
+}
+.char-top {
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:14px;
+}
+.char-avatar {
+  width:70px; height:70px;
+  border-radius:50%;
+  border:2px solid var(--gold);
+  box-shadow:0 0 20px #f0c04044;
+  font-size:2.2rem;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 40% 35%,#1a1a3a,#060810);
+  flex-shrink:0;
+}
+.char-info { flex:1; }
+.char-name-big { font-family:'Black Han Sans'; font-size:1.1rem; color:var(--gold); }
+.char-class { font-size:0.7rem; color:#888; margin-top:2px; }
+.exp-bar-wrap { margin-top:6px; }
+.exp-bar-label { font-size:0.6rem; color:#666; margin-bottom:2px; }
+.exp-bar-track { height:4px; background:#1a1a2a; border-radius:2px; overflow:hidden; }
+.exp-bar-fill { height:100%; background:linear-gradient(90deg,#ffaa00,#ffe066); border-radius:2px; transition:width 0.4s; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.stat-card {
+  background:rgba(255,255,255,0.03);
+  border-radius:8px;
+  padding:8px 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:0.74rem;
+}
+.stat-card .sn { color:#888; }
+.stat-card .sv { font-weight:700; }
+
+/* skills */
+.skills-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:14px;
+}
+.skill-btn {
+  aspect-ratio:1;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;
+  font-size:1.4rem;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:3px;
+  -webkit-tap-highlight-color:transparent;
+}
+.skill-btn .sk-name { font-size:0.58rem; color:#aaa; font-family:'Noto Sans KR'; }
+.skill-btn .sk-cost { font-size:0.55rem; color:var(--cyan); font-family:'Noto Sans KR'; }
+.skill-btn.active { border-color:var(--cyan); box-shadow:0 0 12px #00e5ff44; background:rgba(0,229,255,0.08); }
+.skill-btn:active { transform:scale(0.93); }
+
+/* inventory */
+.inv-grid {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
+.inv-slot {
+  aspect-ratio:1;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem;
+  cursor:pointer;
+  position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.inv-slot:active { border-color:var(--gold); }
+.inv-qty { position:absolute; bottom:1px; right:3px; font-size:0.5rem; color:var(--gold); }
+
+/* ─── MODAL ─── */
+#modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.8);
+  z-index:200;
+  display:flex; align-items:flex-end; justify-content:center;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  opacity:0; pointer-events:none;
+  transition:opacity 0.3s;
+}
+#modal-overlay.show { opacity:1; pointer-events:all; }
+#modal {
+  background:#0d0f1e;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px 16px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom,0));
+  width:100%;
+  transform:translateY(100%);
+  transition:transform 0.3s;
+}
+#modal-overlay.show #modal { transform:none; }
+#modal h2 { font-family:'Black Han Sans'; font-size:1.2rem; margin-bottom:8px; }
+#modal p { font-size:0.78rem; color:#aaa; line-height:1.6; margin-bottom:16px; }
+.modal-btns { display:flex; gap:8px; }
+.modal-btn {
+  flex:1; padding:12px;
+  border-radius:10px; border:1px solid;
+  cursor:pointer; font-family:'Noto Sans KR'; font-size:0.82rem;
+  -webkit-tap-highlight-color:transparent;
+}
+.modal-btn.confirm { border-color:var(--gold); background:rgba(240,192,64,0.15); color:var(--gold); }
+.modal-btn.cancel { border-color:rgba(255,255,255,0.1); background:transparent; color:#888; }
+
+/* ─── OVERLAYS ─── */
+#combat-flash { position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0; }
+#combat-flash.hit { animation:flash 0.3s ease; }
+@keyframes flash{0%{opacity:0}20%{opacity:0.4;background:rgba(255,0,0,0.4)}100%{opacity:0}}
+
+#levelup-banner {
+  position:fixed;top:25%;left:50%;transform:translateX(-50%);
+  z-index:80; font-family:'Black Han Sans'; font-size:1.8rem;
+  color:var(--gold); text-shadow:0 0 40px var(--gold);
+  opacity:0; pointer-events:none; letter-spacing:0.15em;
+  white-space:nowrap;
+}
+#levelup-banner.show { animation:lvlup 2.5s ease forwards; }
+@keyframes lvlup{
+  0%{opacity:0;transform:translateX(-50%) scale(0.7)}
+  20%{opacity:1;transform:translateX(-50%) scale(1.05)}
+  70%{opacity:1;transform:translateX(-50%) scale(1)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-30px) scale(1)}
+}
+
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <h1>WORLD BREAKER</h1>
+  <p>세계를 탐험하고, 강해져라.</p>
+  <div class="load-bar"><div class="load-fill"></div></div>
+</div>
+
+<div id="combat-flash"></div>
+<div id="levelup-banner">⭐ LEVEL UP! ⭐</div>
+
+<div id="modal-overlay">
+  <div id="modal">
+    <h2 id="modal-title"></h2>
+    <p id="modal-body"></p>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">취소</button>
+      <button class="modal-btn confirm" id="modal-confirm">확인</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="logo">⚔ WB</div>
+    <div class="top-bars">
+      <div class="bar-row">
+        <span class="icon">❤️</span>
+        <div class="bar-track"><div class="bar-fill hp" id="hp-bar" style="width:100%"></div></div>
+        <span class="bar-val" id="val-hp">100/100</span>
+      </div>
+      <div class="bar-row">
+        <span class="icon">💎</span>
+        <div class="bar-track"><div class="bar-fill mp" id="mp-bar" style="width:100%"></div></div>
+        <span class="bar-val" id="val-mp">60/60</span>
+      </div>
+    </div>
+    <div class="top-stats">
+      <div class="top-stat lv">Lv.<span class="v" id="t-lv">1</span></div>
+      <div class="top-stat gold">🪙<span class="v" id="t-gold">0</span></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- TAB: MAP -->
+    <div class="tab-pane active" id="tab-map" style="padding:0;overflow:hidden;">
+      <div id="map-wrap">
+        <div id="minimap">
+          <img src="/mnt/user-data/uploads/9120.png" alt="">
+          <div id="mm-player" style="left:50%;top:50%"></div>
+        </div>
+        <div id="map-container">
+          <img id="world-map" src="/mnt/user-data/uploads/9120.png" alt="World Map">
+          <div id="player-marker" style="left:350px;top:350px"></div>
+          <div id="zones-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ZONE -->
+    <div class="tab-pane" id="tab-zone">
+      <div id="zone-tab">
+        <div class="zone-header-big" id="z-name">🌳 센터 숲</div>
+        <span class="zone-danger-badge d0" id="z-danger">안전지대</span>
+        <div class="zone-desc" id="z-desc">맵 중앙의 울창한 고대 숲. 신비로운 생명 에너지. 초보자 시작점.</div>
+
+        <div class="section-title">출현 몬스터</div>
+        <div id="z-enemies"></div>
+
+        <div class="section-title">상점</div>
+        <div id="z-shop"></div>
+      </div>
+    </div>
+
+    <!-- TAB: ACTION -->
+    <div class="tab-pane" id="tab-action">
+      <div id="action-tab">
+        <div class="section-title">액션</div>
+        <div class="action-grid">
+          <button class="act-btn" onclick="doExplore()"><span class="btn-icon">🔍</span>탐험</button>
+          <button class="act-btn" onclick="doRest()"><span class="btn-icon">🛌</span>휴식</button>
+          <button class="act-btn danger" onclick="doBattle()"><span class="btn-icon">⚔️</span>전투</button>
+          <button class="act-btn" onclick="doGather()"><span class="btn-icon">🌿</span>채집</button>
+          <button class="act-btn special" onclick="doSkill()"><span class="btn-icon">✨</span>스킬 사용</button>
+          <button class="act-btn" onclick="doShop()"><span class="btn-icon">🏪</span>상점</button>
+        </div>
+        <div class="section-title">전투 로그</div>
+        <div id="action-log"></div>
+      </div>
+    </div>
+
+    <!-- TAB: CHAR -->
+    <div class="tab-pane" id="tab-char">
+      <div id="char-tab">
+        <div class="char-top">
+          <div class="char-avatar" id="char-emoji">⚔️</div>
+          <div class="char-info">
+            <div class="char-name-big">모험가</div>
+            <div class="char-class" id="char-class-lbl">견습 모험가 • Lv.1</div>
+            <div class="exp-bar-wrap">
+              <div class="exp-bar-label">EXP <span id="exp-txt">0/100</span></div>
+              <div class="exp-bar-track"><div class="exp-bar-fill" id="exp-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">스탯</div>
+        <div class="stats-grid">
+          <div class="stat-card"><span class="sn">⚔️ 공격</span><span class="sv" id="s-atk">12</span></div>
+          <div class="stat-card"><span class="sn">🛡️ 방어</span><span class="sv" id="s-def">8</span></div>
+          <div class="stat-card"><span class="sn">💨 민첩</span><span class="sv" id="s-spd">10</span></div>
+          <div class="stat-card"><span class="sn">🔮 마력</span><span class="sv" id="s-mag">6</span></div>
+        </div>
+
+        <div class="section-title">스킬 <span style="color:#666;font-size:0.6rem">(탭해서 선택)</span></div>
+        <div class="skills-grid" id="skill-grid"></div>
+
+        <div class="section-title">인벤토리 <span style="color:#666;font-size:0.6rem">(탭해서 사용/판매)</span></div>
+        <div class="inv-grid" id="inv-grid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div id="bottom-nav">
+    <button class="nav-btn active" id="nav-map" onclick="switchTab('map')">
+      <span class="nav-icon">🗺️</span>지도
+    </button>
+    <button class="nav-btn" id="nav-zone" onclick="switchTab('zone')">
+      <span class="nav-icon">📍</span>지역
+    </button>
+    <button class="nav-btn" id="nav-action" onclick="switchTab('action')">
+      <span class="nav-icon">⚔️</span>액션
+    </button>
+    <button class="nav-btn" id="nav-char" onclick="switchTab('char')">
+      <span class="nav-icon">👤</span>캐릭터
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════
+//  DATA
+// ═══════════════════════════════
+const ZONES = [
+  { id:'center_forest', name:'센터 숲', emoji:'🌳', x:350, y:350, color:'#39ff6e', danger:0, dangerLabel:'안전지대', dangerCls:'d0',
+    desc:'맵 중앙의 울창한 고대 숲. 신비로운 생명 에너지. 초보자 시작점.',
+    enemies:[{name:'숲 슬라임',lv:'1-3',t:'normal'},{name:'야생 멧돼지',lv:'2-4',t:'normal'},{name:'고대 나무 정령',lv:'5',t:'elite'}],
+    loot:['체력 포션','나뭇잎 갑옷','마나 허브'], goldR:[5,20], expR:[15,40],
+    shop:[{name:'체력 포션 🧪',price:50},{name:'마나 포션 💧',price:40}] },
+  { id:'frostbite', name:'프로스트바이트', emoji:'🏔️', x:310, y:115, color:'#aaddff', danger:3, dangerLabel:'위험 ★★★', dangerCls:'d3',
+    desc:'만년설 설산. 극한의 추위가 HP를 깎는다. 얼음에 봉인된 고대 마법.',
+    enemies:[{name:'빙설 늑대',lv:'15-20',t:'normal'},{name:'서리 거인',lv:'25',t:'elite'},{name:'빙하 드래곤',lv:'35',t:'boss'}],
+    loot:['냉기의 수정','얼음 갑옷 파편','드래곤 비늘'], goldR:[80,200], expR:[200,500],
+    shop:[{name:'방한 외투 🧥',price:300},{name:'냉기 저항 포션 ❄️',price:150}] },
+  { id:'lich_tomb', name:'리치 묘지', emoji:'💀', x:510, y:140, color:'#c86bff', danger:4, dangerLabel:'극위험 ★★★★', dangerCls:'d4',
+    desc:'보라빛 저주의 고대 묘지. 리치 대마법사의 영역. 언데드가 무한 부활.',
+    enemies:[{name:'저주받은 해골',lv:'20-25',t:'normal'},{name:'밴시',lv:'24-28',t:'normal'},{name:'리치 로드',lv:'50',t:'boss'}],
+    loot:['저주의 반지','소울 크리스탈','리치 로브'], goldR:[150,350], expR:[400,900],
+    shop:[{name:'성수 💦',price:200},{name:'퇴마 마법서 📖',price:500}] },
+  { id:'gold_gang', name:'골드 갱', emoji:'⛏️', x:245, y:205, color:'#ffd700', danger:2, dangerLabel:'보통 ★★', dangerCls:'d2',
+    desc:'금맥 풍부한 광산. 채집 보너스 2배.',
+    enemies:[{name:'광산 몬스터',lv:'8-12',t:'normal'},{name:'골드 골렘',lv:'15',t:'elite'}],
+    loot:['금괴','철광석','보석 원석'], goldR:[100,300], expR:[80,180],
+    shop:[{name:'곡괭이 ⛏️',price:120},{name:'광부 투구 ⛑️',price:200}] },
+  { id:'robot_zone', name:'로봇01단지', emoji:'🤖', x:580, y:265, color:'#00e5ff', danger:3, dangerLabel:'위험 ★★★', dangerCls:'d3',
+    desc:'폐기 AI 공장. 오작동 로봇들이 침략자를 공격.',
+    enemies:[{name:'경비 로봇',lv:'14-18',t:'normal'},{name:'전투 드론',lv:'16-20',t:'normal'},{name:'마더코어',lv:'45',t:'boss'}],
+    loot:['회로 기판','로봇 코어','나노 강철'], goldR:[90,220], expR:[180,420],
+    shop:[{name:'전기충격 봉 ⚡',price:380},{name:'사이버 방어막 🛡',price:450}] },
+  { id:'lawless', name:'무법지', emoji:'🏜️', x:165, y:315, color:'#ff8844', danger:2, dangerLabel:'보통 ★★', dangerCls:'d2',
+    desc:'법이 없는 황야. 도적단과 현상금 사냥꾼.',
+    enemies:[{name:'도적단 졸개',lv:'10-14',t:'normal'},{name:'무법지 두목',lv:'20',t:'boss'}],
+    loot:['도적의 단검','훔친 금화','독 병'], goldR:[60,160], expR:[100,250],
+    shop:[{name:'독 단검 🗡',price:250},{name:'연막탄 💨',price:80}] },
+  { id:'arena', name:'파이팅 아레나', emoji:'🏟️', x:540, y:390, color:'#ff3b3b', danger:3, dangerLabel:'위험 ★★★', dangerCls:'d3',
+    desc:'관중이 지켜보는 원형 경기장. 강한 자들의 격전지.',
+    enemies:[{name:'검투사',lv:'20-25',t:'normal'},{name:'챔피언',lv:'28',t:'elite'},{name:'아레나 황제',lv:'40',t:'boss'}],
+    loot:['챔피언 검','아레나 훈장','황금 투구'], goldR:[200,500], expR:[350,750],
+    shop:[{name:'결투용 갑옷 ⚔️',price:600},{name:'체력 폭발 포션 💪',price:180}] },
+  { id:'swamp', name:'고을의 늪', emoji:'🌿', x:175, y:500, color:'#44ff88', danger:2, dangerLabel:'보통 ★★', dangerCls:'d2',
+    desc:'독기가 흐르는 불길한 늪. 독성 생물들.',
+    enemies:[{name:'늪 악어',lv:'12-16',t:'normal'},{name:'독 거미',lv:'14-18',t:'normal'},{name:'늪지 히드라',lv:'25',t:'boss'}],
+    loot:['맹독 낭','늪지 허브','히드라 비늘'], goldR:[50,140], expR:[90,220],
+    shop:[{name:'해독 포션 🍶',price:70},{name:'독성 화살 🏹',price:200}] },
+  { id:'backstage', name:'백스테이지', emoji:'🕳️', x:390, y:560, color:'#888888', danger:4, dangerLabel:'극위험 ★★★★', dangerCls:'d4',
+    desc:'심연의 구덩이. 고대 악마 봉인 장소. 절대 암흑.',
+    enemies:[{name:'암흑 악령',lv:'25-30',t:'normal'},{name:'심연의 군주',lv:'55',t:'boss'}],
+    loot:['공허 결정','심연의 조각','저주받은 무기'], goldR:[200,450], expR:[500,1000],
+    shop:[{name:'어둠 망토 🌑',price:700},{name:'공허 봉인석 🔮',price:1000}] },
+  { id:'ruins', name:'루인즈', emoji:'🏚️', x:300, y:640, color:'#ccaa66', danger:2, dangerLabel:'보통 ★★', dangerCls:'d2',
+    desc:'고대 문명 폐허. 트랩과 보물이 공존.',
+    enemies:[{name:'고대 골렘',lv:'10-15',t:'normal'},{name:'유물 수호자',lv:'18',t:'elite'}],
+    loot:['고대 유물','폐허 지도','고대 주화'], goldR:[80,200], expR:[120,280],
+    shop:[{name:'폐허 탐험 지도 🗺',price:300},{name:'고대 보호 부적 🧿',price:250}] },
+  { id:'nautilus', name:'노틸러스', emoji:'🌀', x:590, y:640, color:'#0088ff', danger:5, dangerLabel:'죽음 ★★★★★', dangerCls:'d5',
+    desc:'바다 소용돌이. 해적선 묘지. 전설의 바다 신.',
+    enemies:[{name:'심해 크라켄',lv:'35-45',t:'normal'},{name:'해골 해적선장',lv:'40',t:'elite'},{name:'레비아탄',lv:'99',t:'boss'}],
+    loot:['레비아탄 비늘','해적의 보물','신의 눈물'], goldR:[500,2000], expR:[1000,3000],
+    shop:[{name:'바다 왕의 삼지창 🔱',price:5000},{name:'불침 갑옷 🌊',price:3000}] },
+  { id:'pixel_zone', name:'@"#^W', emoji:'🟣', x:100, y:135, color:'#ff44cc', danger:5, dangerLabel:'죽음 ★★★★★', dangerCls:'d5',
+    desc:'차원 균열. 데이터가 부서지고 현실이 왜곡된다.',
+    enemies:[{name:'ERROR_ENTITY',lv:'???',t:'elite'},{name:'NULL_GOD',lv:'∞',t:'boss'}],
+    loot:['오류 조각','null 코드','신화급 아이템'], goldR:[1000,5000], expR:[2000,9999],
+    shop:[{name:'버그 해킹 툴 💻',price:9999},{name:'차원 왜곡 석 🌀',price:7777}] },
+];
+
+const SKILLS = [
+  {id:'slash',name:'베기',emoji:'⚔️',cost:10,dmgMul:1.8},
+  {id:'shield',name:'방어',emoji:'🛡️',cost:8,dmgMul:0},
+  {id:'fire',name:'화염구',emoji:'🔥',cost:20,dmgMul:2.5},
+  {id:'heal',name:'치유',emoji:'💚',cost:25,dmgMul:0},
+  {id:'thunder',name:'번개',emoji:'⚡',cost:18,dmgMul:2.2},
+  {id:'dark',name:'암흑',emoji:'🌑',cost:30,dmgMul:3.0},
+];
+
+const ITEMS = {
+  '체력 포션':{emoji:'🧪',effect:'hp',val:50},
+  '마나 포션':{emoji:'💧',effect:'mp',val:30},
+  '마나 허브':{emoji:'🌿',effect:'mp',val:20},
+  '나뭇잎 갑옷':{emoji:'🍃',effect:'def',val:5},
+  '해독 포션':{emoji:'🍶',effect:'hp',val:20},
+  '냉기의 수정':{emoji:'💎',effect:'sell',val:200},
+  '금괴':{emoji:'🥇',effect:'sell',val:300},
+  '회로 기판':{emoji:'🔌',effect:'sell',val:150},
+  '고대 유물':{emoji:'🏺',effect:'sell',val:500},
+  '레비아탄 비늘':{emoji:'🐉',effect:'sell',val:1000},
+  '오류 조각':{emoji:'🟣',effect:'sell',val:999},
+};
+
+// ═══════════════════════════════
+//  STATE
+// ═══════════════════════════════
+let G = {
+  lv:1, hp:100, maxhp:100, mp:60, maxmp:60,
+  atk:12, def:8, spd:10, mag:6,
+  gold:30, exp:0, expNext:100,
+  curZone: ZONES[0],
+  inventory: [],
+  activeSkill: null,
+};
+
+// ═══════════════════════════════
+//  INIT
+// ═══════════════════════════════
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    document.getElementById('loading').style.opacity='0';
+    setTimeout(()=>document.getElementById('loading').style.display='none',500);
+    initMap();
+    initSkills();
+    renderInventory();
+    updateUI();
+    updateZonePanel(G.curZone);
+    addLog('🌍 WORLD BREAKER 시작! 지도에서 지역을 탭하세요.','system');
+    addLog('💡 센터 숲에서 레벨업 후 위험 지역 도전!','info');
+  }, 2000);
+});
+
+// ═══════════════════════════════
+//  TAB SWITCH
+// ═══════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════
+//  MAP INIT
+// ═══════════════════════════════
+function initMap() {
+  const wrap = document.getElementById('map-wrap');
+  const cont = document.getElementById('map-container');
+  const zonesDiv = document.getElementById('zones-container');
+
+  // initial center
+  let scale = Math.min(wrap.clientWidth, wrap.clientHeight) / 700 * 1.1;
+  let ox = (wrap.clientWidth - 700*scale)/2;
+  let oy = (wrap.clientHeight - 700*scale)/2;
+  setTransform(ox, oy, scale);
+
+  // touch drag + pinch
+  let touches = [];
+  let lastDist = 0;
+
+  wrap.addEventListener('touchstart', e=>{
+    touches = Array.from(e.touches);
+    if(touches.length===2) lastDist = dist(touches[0],touches[1]);
+  }, {passive:true});
+
+  wrap.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    const t = Array.from(e.touches);
+    if(t.length===1 && touches.length===1){
+      const dx=t[0].clientX-touches[0].clientX;
+      const dy=t[0].clientY-touches[0].clientY;
+      ox+=dx; oy+=dy;
+    } else if(t.length===2 && touches.length===2){
+      const d=dist(t[0],t[1]);
+      const factor=d/lastDist;
+      const cx=(t[0].clientX+t[1].clientX)/2;
+      const cy=(t[0].clientY+t[1].clientY)/2;
+      const newScale=Math.min(2.5,Math.max(0.4,scale*factor));
+      ox=cx-(cx-ox)/scale*newScale;
+      oy=cy-(cy-oy)/scale*newScale;
+      scale=newScale; lastDist=d;
+    }
+    touches=t;
+    setTransform(ox,oy,scale);
+  }, {passive:false});
+
+  wrap.addEventListener('touchend', e=>{ touches=Array.from(e.touches); }, {passive:true});
+
+  function dist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+  function setTransform(x,y,s){
+    cont.style.transform=`translate(${x}px,${y}px) scale(${s})`;
+  }
+
+  // zone hotspots
+  ZONES.forEach(zone=>{
+    const el=document.createElement('div');
+    el.className='zone-hot';
+    el.style.left=zone.x+'px';
+    el.style.top=zone.y+'px';
+    const dot=document.createElement('div');
+    dot.className='zone-dot';
+    dot.style.borderColor=zone.color;
+    dot.style.color=zone.color;
+    dot.style.boxShadow=`0 0 8px ${zone.color}`;
+    const lbl=document.createElement('div');
+    lbl.className='zone-label';
+    lbl.textContent=zone.emoji+' '+zone.name;
+    el.appendChild(dot); el.appendChild(lbl);
+    el.addEventListener('click',()=>travelTo(zone));
+    zonesDiv.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════
+//  UI UPDATE
+// ═══════════════════════════════
+function updateUI(){
+  document.getElementById('hp-bar').style.width=(G.hp/G.maxhp*100)+'%';
+  document.getElementById('mp-bar').style.width=(G.mp/G.maxmp*100)+'%';
+  document.getElementById('val-hp').textContent=G.hp+'/'+G.maxhp;
+  document.getElementById('val-mp').textContent=G.mp+'/'+G.maxmp;
+  document.getElementById('t-lv').textContent=G.lv;
+  document.getElementById('t-gold').textContent=G.gold.toLocaleString();
+  document.getElementById('s-atk').textContent=G.atk;
+  document.getElementById('s-def').textContent=G.def;
+  document.getElementById('s-spd').textContent=G.spd;
+  document.getElementById('s-mag').textContent=G.mag;
+  const expPct=G.exp/G.expNext*100;
+  document.getElementById('exp-bar').style.width=expPct+'%';
+  document.getElementById('exp-txt').textContent=G.exp+'/'+G.expNext;
+  const cls=G.lv<5?'견습 모험가':G.lv<10?'전사':G.lv<20?'영웅':G.lv<35?'전설':'신화';
+  document.getElementById('char-class-lbl').textContent=cls+' • Lv.'+G.lv;
+  document.getElementById('char-emoji').textContent=G.lv<5?'⚔️':G.lv<15?'🗡️':G.lv<30?'🔥':G.lv<50?'⭐':'👑';
+  renderInventory();
+}
+
+function updateZonePanel(zone){
+  document.getElementById('z-name').textContent=zone.emoji+' '+zone.name;
+  const db=document.getElementById('z-danger');
+  db.textContent=zone.dangerLabel; db.className='zone-danger-badge '+zone.dangerCls;
+  document.getElementById('z-desc').textContent=zone.desc;
+  document.getElementById('z-enemies').innerHTML=zone.enemies.map(e=>
+    `<div class="enemy-card ${e.t}">${e.t==='boss'?'👑':e.t==='elite'?'⭐':'•'} ${e.name}<span class="enemy-lv">Lv.${e.lv}</span></div>`
+  ).join('');
+  document.getElementById('z-shop').innerHTML=zone.shop.map(s=>
+    `<div class="shop-card" onclick='buyItem(${JSON.stringify(s)})'><span>${s.name}</span><span class="shop-price">🪙${s.price}</span></div>`
+  ).join('');
+}
+
+// ═══════════════════════════════
+//  TRAVEL
+// ═══════════════════════════════
+function travelTo(zone){
+  if(zone.id===G.curZone.id){
+    switchTab('zone');
+    addLog(`이미 ${zone.name}에 있습니다.`,'info');
+    return;
+  }
+  const dangerDiff=zone.danger-G.lv/10;
+  if(dangerDiff>2.5){
+    showModal('⚠️ '+zone.name,
+      `위험도 ${zone.dangerLabel} — 현재 레벨에 비해 매우 위험합니다. 이동할까요?`,
+      ()=>moveToZone(zone));
+    return;
+  }
+  moveToZone(zone);
+}
+
+function moveToZone(zone){
+  G.curZone=zone;
+  const marker=document.getElementById('player-marker');
+  marker.style.left=zone.x+'px'; marker.style.top=zone.y+'px';
+  const mm=document.getElementById('mm-player');
+  mm.style.left=(zone.x/700*100)+'%'; mm.style.top=(zone.y/700*100)+'%';
+  updateZonePanel(zone);
+  addLog(`📍 ${zone.emoji} ${zone.name}(으)로 이동`,'event');
+  if(zone.danger>=4) addLog('⚠️ 극도로 위험한 지역!','danger');
+  switchTab('zone');
+}
+
+// ═══════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════
+function doExplore(){
+  switchTab('action');
+  const z=G.curZone;
+  const r=Math.random();
+  if(r<0.18){ addLog(`🪤 함정! ${rand(5,15)} 데미지`,'combat'); takeDmg(rand(5,15)); }
+  else if(r<0.38){ addLog(`👁 몬스터 출현!`,'combat'); triggerBattle(z); }
+  else if(r<0.55){ addLog(`🗺 보물 상자 발견!`,'loot'); lootRandom(z); }
+  else if(r<0.7){ addLog(`✨ 마력 소용돌이! MP 회복`,'event'); G.mp=Math.min(G.maxmp,G.mp+20); }
+  else { addLog(`🔍 새 경로 발견! 금 획득`,'event'); gainGold(rand(10,30)); }
+  gainExp(rand(5,15));
+  updateUI();
+}
+
+function doRest(){
+  switchTab('action');
+  if(G.hp>=G.maxhp){ addLog('HP가 이미 최대입니다.','info'); return; }
+  const h=Math.floor(G.maxhp*0.25);
+  G.hp=Math.min(G.maxhp,G.hp+h);
+  addLog(`🛌 휴식... HP +${h}`,'system');
+  updateUI();
+}
+
+function doGather(){
+  switchTab('action');
+  if(Math.random()<0.15){ addLog('🌿 채집 중 몬스터!','combat'); triggerBattle(G.curZone); return; }
+  lootRandom(G.curZone);
+  gainExp(rand(8,20));
+  updateUI();
+}
+
+function doBattle(){
+  switchTab('action');
+  triggerBattle(G.curZone);
+}
+
+function triggerBattle(zone){
+  const enemies=zone.enemies.filter(e=>e.t!=='boss'||G.lv>=15);
+  const enemy=enemies[Math.floor(Math.random()*enemies.length)]||zone.enemies[0];
+  const baseLv=parseInt(enemy.lv)||15;
+  const eAtk=Math.max(3,baseLv*2+rand(-3,3));
+  const eDef=Math.max(1,baseLv+rand(-2,2));
+  const eHpMax=baseLv*20+rand(0,50);
+  let eHp=eHpMax;
+  addLog(`⚔️ ${enemy.name}(Lv.${enemy.lv}) 전투 시작!`,'combat');
+
+  let round=0;
+  const tick=()=>{
+    round++;
+    if(G.hp<=0||eHp<=0){ endBattle(zone,enemy,baseLv,G.hp>0); return; }
+    const sk=G.activeSkill;
+    let pdmg;
+    if(sk&&sk.dmgMul>0&&G.mp>=sk.cost){
+      pdmg=Math.max(1,Math.floor(G.atk*sk.dmgMul)-eDef+rand(-3,3));
+      G.mp=Math.max(0,G.mp-sk.cost);
+      addLog(`✨ ${sk.name}! ${pdmg} 데미지`,'combat');
+    } else {
+      pdmg=Math.max(1,G.atk-eDef+rand(-2,4));
+      addLog(`⚔️ 공격! ${pdmg} 데미지`,'combat');
+    }
+    eHp-=pdmg;
+    if(eHp<=0){ endBattle(zone,enemy,baseLv,true); return; }
+    const edmg=Math.max(1,eAtk-G.def+rand(-2,3));
+    G.hp=Math.max(0,G.hp-edmg);
+    addLog(`💢 반격! ${edmg} 데미지`,'combat');
+    flashDmg();
+    updateUI();
+    if(G.hp<=0){ endBattle(zone,enemy,baseLv,false); return; }
+    if(round<5) setTimeout(tick,500);
+    else endBattle(zone,enemy,baseLv,true);
+  };
+  setTimeout(tick,100);
+}
+
+function endBattle(zone,enemy,lv,win){
+  if(!win){
+    addLog(`💀 패배... HP 20% 부활, 골드 10% 손실`,'danger');
+    G.hp=Math.floor(G.maxhp*0.2);
+    G.gold=Math.max(0,G.gold-Math.floor(G.gold*0.1));
+    updateUI(); return;
+  }
+  const g=rand(...zone.goldR), e=rand(...zone.expR);
+  gainGold(g); gainExp(e);
+  if(Math.random()<0.5) lootRandom(zone);
+  addLog(`✅ 승리! 🪙+${g} EXP+${e}`,'loot');
+  updateUI();
+}
+
+function doSkill(){
+  switchTab('action');
+  if(!G.activeSkill){ addLog('👈 캐릭터 탭에서 스킬을 선택하세요','info'); return; }
+  const sk=G.activeSkill;
+  if(G.mp<sk.cost){ addLog(`💧 MP 부족! (필요:${sk.cost})`, 'danger'); return; }
+  if(sk.id==='heal'){
+    G.mp-=sk.cost;
+    const h=Math.floor(G.maxhp*0.3);
+    G.hp=Math.min(G.maxhp,G.hp+h);
+    addLog(`💚 치유! HP +${h}`,'system');
+  } else if(sk.id==='shield'){
+    G.mp-=sk.cost; G.def+=5;
+    addLog(`🛡 방어 강화! DEF +5 (10초)`,'system');
+    setTimeout(()=>{G.def=Math.max(1,G.def-5);updateUI();},10000);
+  } else {
+    addLog(`✨ ${sk.name} 준비완료! 다음 전투에 사용됩니다.`,'event');
+  }
+  updateUI();
+}
+
+function doShop(){
+  switchTab('zone');
+  addLog(`🏪 ${G.curZone.name} 상점 — 지역 탭에서 구매`,'system');
+}
+
+// ═══════════════════════════════
+//  SKILLS
+// ═══════════════════════════════
+function initSkills(){
+  const g=document.getElementById('skill-grid');
+  g.innerHTML='';
+  SKILLS.forEach(sk=>{
+    const b=document.createElement('button');
+    b.className='skill-btn'; b.id='sk-'+sk.id;
+    b.innerHTML=`${sk.emoji}<span class="sk-name">${sk.name}</span><span class="sk-cost">${sk.cost}MP</span>`;
+    b.onclick=()=>selectSkill(sk);
+    g.appendChild(b);
+  });
+}
+
+function selectSkill(sk){
+  G.activeSkill=sk;
+  document.querySelectorAll('.skill-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sk-'+sk.id).classList.add('active');
+  addLog(`✨ ${sk.name} 선택됨`,'system');
+}
+
+// ═══════════════════════════════
+//  INVENTORY
+// ═══════════════════════════════
+function renderInventory(){
+  const g=document.getElementById('inv-grid');
+  g.innerHTML='';
+  for(let i=0;i<15;i++){
+    const slot=document.createElement('div');
+    slot.className='inv-slot';
+    const item=G.inventory[i];
+    if(item){
+      const def=ITEMS[item.name]||{emoji:'📦'};
+      slot.innerHTML=`${def.emoji}<span class="inv-qty">${item.qty}</span>`;
+      slot.title=item.name;
+      slot.onclick=()=>useItem(i);
+    }
+    g.appendChild(slot);
+  }
+}
+
+function addItem(name){
+  const ex=G.inventory.find(i=>i&&i.name===name);
+  if(ex){ ex.qty++; }
+  else if(G.inventory.length<15){ G.inventory.push({name,qty:1}); }
+  renderInventory();
+}
+
+function useItem(idx){
+  const item=G.inventory[idx];
+  if(!item) return;
+  const def=ITEMS[item.name];
+  if(!def){ addLog(`📦 ${item.name} 사용 불가`,'info'); return; }
+  if(def.effect==='hp'){ G.hp=Math.min(G.maxhp,G.hp+def.val); addLog(`🧪 ${item.name} 사용! HP +${def.val}`,'system'); }
+  else if(def.effect==='mp'){ G.mp=Math.min(G.maxmp,G.mp+def.val); addLog(`💧 ${item.name} 사용! MP +${def.val}`,'system'); }
+  else if(def.effect==='def'){ G.def+=def.val; addLog(`🍃 ${item.name} 장착! DEF +${def.val}`,'system'); }
+  else if(def.effect==='sell'){ G.gold+=def.val; addLog(`🪙 ${item.name} 판매! +${def.val}G`,'loot'); }
+  item.qty--;
+  if(item.qty<=0) G.inventory.splice(idx,1);
+  updateUI();
+}
+
+function buyItem(s){
+  if(G.gold<s.price){ addLog(`🪙 골드 부족! (필요:${s.price})`,'danger'); switchTab('action'); return; }
+  G.gold-=s.price;
+  const nm=s.name.replace(/\s*[^\w가-힣\s].*/,'').trim();
+  addItem(nm||s.name);
+  addLog(`🛒 ${s.name} 구매! -${s.price}G`,'loot');
+  switchTab('action');
+  updateUI();
+}
+
+// ═══════════════════════════════
+//  HELPERS
+// ═══════════════════════════════
+function gainGold(n){ G.gold+=n; }
+function gainExp(n){
+  G.exp+=n;
+  while(G.exp>=G.expNext) levelUp();
+}
+function lootRandom(zone){
+  const i=zone.loot[Math.floor(Math.random()*zone.loot.length)];
+  addItem(i); addLog(`🎁 ${i} 획득!`,'loot');
+}
+function takeDmg(n){ G.hp=Math.max(0,G.hp-n); flashDmg(); }
+
+function levelUp(){
+  G.exp-=G.expNext; G.lv++;
+  G.expNext=Math.floor(G.expNext*1.4);
+  G.maxhp+=20; G.hp=G.maxhp;
+  G.maxmp+=10; G.mp=G.maxmp;
+  G.atk+=3; G.def+=2; G.spd+=2; G.mag+=2;
+  addLog(`⭐ 레벨 업! Lv.${G.lv} — 스탯 증가!`,'system');
+  const b=document.getElementById('levelup-banner');
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+
+function addLog(msg,type='info'){
+  const log=document.getElementById('action-log');
+  const el=document.createElement('div');
+  el.className='log-entry '+type;
+  el.textContent=msg;
+  log.appendChild(el);
+  log.scrollTop=log.scrollHeight;
+  if(log.children.length>60) log.removeChild(log.firstChild);
+}
+
+function flashDmg(){
+  const el=document.getElementById('combat-flash');
+  el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
+}
+
+let _cb=null;
+function showModal(title,body,cb){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').textContent=body;
+  _cb=cb;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); }
+document.getElementById('modal-confirm').onclick=()=>{ closeModal(); if(_cb)_cb(); };
+
+function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+</script>
+</body>
+</html>

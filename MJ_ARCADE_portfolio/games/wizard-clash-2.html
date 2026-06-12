@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>✨ WIZARD CLASH</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=MedievalSharp&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05030f;--panel:#0d0820;--b:#2a1a4a;
+  --gold:#ffcc44;--cyan:#44ffee;--red:#ff3366;
+  --purple:#cc44ff;--blue:#4488ff;--green:#44ffaa;
+  --px:'Cinzel',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--px);color:#dde0ff;touch-action:manipulation;}
+
+/* ── TABS ── */
+.tabs{display:flex;background:#08051a;border-bottom:2px solid var(--b);flex-shrink:0;}
+.tab{flex:1;padding:6px 1px;font-family:var(--px);font-size:clamp(.18rem,1.1vw,.28rem);
+  color:#2a1a5a;background:none;border:none;cursor:pointer;
+  border-bottom:3px solid transparent;position:relative;top:2px;letter-spacing:.5px;transition:color .15s;}
+.tab.on{color:var(--gold);border-bottom:3px solid var(--gold);text-shadow:0 0 8px var(--gold);}
+.tab:active{color:var(--purple);}
+
+/* ── PANELS ── */
+.pnl{display:none !important;flex:1;flex-direction:column;min-height:0;}
+.pnl.on{display:flex !important;flex-direction:column;}
+#shopPnl,#dexPnl,#upgradePnl,#achievePnl,#settingsPnl{overflow-y:auto !important;overflow-x:hidden !important;}
+
+/* ── ROOT ── */
+#root{display:flex;flex-direction:column;width:100%;height:100%;max-width:860px;margin:0 auto;}
+
+/* ── ARENA HUD ── */
+#hud{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:#08051a;flex-shrink:0;border-bottom:1px solid var(--b);}
+.hp-side{flex:1;display:flex;flex-direction:column;gap:2px;}
+.hp-lbl{font-size:clamp(.16rem,.9vw,.24rem);letter-spacing:1px;}
+.hp-track{height:8px;background:#0a0518;border:1px solid var(--b);overflow:hidden;position:relative;}
+.hp-fill{height:100%;transition:width .18s;}
+#p1Hp{background:linear-gradient(90deg,#6600cc,#cc44ff);}
+#p2Hp{background:linear-gradient(90deg,#cc0044,#ff3366);}
+.sp-wrap{width:44px;height:4px;background:#0a0518;border:1px solid var(--b);margin-top:1px;}
+.sp-fill{height:100%;background:linear-gradient(90deg,#0088ff,#44ffee);transition:width .2s;}
+.hud-c{text-align:center;flex-shrink:0;padding:0 6px;}
+.rnd{font-size:clamp(.18rem,1.1vw,.3rem);color:var(--gold);letter-spacing:1px;}
+.coins{font-size:clamp(.16rem,1vw,.26rem);color:var(--gold);}
+.sw-hud{font-size:clamp(.18rem,1.1vw,.28rem);margin-top:2px;letter-spacing:1px;font-weight:bold;}
+
+/* ── STAGE ── */
+.stage{flex:1;position:relative;overflow:hidden;min-height:0;touch-action:none;}
+#gc{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;}
+#flash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .05s;}
+#msg{position:absolute;top:36%;left:50%;transform:translateX(-50%);
+  font-size:clamp(.5rem,3.5vw,.85rem);color:#fff;text-align:center;
+  text-shadow:0 0 20px var(--purple),2px 2px 0 #000;
+  pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;}
+#abilityMsg{position:absolute;top:22%;left:50%;transform:translateX(-50%);
+  font-size:clamp(.28rem,2vw,.45rem);color:#fff;text-align:center;
+  text-shadow:0 0 12px var(--cyan);pointer-events:none;opacity:0;
+  transition:opacity .2s;white-space:nowrap;}
+#secretBanner{position:absolute;top:14%;left:50%;transform:translateX(-50%);
+  font-family:var(--px);font-size:clamp(.35rem,2.5vw,.55rem);
+  color:#ffffff;letter-spacing:3px;text-align:center;white-space:nowrap;
+  text-shadow:0 0 12px #aaaacc,0 0 30px #8888aa;
+  pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;
+  background:rgba(10,5,30,0.85);padding:6px 14px;border:1px solid #6644aa;border-radius:4px;}
+
+/* ── CONTROLS ── */
+#ctrlBar{display:flex;justify-content:space-between;align-items:center;
+  padding:4px 6px;background:#08051a;flex-shrink:0;border-top:1px solid var(--b);}
+.btn-group{display:flex;gap:4px;}
+.cbtn{width:46px;height:46px;border:2px solid #2a1a4a;border-radius:4px;
+  background:rgba(30,10,60,0.7);color:#8866bb;
+  font-size:clamp(.28rem,2vw,.5rem);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:rgba(180,100,255,0.2);
+  touch-action:manipulation;}
+.cbtn:active,.cbtn.pressed{background:rgba(100,40,180,0.5);border-color:var(--purple);color:var(--purple);}
+.cbtn.cast{border-color:#ff6644;color:#ff6644;}
+.cbtn.skill{border-color:var(--purple);color:var(--purple);}
+.cbtn.def{border-color:#44cc88;color:#44cc88;}
+.sw-label{font-size:clamp(.16rem,.95vw,.26rem);letter-spacing:1px;text-align:center;font-weight:bold;}
+.kb-hint{font-size:clamp(.12rem,.7vw,.18rem);color:#2a1a4a;letter-spacing:.5px;}
+
+/* ── SHOP ── */
+.s-title{font-size:clamp(.35rem,2vw,.5rem);color:var(--gold);text-align:center;
+  text-shadow:0 0 12px var(--gold);letter-spacing:3px;margin-bottom:4px;padding:8px 0 4px;}
+.s-coins{font-size:clamp(.22rem,1.4vw,.36rem);color:var(--gold);text-align:center;margin-bottom:8px;}
+.merchant-box{display:flex;align-items:center;gap:8px;padding:8px;
+  background:rgba(20,10,40,0.8);border:1px solid var(--b);border-radius:4px;margin-bottom:8px;}
+.merchant-sprite{font-size:2rem;}
+.merchant-text{flex:1;}
+.merchant-name{font-size:clamp(.24rem,1.5vw,.38rem);color:var(--gold);margin-bottom:4px;letter-spacing:1px;}
+.merchant-quote{font-size:clamp(.16rem,1vw,.26rem);color:#7766aa;margin-bottom:6px;line-height:1.6;}
+.gacha-btn{width:100%;padding:8px;background:linear-gradient(135deg,#330066,#6600cc);
+  border:2px solid var(--purple);color:#fff;font-family:var(--px);
+  font-size:clamp(.22rem,1.4vw,.36rem);letter-spacing:2px;cursor:pointer;
+  box-shadow:0 0 14px rgba(180,80,255,.4);touch-action:manipulation;}
+.gacha-cost{font-size:clamp(.14rem,.9vw,.22rem);color:#553388;margin-top:3px;letter-spacing:.5px;}
+.inv-title{font-size:clamp(.22rem,1.4vw,.36rem);color:var(--gold);letter-spacing:2px;margin-bottom:6px;}
+.s-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;}
+.sc{background:var(--panel);border:2px solid var(--b);border-radius:4px;padding:8px;
+  text-align:center;cursor:pointer;position:relative;transition:border-color .15s;}
+.sc.eq{box-shadow:0 0 10px var(--purple);}
+.sc.eq::after{content:'EQ';position:absolute;top:4px;right:5px;font-size:.2rem;color:var(--gold);}
+.sc.locked{opacity:.5;}
+.si{font-size:1.4rem;display:block;margin-bottom:3px;}
+.sn{font-size:clamp(.18rem,1.1vw,.28rem);margin-bottom:2px;}
+.sa{font-size:clamp(.15rem,.9vw,.22rem);color:#ff8844;}
+.sr{font-size:clamp(.13rem,.8vw,.2rem);margin-bottom:2px;letter-spacing:.5px;}
+.sab{font-size:clamp(.12rem,.75vw,.18rem);color:#7766aa;line-height:1.5;}
+
+/* ── DEX ── */
+.dex-card{background:var(--panel);border:2px solid var(--b);border-radius:4px;padding:8px;text-align:center;cursor:pointer;}
+.dex-card.found{border-color:#3a2a5a;}
+.dex-badge{font-size:.2rem;color:var(--green);position:absolute;top:3px;left:5px;}
+.dex-icon{font-size:1.6rem;display:block;margin-bottom:3px;}
+.dex-name{font-size:clamp(.16rem,.95vw,.24rem);letter-spacing:.5px;}
+.dex-coin{font-size:clamp(.15rem,.85vw,.22rem);color:var(--gold);}
+.dex-count{font-size:clamp(.13rem,.75vw,.18rem);color:#3a2a5a;}
+
+/* ── ACHIEVEMENT ── */
+.ach-card{background:var(--panel);border:1px solid var(--b);border-radius:4px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.ach-card.done{border-color:var(--gold);background:rgba(255,204,68,0.04);}
+.ach-icon{font-size:1.4rem;flex-shrink:0;width:28px;text-align:center;}
+.ach-info{flex:1;min-width:0;}
+.ach-name{font-size:clamp(.22rem,1.3vw,.34rem);letter-spacing:1px;margin-bottom:2px;}
+.ach-card.done .ach-name{color:var(--gold);}
+.ach-card:not(.done) .ach-name{color:#2a1a4a;}
+.ach-desc{font-size:clamp(.15rem,.9vw,.22rem);line-height:1.5;}
+.ach-badge{font-size:clamp(.15rem,.9vw,.2rem);flex-shrink:0;color:var(--gold);}
+
+/* ── POPUPS ── */
+#dexPop{position:fixed;inset:0;z-index:400;background:rgba(5,2,20,0.95);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;}
+#dexPop.on{display:flex;}
+.dp-icon{font-size:3rem;}
+.dp-name{font-family:var(--px);font-size:clamp(.4rem,2.5vw,.65rem);color:var(--gold);letter-spacing:2px;}
+.dp-stat{font-size:clamp(.18rem,1vw,.28rem);color:#8ab;line-height:2;text-align:center;}
+.dp-desc{font-size:clamp(.16rem,.95vw,.24rem);color:#4a3a6a;max-width:240px;line-height:1.8;text-align:center;}
+.dp-drops{font-size:clamp(.16rem,.95vw,.24rem);color:var(--gold);}
+.dp-weak{font-size:clamp(.14rem,.85vw,.22rem);color:#ff8866;}
+.dp-close{background:none;border:2px solid #2a1a4a;color:#4a3a6a;font-family:var(--px);font-size:clamp(.18rem,1.1vw,.28rem);padding:7px 18px;cursor:pointer;letter-spacing:2px;margin-top:4px;touch-action:manipulation;}
+
+#gPop{position:fixed;inset:0;z-index:500;background:rgba(5,2,20,0.95);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#gPop.on{display:flex;}
+.gp-icon{font-size:4rem;animation:gPop .45s cubic-bezier(.34,1.56,.64,1);}
+@keyframes gPop{from{transform:scale(0) rotate(-25deg)}to{transform:scale(1)}}
+.gp-rar{font-size:clamp(.3rem,2vw,.5rem);letter-spacing:3px;text-shadow:0 0 20px currentColor;}
+.gp-name{font-size:clamp(.4rem,2.5vw,.7rem);color:#fff;letter-spacing:2px;}
+.gp-atk{font-size:clamp(.22rem,1.4vw,.38rem);color:#ff8844;}
+.gp-abi{font-size:clamp(.16rem,1vw,.26rem);color:#8877aa;text-align:center;max-width:240px;line-height:1.8;}
+.gp-new{font-size:clamp(.16rem,1vw,.26rem);color:var(--green);}
+.gp-close{background:none;border:2px solid #2a1a4a;color:#4a3a6a;font-family:var(--px);font-size:clamp(.2rem,1.2vw,.32rem);padding:8px 20px;cursor:pointer;letter-spacing:2px;touch-action:manipulation;}
+
+/* RESET CONFIRM */
+#resetConfirm{position:fixed;inset:0;z-index:600;background:rgba(5,2,20,0.95);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+</style>
+</head>
+<body>
+<div id="root">
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab on" id="tArena"   onclick="tab('arena')">⚔ ARENA</button>
+  <button class="tab"    id="tShop"    onclick="tab('shop')">✨ SHOP</button>
+  <button class="tab"    id="tDex"     onclick="tab('dex')">📖 도감</button>
+  <button class="tab"    id="tUpgrade" onclick="tab('upgrade')">⬆ 강화</button>
+  <button class="tab"    id="tAchieve"  onclick="tab('achieve')">🏆 업적</button>
+  <button class="tab"    id="tSettings" onclick="tab('settings')">⚙ 설정</button>
+</div>
+
+<!-- ══ ARENA ══ -->
+<div class="pnl on" id="arenaPnl">
+  <div id="hud">
+    <div class="hp-side">
+      <div class="hp-lbl" style="color:#cc44ff">◀ MAGE</div>
+      <div class="hp-track"><div class="hp-fill" id="p1Hp" style="width:100%"></div></div>
+      <div class="sp-wrap"><div class="sp-fill" id="spBar" style="width:0%"></div></div>
+    </div>
+    <div class="hud-c">
+      <div class="rnd" id="rndTxt">RND 1</div>
+      <div class="coins">🪙<span id="coinHud">0</span></div>
+      <div class="sw-hud" id="swHud">🪄 기본 지팡이</div>
+    </div>
+    <div class="hp-side" style="align-items:flex-end;">
+      <div class="hp-lbl" style="color:#ff3366">ENEMY ▶</div>
+      <div class="hp-track" style="width:100%"><div class="hp-fill" id="p2Hp" style="width:100%"></div></div>
+      <div class="hp-track" style="width:100%;height:3px;margin-top:2px;background:#0a0518;border:1px solid var(--b)">
+        <div id="enRage" style="height:100%;background:linear-gradient(90deg,#ff6600,#ff2200);width:0%;transition:width .3s;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="stage">
+    <canvas id="gc"></canvas>
+    <div id="flash"></div>
+    <div id="msg"></div>
+    <div id="abilityMsg"></div>
+    <div id="secretBanner"></div>
+  </div>
+  <div id="ctrlBar">
+    <div class="btn-group">
+      <div class="cbtn" id="btnL">◀</div>
+      <div class="cbtn" id="btnR">▶</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div class="sw-label" id="swLabel">🪄 기본 지팡이</div>
+      <div class="kb-hint">WASD · J · K · L</div>
+    </div>
+    <div class="btn-group">
+      <div class="cbtn" id="btnJ" style="border-color:#4488ff;color:#4488ff;">↑</div>
+      <div class="cbtn cast" id="btnA">ATK</div>
+      <div class="cbtn skill" id="btnS">SKL</div>
+      <div class="cbtn def" id="btnD">🛡</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SHOP ══ -->
+<div class="pnl" id="shopPnl" style="overflow-y:auto;overflow-x:hidden;padding:12px;gap:10px;">
+  <div class="s-title">✦ 마법 상점 ✦</div>
+  <div class="s-coins">🪙 보유 코인: <span id="shopCoins">0</span></div>
+  <div class="merchant-box">
+    <div class="merchant-sprite">🧙</div>
+    <div class="merchant-text">
+      <div class="merchant-name">★ 마법사 아크 ★</div>
+      <div class="merchant-quote" id="mQuote">"어서오게! 강력한 지팡이를 팔고 있다네..."</div>
+      <button class="gacha-btn" id="gachaBtn" onclick="doGacha()">[ 🪄 지팡이 뽑기 ]</button>
+      <div class="gacha-cost">💰 5코인 소모 · 랜덤 지팡이 획득</div>
+    </div>
+  </div>
+  <div class="inv-title">📦 보유한 지팡이</div>
+  <div class="s-grid" id="sGrid"></div>
+</div>
+
+<!-- ══ DEX ══ -->
+<div class="pnl" id="dexPnl" style="overflow-y:auto;overflow-x:hidden;padding:12px;gap:10px;">
+  <div class="s-title">📖 몬스터 도감</div>
+  <div style="font-size:clamp(.16rem,.95vw,.26rem);color:#2a1a4a;text-align:center;margin-bottom:10px;letter-spacing:.5px">전투에서 처치한 몬스터가 등록됩니다</div>
+  <div id="dexGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin-bottom:14px;"></div>
+  <div style="border-top:1px solid #1a0a2a;padding-top:10px;margin-top:4px;">
+    <div style="font-family:var(--px);font-size:clamp(.28rem,1.7vw,.44rem);color:#aaaacc;letter-spacing:3px;text-align:center;margin-bottom:4px;text-shadow:0 0 10px #8888aa;">🌑 시크릿</div>
+    <div style="font-size:clamp(.14rem,.85vw,.22rem);color:#1a0a2a;text-align:center;margin-bottom:8px;letter-spacing:.5px;">1/100 확률 · 은빛 변종</div>
+    <div id="secretGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;"></div>
+  </div>
+</div>
+
+<!-- ══ UPGRADE ══ -->
+<div class="pnl" id="upgradePnl" style="overflow-y:auto;padding:12px;gap:10px;">
+  <div class="s-title">⬆ 지팡이 강화</div>
+  <div class="s-coins">🪙 보유 코인: <span id="upgradeCoins">0</span></div>
+  <div style="background:var(--panel);border:2px solid var(--b);border-radius:4px;padding:14px;margin-bottom:10px;text-align:center;">
+    <div style="font-size:1.8rem;margin-bottom:4px;">🪄</div>
+    <div style="font-family:var(--px);font-size:clamp(.26rem,1.6vw,.4rem);color:var(--gold);letter-spacing:2px;margin-bottom:3px;" id="upgLevelTxt">강화 레벨 0</div>
+    <div style="font-size:clamp(.18rem,1.1vw,.28rem);color:#4488ff;margin-bottom:6px;" id="upgDmgTxt">추가 데미지: +0</div>
+    <div style="font-size:clamp(.14rem,.9vw,.24rem);color:#3a2a5a;margin-bottom:8px;line-height:1.8;" id="upgInfoTxt">강화 비용: 10코인</div>
+    <div style="font-size:clamp(.14rem,.85vw,.22rem);color:#ff8844;margin-bottom:10px;" id="upgChanceTxt">성공 확률: 100%</div>
+    <button onclick="doUpgrade()" id="upgBtn" style="width:100%;padding:10px;background:linear-gradient(135deg,#220044,#5500aa);border:2px solid var(--purple);color:#fff;font-family:var(--px);font-size:clamp(.22rem,1.4vw,.36rem);letter-spacing:2px;cursor:pointer;box-shadow:0 0 14px rgba(180,80,255,.3);touch-action:manipulation;">[ ⬆ 강화하기 ]</button>
+    <div id="upgResult" style="font-size:clamp(.18rem,1.1vw,.3rem);margin-top:8px;min-height:18px;letter-spacing:1px;"></div>
+  </div>
+  <div style="background:var(--panel);border:1px solid var(--b);border-radius:4px;padding:10px;">
+    <div class="inv-title" style="margin-bottom:6px;">📊 강화 기록</div>
+    <div id="upgHistory" style="font-size:clamp(.14rem,.85vw,.22rem);color:#2a1a3a;line-height:2;letter-spacing:.5px;">아직 강화 기록 없음</div>
+  </div>
+</div>
+
+<!-- ══ ACHIEVE ══ -->
+<div class="pnl" id="achievePnl" style="overflow-y:auto;overflow-x:hidden;padding:12px;gap:8px;">
+  <div class="s-title">🏆 업적</div>
+  <div id="achieveGrid" style="display:flex;flex-direction:column;gap:5px;"></div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div class="pnl" id="settingsPnl" style="overflow-y:auto;overflow-x:hidden;padding:12px;gap:10px;">
+  <div class="s-title">⚙ 설정</div>
+  <div style="background:var(--panel);border:1px solid var(--b);border-radius:4px;padding:12px;text-align:center;">
+    <div style="font-family:var(--px);font-size:clamp(.22rem,1.4vw,.36rem);color:#4488ff;margin-bottom:8px;letter-spacing:2px;">🌅 배경 설정</div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button id="bgNightBtn" onclick="setBg(false)" style="padding:7px 12px;font-family:var(--px);font-size:clamp(.16rem,1vw,.26rem);cursor:pointer;border-radius:3px;background:#08051a;border:2px solid #2a1a4a;color:#8866bb;touch-action:manipulation;">🌙 밤</button>
+      <button id="bgDayBtn" onclick="setBg(true)" style="padding:7px 12px;font-family:var(--px);font-size:clamp(.16rem,1vw,.26rem);cursor:pointer;border-radius:3px;background:#1a2a0a;border:2px solid #2a4a1a;color:#88cc66;touch-action:manipulation;">🌿 마법 숲</button>
+    </div>
+  </div>
+  <div style="background:var(--panel);border:1px solid var(--b);border-radius:4px;padding:12px;text-align:center;">
+    <div style="font-family:var(--px);font-size:clamp(.22rem,1.4vw,.36rem);color:#44cc88;margin-bottom:6px;letter-spacing:2px;">🛡 방어</div>
+    <div style="font-size:clamp(.14rem,.85vw,.22rem);color:#2a3a2a;line-height:1.8;letter-spacing:.5px;">L키 또는 🛡 버튼 — 공격 타이밍에 막으면 데미지 0</div>
+  </div>
+  <div style="background:var(--panel);border:1px solid #330011;border-radius:4px;padding:12px;text-align:center;">
+    <div style="font-size:clamp(.14rem,.85vw,.22rem);color:#2a1a1a;margin-bottom:8px;line-height:1.8;letter-spacing:.5px;">⚠ 지팡이 · 도감 · 강화 · 코인 전부 초기화</div>
+    <button id="resetBtn" style="padding:8px 20px;background:none;border:2px solid #880022;color:#ff3366;font-family:var(--px);font-size:clamp(.18rem,1.1vw,.3rem);letter-spacing:2px;cursor:pointer;touch-action:manipulation;transition:background .15s;">[ 🗑 전체 재설정 ]</button>
+  </div>
+  <div style="text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--b);">
+    <div style="font-family:var(--px);font-size:clamp(.14rem,.85vw,.22rem);color:#1a0a2a;letter-spacing:3px;">made by mj</div>
+  </div>
+</div>
+
+</div><!-- /root -->
+
+<!-- DEX POPUP -->
+<div id="dexPop">
+  <div class="dp-icon" id="dpIcon"></div>
+  <div class="dp-name" id="dpName"></div>
+  <div class="dp-stat" id="dpStat"></div>
+  <div class="dp-desc" id="dpDesc"></div>
+  <div class="dp-drops" id="dpDrops"></div>
+  <div class="dp-weak" id="dpWeak"></div>
+  <button class="dp-close" onclick="closeDex()">[ 닫기 ]</button>
+</div>
+
+<!-- GACHA POPUP -->
+<div id="gPop">
+  <div class="gp-icon" id="gpIcon"></div>
+  <div class="gp-rar" id="gpRar"></div>
+  <div class="gp-name" id="gpName"></div>
+  <div class="gp-atk" id="gpAtk"></div>
+  <div class="gp-abi" id="gpAbi"></div>
+  <div class="gp-new" id="gpNew"></div>
+  <button class="gp-close" onclick="closeGacha()">[ 확인 ]</button>
+</div>
+
+<!-- RESET CONFIRM -->
+<div id="resetConfirm" style="position:fixed;inset:0;z-index:600;background:rgba(5,2,20,0.95);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+  <div style="font-family:var(--px);font-size:clamp(.4rem,2.5vw,.65rem);color:#ff3366;letter-spacing:2px;text-align:center;">⚠ 정말 초기화?</div>
+  <div style="font-size:clamp(.18rem,1.1vw,.3rem);color:#3a2a4a;text-align:center;line-height:2;letter-spacing:.5px;">지팡이 · 도감 · 강화 · 코인<br>모든 데이터가 삭제됩니다</div>
+  <div style="display:flex;gap:10px;">
+    <button id="resetConfirmYes" style="padding:8px 20px;background:none;border:2px solid #ff3366;color:#ff3366;font-family:var(--px);font-size:clamp(.22rem,1.4vw,.36rem);letter-spacing:2px;cursor:pointer;touch-action:manipulation;">[ 확인 ]</button>
+    <button id="resetConfirmNo" style="padding:8px 20px;background:none;border:2px solid #2a1a4a;color:#4a3a6a;font-family:var(--px);font-size:clamp(.22rem,1.4vw,.36rem);letter-spacing:2px;cursor:pointer;touch-action:manipulation;">[ 취소 ]</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   STAFF / SPELL DATA
+═══════════════════════════════════════════════ */
+var RARITY_COL={COMMON:'#aabbd0',UNCOMMON:'#3dff7a',RARE:'#4488ff',EPIC:'#cc44ff',LEGENDARY:'#ffcc44',ACHIEVE:'#ff9944',SECRET:'#ccccff'};
+
+var STAVES={
+  basic:   {name:'기본 지팡이', icon:'🪄',atk:8, rarity:'COMMON',   col:'#aabbcc',category:'normal',
+    abi:'없음', skill(p,e){spawnSpell(p.x+p.w,p.y+p.h/2,p.facing,'#aabbcc',6,2,p.atk*1.5);}},
+
+  fire:    {name:'화염 지팡이', icon:'🔥',atk:14,rarity:'UNCOMMON', col:'#ff5500',category:'normal',
+    abi:'화염구 — 전방에 불덩이 3발 발사',
+    skill(p,e){
+      for(var i=0;i<3;i++) setTimeout((function(ii){return function(){
+        spawnSpell(p.x+p.w,p.y+p.h/2,p.facing,'#ff4400',12,3+ii,p.atk*1.5);
+        spawnMagicBurst(p.x+p.w,p.y+p.h/2,'#ff4400',8);
+      }})(i),i*80);
+      showAbilityMsg('🔥 화염구!','#ff5500');
+    }},
+
+  frost:   {name:'서리 지팡이', icon:'❄️',atk:16,rarity:'UNCOMMON', col:'#88ddff',category:'normal',
+    abi:'빙결 — 모든 적 슬로우 + 결빙 이펙트',
+    skill(p,e){
+      enemies.filter(en=>en.state!=='dead').forEach(en=>{
+        en.slowTicks=200;
+        dealToEnemyDirect(en,p.atk*1.5,'#88ddff');
+        spawnFrostBurst(en.x+en.w/2,en.y+en.h/2);
+      });
+      showAbilityMsg('❄️ 빙결!','#88ddff');
+    }},
+
+  thunder: {name:'번개 지팡이', icon:'⚡',atk:20,rarity:'RARE',     col:'#ffff00',category:'normal',
+    abi:'낙뢰 — 가장 가까운 적에게 번개 연쇄',
+    skill(p,e){
+      var alive=enemies.filter(en=>en.state!=='dead');
+      alive.forEach((en,i)=>{
+        setTimeout(()=>{
+          dealToEnemyDirect(en,p.atk*2,'#ffff00');
+          spawnLightningBolt(en.x+en.w/2,en.y);
+        },i*100);
+      });
+      showAbilityMsg('⚡ 낙뢰 연쇄!','#ffff00');
+      shakeScreen();
+    }},
+
+  void:    {name:'공허 지팡이', icon:'🌌',atk:22,rarity:'RARE',     col:'#4400ff',category:'normal',
+    abi:'블랙홀 — 모든 적 흡입 + 공허 폭발',
+    skill(p,e){
+      var alive=enemies.filter(en=>en.state!=='dead');
+      alive.forEach(en=>{en.x=PL.x+PL.w/2;en.stun=80;dealToEnemyDirect(en,p.atk*2.2,'#4400ff');});
+      spawnVoidBurst(PL.x+PL.w/2,GROUND-40);
+      showAbilityMsg('🌌 블랙홀!','#4400ff');
+    }},
+
+  nature:  {name:'자연 지팡이', icon:'🌿',atk:24,rarity:'EPIC',     col:'#00ff88',category:'normal',
+    abi:'자연의 힘 — 회복 + 독 구름 소환',
+    skill(p,e){
+      PL.hp=Math.min(PL.maxHp,PL.hp+30);
+      lavaTicks=160;
+      enemies.filter(en=>en.state!=='dead').forEach(en=>{en.stun=60;});
+      spawnNatureBurst(PL.x+PL.w/2,PL.y+PL.h/2);
+      showAbilityMsg('🌿 자연의 힘! +30HP','#00ff88');
+    }},
+
+  arcane:  {name:'비전 지팡이', icon:'🔮',atk:28,rarity:'EPIC',     col:'#ff44ff',category:'normal',
+    abi:'비전 폭풍 — 전방에 마법 폭풍 소환',
+    skill(p,e){
+      var alive=enemies.filter(en=>en.state!=='dead');
+      alive.forEach(en=>{dealToEnemyDirect(en,p.atk*2.8,'#ff44ff');spawnArcaneBurst(en.x+en.w/2,en.y+en.h/2);});
+      for(var i=0;i<8;i++) setTimeout((function(ii){return function(){
+        spawnSpell(PL.x+(PL.facing>0?30:-30),PL.y+PL.h/2,PL.facing,'#ff44ff',10,4,0);
+      }})(i),i*60);
+      showAbilityMsg('🔮 비전 폭풍!','#ff44ff');
+      flashFn('#ff44ff33',200);
+    }},
+
+  divinity:{name:'신성 지팡이', icon:'✨',atk:36,rarity:'LEGENDARY', col:'#ffcc44',category:'normal',
+    abi:'신성한 빛 — 모든 적에게 신성 폭발 + 무적',
+    skill(p,e){
+      var alive=enemies.filter(en=>en.state!=='dead');
+      alive.forEach(en=>{dealToEnemyDirect(en,p.atk*3.5,'#ffcc44');spawnDivineBurst(en.x+en.w/2,en.y);});
+      PL.iframes=120;
+      for(var i=0;i<10;i++) setTimeout((function(ii){return function(){
+        spawnDivineBurst(randInt(20,CW-20),randInt(10,GROUND-20));
+      }})(i),i*60);
+      showAbilityMsg('✨ 신성한 빛! 무적','#ffcc44');
+      flashFn('#ffcc4466',300);shakeScreen();
+    }},
+
+  // 업적 지팡이
+  staff_luck:{name:'행운 지팡이', icon:'🍀',atk:20,rarity:'ACHIEVE',col:'#00ff88',category:'achieve',
+    abi:'행운의 가호 — 5초 무적',
+    skill(p,e){
+      PL.iframes=300;
+      for(var i=0;i<12;i++) setTimeout((function(ii){return function(){
+        spawnSpell(PL.x+PL.w/2,PL.y+PL.h/2,Math.random()<.5?1:-1,'#00ff88',8,randInt(2,5),0);
+      }})(i),i*40);
+      flashFn('#00ff8844',200);
+      showAbilityMsg('🍀 행운의 가호! 5초 무적','#00ff88');
+    }},
+
+  staff_slash:{name:'파동 지팡이', icon:'〰️',atk:28,rarity:'ACHIEVE',col:'#cc00ff',category:'achieve',
+    abi:'마법 파동 — 전방 즉사 파동',
+    skill(p,e){
+      var slashX=PL.x+(PL.facing>0?40:-100),slashW=100;
+      enemies.filter(en=>en.state!=='dead').forEach(en=>{
+        if(en.x+en.w>slashX&&en.x<slashX+slashW){
+          en.hp=0;en.state='dead';
+          var tk=en.typeKey||'normal';
+          recordKill(tk,en.variantKey||null,en.isFallenGod||false);
+          onEnemyKilled(en);
+          spawnBigExplosion(en.x+en.w/2,en.y+en.h/2,'#cc00ff');
+        }
+      });
+      spawnWaveBurst(slashX+slashW/2,GROUND-40,'#cc00ff');
+      showAbilityMsg('〰️ 마법 파동! 즉사','#cc00ff');
+    }},
+
+  staff_boss:{name:'소환 지팡이', icon:'👊',atk:30,rarity:'ACHIEVE',col:'#ff6600',category:'achieve',
+    abi:'보스 소환 — 랜덤 보스가 아군으로',
+    skill(p,e){
+      spawnAlly(Math.random()<0.5?'demon':'dragon');
+      spawnSummonCircle(PL.x+PL.w/2,GROUND);
+      showAbilityMsg('👊 보스 소환!','#ff6600');
+    }},
+
+  staff_demon:{name:'마왕 지팡이', icon:'😈',atk:32,rarity:'ACHIEVE',col:'#ff00aa',category:'achieve',
+    abi:'마왕 소환 — 대악마가 아군으로',
+    skill(p,e){
+      spawnAlly('boss');
+      spawnSummonCircle(PL.x+PL.w/2,GROUND);
+      flashFn('#ff00aa33',200);
+      showAbilityMsg('😈 대악마 소환!','#ff00aa');
+    }},
+
+  staff_rage:{name:'분노 지팡이', icon:'💢',atk:100,rarity:'ACHIEVE',col:'#ff0000',category:'achieve',
+    abi:'분노 — ATK 100. 쿨타임 4초',
+    skill(p,e){showAbilityMsg('💢 분노!','#ff0000');}},
+
+  staff_gold:{name:'황금 지팡이', icon:'🌟',atk:22,rarity:'ACHIEVE',col:'#ffd700',category:'achieve',
+    abi:'황금 마법 — 모든 적 골드 변환',
+    skill(p,e){
+      enemies.filter(en=>en.state!=='dead').forEach(en=>{
+        if(!en.variantKey){en.variantKey='gold';en.col='#ffd700';
+          var v=VARIANTS.gold;en.maxHp=Math.floor(en.maxHp*v.hpMul);en.hp=Math.floor(en.hp*v.hpMul);en.atk=Math.floor(en.atk*v.atkMul);en.coin=Math.floor(en.coin*v.coinMul);}
+      });
+      spawnGoldBurst(PL.x+PL.w/2,PL.y);
+      showAbilityMsg('🌟 황금 마법!','#ffd700');
+    }},
+
+  staff_diamond:{name:'다이아 지팡이',icon:'💎',atk:24,rarity:'ACHIEVE',col:'#44ddff',category:'achieve',
+    abi:'다이아 마법 — 모든 적 다이아 변환',
+    skill(p,e){
+      enemies.filter(en=>en.state!=='dead').forEach(en=>{
+        if(!en.variantKey){en.variantKey='diamond';en.col='#aaddff';
+          var v=VARIANTS.diamond;en.maxHp=Math.floor(en.maxHp*v.hpMul);en.hp=Math.floor(en.hp*v.hpMul);en.atk=Math.floor(en.atk*v.atkMul);en.coin=Math.floor(en.coin*v.coinMul);}
+      });
+      showAbilityMsg('💎 다이아 마법!','#44ddff');
+    }},
+
+  staff_rainbow:{name:'무지개 지팡이',icon:'🌈',atk:26,rarity:'ACHIEVE',col:'#ff66ff',category:'achieve',
+    abi:'무지개 마법 — 모든 적 무지개 변환',
+    skill(p,e){
+      enemies.filter(en=>en.state!=='dead').forEach(en=>{
+        if(!en.variantKey){en.variantKey='rainbow';en.col='#ff44ff';
+          var v=VARIANTS.rainbow;en.maxHp=Math.floor(en.maxHp*v.hpMul);en.hp=Math.floor(en.hp*v.hpMul);en.atk=Math.floor(en.atk*v.atkMul);en.coin=Math.floor(en.coin*v.coinMul);}
+      });
+      showAbilityMsg('🌈 무지개 마법!','#ff66ff');
+    }},
+
+  staff_crystal:{name:'크리스탈 지팡이',icon:'💠',atk:20,rarity:'ACHIEVE',col:'#00ffcc',category:'achieve',
+    abi:'크리스탈 — HP 전체 회복',
+    skill(p,e){
+      PL.hp=PL.maxHp;
+      spawnCrystalBurst(PL.x+PL.w/2,PL.y+PL.h/2);
+      showAbilityMsg('💠 크리스탈 회복!','#00ffcc');
+    }},
+
+  staff_fallen:{name:'타락신 지팡이',icon:'☠',atk:45,rarity:'ACHIEVE',col:'#8866ff',category:'achieve',
+    abi:'타락신 강림 — 타락신이 아군으로',
+    skill(p,e){
+      spawnAlly('boss');
+      if(allies.length>0){var a=allies[allies.length-1];a.name='[아군] 타락신';a.col='#222233';a.hp=FALLEN_GOD.hp;a.maxHp=FALLEN_GOD.hp;a.atk=FALLEN_GOD.atk*0.7;}
+      spawnSummonCircle(PL.x+PL.w/2,GROUND);
+      flashFn('#ccccff44',300);
+      showAbilityMsg('☠ 타락신 강림!','#ccccff');
+    }},
+
+  // 금지된 지팡이
+  secret:  {name:'시크릿 지팡이',icon:'🌑',atk:55,rarity:'SECRET',col:'#e8e8ff',category:'forbidden',
+    abi:'소멸 — 모든 적 즉시 소멸',
+    skill(p,e){
+      var alive=enemies.filter(en=>en.state!=='dead');
+      alive.forEach(en=>{
+        en.hp=0;en.state='dead';
+        var tk=en.typeKey||'normal';
+        recordKill(tk,en.variantKey||null,en.isFallenGod||false);
+        onEnemyKilled(en);
+        spawnBigExplosion(en.x+en.w/2,en.y+en.h/2,'#ccccff');
+        spawnArcaneBurst(en.x+en.w/2,en.y+en.h/2);
+      });
+      PL.iframes=180;
+      for(var i=0;i<14;i++) setTimeout((function(ii){return function(){
+        spawnDivineBurst(randInt(10,CW-10),randInt(10,GROUND-10));
+      }})(i),i*45);
+      flashFn('#ffffff99',350);shakeScreen();
+      showAbilityMsg('🌑 소멸 — 전멸!','#e8e8ff');
+    }},
+};
+
+/* ═══════════════════════════════════════════════
+   ENEMY TYPES
+═══════════════════════════════════════════════ */
+var ENEMY_TYPES={
+  normal:  {name:'좀비',     icon:'🧟',col:'#447744',hp:40, atk:6, spd:1.2,coin:1,rage:false,w:38,h:56,desc:'기본적인 적.',drops:'코인 1개',weakness:'화염 지팡이'},
+  fast:    {name:'빠른좀비', icon:'💨',col:'#44aa88',hp:25, atk:4, spd:2.8,coin:1,rage:false,w:30,h:48,desc:'매우 빠르다.',drops:'코인 1개',weakness:'번개 지팡이'},
+  strong:  {name:'강한좀비', icon:'👾',col:'#994422',hp:90, atk:14,spd:0.9,coin:3,rage:true, w:46,h:62,desc:'체력이 높다.',drops:'코인 3개',weakness:'공허 지팡이'},
+  ghost:   {name:'유령',     icon:'👻',col:'#6655aa',hp:30, atk:8, spd:1.8,coin:1,rage:false,w:34,h:50,desc:'반투명하게 접근.',drops:'코인 1개',weakness:'신성 지팡이'},
+  skeleton:{name:'해골전사', icon:'💀',col:'#8899aa',hp:55, atk:10,spd:1.3,coin:2,rage:false,w:36,h:54,desc:'균형잡힌 스탯.',drops:'코인 2개',weakness:'화염 지팡이'},
+  slime:   {name:'슬라임',   icon:'🫧',col:'#44bbaa',hp:35, atk:5, spd:1.0,coin:1,rage:false,w:40,h:36,desc:'무리 지어 온다.',drops:'코인 1개',weakness:'자연 지팡이'},
+  demon:   {name:'데몬',     icon:'😈',col:'#aa1133',hp:120,atk:18,spd:1.1,coin:4,rage:true, w:44,h:60,desc:'강력한 공격.',drops:'코인 4개',weakness:'서리 지팡이'},
+  dragon:  {name:'드래곤',   icon:'🐉',col:'#cc4400',hp:200,atk:22,spd:0.8,coin:6,rage:true, w:52,h:64,desc:'보스급 몬스터.',drops:'코인 6개',weakness:'신성 지팡이'},
+  boss:    {name:'대악마 보스',icon:'👿',col:'#660066',hp:280,atk:16,spd:0.7,coin:15,rage:true,w:60,h:70,desc:'희귀 보스.',drops:'코인 15개',weakness:'비전+신성 조합'},
+};
+
+var FALLEN_GOD={name:'타락신',icon:'☠',col:'#222233',hp:600,atk:20,spd:0.9,coin:50,rage:true,w:70,h:78,desc:'이 세계 최강의 존재.',drops:'코인 50개',weakness:'모든 지팡이 조합'};
+var BOSS_NAMES=['데몬','드래곤','대악마 보스','타락신'];
+
+var VARIANTS={
+  gold:   {name:'골드',  mul:2,  hpMul:1.5,atkMul:1.2,coinMul:3, col:'#ffd700',glow:'#ffaa00',chance:1/10},
+  diamond:{name:'다이아',mul:2.5,hpMul:2,  atkMul:1.5,coinMul:5, col:'#aaddff',glow:'#88ccff',chance:1/20},
+  rainbow:{name:'무지개',mul:3,  hpMul:2.5,atkMul:1.8,coinMul:8, col:'#ff44ff',glow:'#ff00ff',chance:1/30},
+  secret: {name:'시크릿',mul:4,  hpMul:2.2,atkMul:2.0,coinMul:20,col:'#cccccc',glow:'#ffffff',chance:1/100},
+};
+
+var WAVES=[
+  [{t:'normal',n:1}],
+  [{t:'normal',n:2},{t:'fast',n:1}],
+  [{t:'normal',n:1},{t:'fast',n:2},{t:'ghost',n:1}],
+  [{t:'skeleton',n:2},{t:'fast',n:2}],
+  [{t:'normal',n:2},{t:'slime',n:2},{t:'strong',n:1}],
+  [{t:'skeleton',n:2},{t:'demon',n:1}],
+  [{t:'fast',n:3},{t:'ghost',n:2},{t:'strong',n:2}],
+  [{t:'slime',n:3},{t:'skeleton',n:2},{t:'demon',n:1}],
+  [{t:'strong',n:2},{t:'demon',n:2},{t:'ghost',n:2}],
+  [{t:'dragon',n:1},{t:'demon',n:2}],
+  [{t:'dragon',n:1},{t:'strong',n:3},{t:'fast',n:3}],
+  [{t:'dragon',n:2},{t:'demon',n:3}],
+];
+
+var QUOTES=[
+  '"어서오게! 강력한 마법이 담긴 지팡이를 팔고 있다네..."',
+  '"좋은 지팡이는 마법사의 혼이라네!"',
+  '"신성 지팡이? 1% 확률이지... 행운을 빌게!"',
+  '"드래곤을 잡으면 6코인이라네!"',
+  '"번개 지팡이로 연쇄 낙뢰를!"',
+];
+
+/* ═══════════════════════════════════════════════
+   CANVAS
+═══════════════════════════════════════════════ */
+var gc=document.getElementById('gc');
+var ctx=gc.getContext('2d');
+var CW=400,CH=260,GROUND=200,PIX=1;
+var WORLD_W=3200;
+
+function resizeCanvas(){
+  var wrap=document.querySelector('.stage');
+  var rw=Math.max(wrap.clientWidth||300,300);
+  var rh=Math.max(wrap.clientHeight||200,180);
+  CW=Math.floor(rw/PIX);CH=Math.floor(rh/PIX);
+  GROUND=Math.floor(CH*0.8);
+  gc.width=CW;gc.height=CH;
+  gc.style.width=rw+'px';gc.style.height=rh+'px';
+}
+
+/* ═══════════════════════════════════════════════
+   GAME STATE
+═══════════════════════════════════════════════ */
+var coins=0,round=1,equipped='basic',inventory=['basic'];
+var gameRunning=false,roundActive=false;
+var lavaTicks=0,shakeX=0,shakeY=0,shakeDur=0;
+var camX=0;
+var upgradeLevel=0,upgradeBonusDmg=0,upgradeHistory=[];
+var bgMorning=false;
+
+var PL={
+  x:80,y:0,w:28,h:50,vx:0,vy:0,
+  hp:130,maxHp:130,sp:0,maxSp:100,
+  onGround:false,facing:1,
+  state:'idle',stTimer:0,
+  atkCd:0,sklCd:0,iframes:0,
+  isBlocking:false,
+  get atk(){return (STAVES[equipped]||STAVES['basic']).atk+upgradeBonusDmg;}
+};
+
+var enemies=[],projs=[],parts=[],dmgNums=[],allies=[];
+
+/* ═══════════════════════════════════════════════
+   INPUT
+═══════════════════════════════════════════════ */
+var K={left:false,right:false,jump:false,atk:false,skill:false,defend:false};
+var KP={atk:false,skill:false,jump:false};
+var KB={a:'left',d:'right',arrowleft:'left',arrowright:'right',w:'jump',arrowup:'jump',' ':'jump',j:'atk',k:'skill',l:'defend'};
+window.addEventListener('keydown',function(e){
+  var m=KB[e.key.toLowerCase()];
+  if(m){if(!K[m]&&KP[m]!==undefined)KP[m]=true;K[m]=true;e.preventDefault();}
+});
+window.addEventListener('keyup',function(e){var m=KB[e.key.toLowerCase()];if(m)K[m]=false;});
+function kdn(k){K[k]=true;if(KP[k]!==undefined)KP[k]=true;}
+function kup(k){K[k]=false;}
+function clearEdge(){KP.atk=false;KP.skill=false;KP.jump=false;}
+
+/* ═══════════════════════════════════════════════
+   ACHIEVEMENTS
+═══════════════════════════════════════════════ */
+var achievements={
+  luckyDay:   {name:'운이 좋았어',icon:'🍀',desc:'한 라운드에 무지개+시크릿 동시 등장',done:false},
+  superBoss:  {name:'초강력',     icon:'💪',desc:'보스 5마리 이상 라운드 클리어',done:false},
+  firstBoss:  {name:'첫 보스',    icon:'👊',desc:'보스 처음 처치',done:false},
+  firstDemon: {name:'첫 마왕',    icon:'😈',desc:'대악마 보스 처치',done:false},
+  closeCall:  {name:'빡종',       icon:'💀',desc:'보스 HP 10 이하일 때 플레이어 사망',done:false},
+  goldDex:    {name:'골드',       icon:'⭐',desc:'모든 몬스터 골드 도감 해금',done:false},
+  diamondDex: {name:'다이아',     icon:'💎',desc:'모든 몬스터 다이아 도감 해금',done:false},
+  rainbowDex: {name:'무지개',     icon:'🌈',desc:'모든 몬스터 무지개 도감 해금',done:false},
+  normalDexFull:{name:'이제 끝?', icon:'📖',desc:'일반 도감 100% 달성',done:false},
+  secretDexFull:{name:'이제 끝',  icon:'🌑',desc:'시크릿 도감 100% 달성',done:false},
+  madNight:   {name:'광란의 밤',  icon:'🌙',desc:'한 라운드 444 이상 데미지',done:false},
+  smartFight: {name:'똑똑해짐',   icon:'🧠',desc:'약점 지팡이로 해당 몬스터에 스킬',done:false},
+  youCrazy:   {name:'넌 미쳤어',  icon:'🤯',desc:'보스+대악마 합계 100마리 처치',done:false},
+};
+
+var ACHIEVE_STAFF_MAP={
+  luckyDay:'staff_luck',superBoss:'staff_slash',firstBoss:'staff_boss',
+  firstDemon:'staff_demon',closeCall:'staff_rage',goldDex:'staff_gold',
+  diamondDex:'staff_diamond',rainbowDex:'staff_rainbow',
+  normalDexFull:'staff_crystal',secretDexFull:'secret',madNight:null,
+  smartFight:null,youCrazy:'staff_fallen',
+};
+
+var roundRainbow=false,roundSecret=false,roundBossCount=0,roundTotalDmg=0,roundBossMinHp=9999;
+var WEAKNESS_MAP={'유령':'divinity','해골전사':'fire','슬라임':'nature','데몬':'frost','드래곤':'divinity','좀비':null,'빠른좀비':null,'강한좀비':null};
+
+var SECRET_REQUIRED=['normal_secret','fast_secret','strong_secret','ghost_secret','skeleton_secret','slime_secret','demon_secret','dragon_secret','fallenGod_secret'];
+var SECRET_SWORD_KEY='secret';
+var dexKills={};
+
+/* ═══════════════════════════════════════════════
+   SPELL EFFECTS  ← THE MAGIC!
+═══════════════════════════════════════════════ */
+
+// Generic projectile spell
+function spawnSpell(x,y,dir,col,speed,size,dmg){
+  projs.push({x,y,vx:dir*speed,vy:(Math.random()-.5)*.5,col,size,dmg,life:80,trail:[]});
+}
+
+// Fire burst
+function spawnMagicBurst(x,y,col,count){
+  for(var i=0;i<count;i++){
+    var ang=Math.random()*Math.PI*2;
+    var spd=1+Math.random()*3;
+    parts.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-1,col,life:30+Math.random()*20,maxLife:50,size:2+Math.random()*3,type:'magic'});
+  }
+}
+
+function spawnFrostBurst(x,y){
+  for(var i=0;i<12;i++){
+    var ang=(i/12)*Math.PI*2;
+    parts.push({x,y,vx:Math.cos(ang)*3,vy:Math.sin(ang)*3,col:'#88ddff',life:35,maxLife:35,size:3,type:'frost'});
+    parts.push({x,y,vx:Math.cos(ang)*1.5,vy:Math.sin(ang)*1.5,col:'#ffffff',life:25,maxLife:25,size:1.5,type:'frost'});
+  }
+  // Ice crystal effect
+  for(var i=0;i<6;i++){
+    var ang=(i/6)*Math.PI*2;
+    parts.push({x:x+Math.cos(ang)*15,y:y+Math.sin(ang)*15,vx:0,vy:-.5,col:'#ccffff',life:40,maxLife:40,size:4,type:'crystal'});
+  }
+}
+
+function spawnLightningBolt(x,y){
+  // Lightning segments from top to target
+  for(var seg=0;seg<8;seg++){
+    var sy=y*seg/8;
+    parts.push({x:x+(Math.random()-.5)*20,y:sy,vx:0,vy:0,col:'#ffff00',life:15,maxLife:15,size:3,type:'lightning'});
+  }
+  // Flash
+  parts.push({x,y,vx:0,vy:0,col:'#ffffff',life:8,maxLife:8,size:30,type:'flash'});
+  spawnMagicBurst(x,y,'#ffff00',16);
+}
+
+function spawnVoidBurst(x,y){
+  for(var i=0;i<20;i++){
+    var ang=Math.random()*Math.PI*2;
+    var spd=.5+Math.random()*4;
+    parts.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,col:i%2===0?'#4400ff':'#aa00ff',life:40,maxLife:40,size:2+Math.random()*4,type:'void'});
+  }
+  // Void ring
+  for(var i=0;i<16;i++){
+    var ang=(i/16)*Math.PI*2;
+    parts.push({x:x+Math.cos(ang)*30,y:y+Math.sin(ang)*30,vx:-Math.cos(ang)*.5,vy:-Math.sin(ang)*.5,col:'#6600ff',life:30,maxLife:30,size:3,type:'void'});
+  }
+}
+
+function spawnNatureBurst(x,y){
+  for(var i=0;i<16;i++){
+    var ang=Math.random()*Math.PI*2;
+    var spd=1+Math.random()*3;
+    parts.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-1.5,col:i%3===0?'#00ff88':i%3===1?'#44ff44':'#88ff44',life:45,maxLife:45,size:2+Math.random()*3,type:'nature'});
+  }
+  // Leaf spiral
+  for(var i=0;i<8;i++){
+    var ang=(i/8)*Math.PI*2;
+    parts.push({x:x+Math.cos(ang)*20,y:y+Math.sin(ang)*20,vx:Math.cos(ang+1.5)*.8,vy:-1,col:'#00ff66',life:50,maxLife:50,size:4,type:'leaf'});
+  }
+}
+
+function spawnArcaneBurst(x,y){
+  for(var i=0;i<18;i++){
+    var ang=(i/18)*Math.PI*2;
+    var spd=.5+Math.random()*4;
+    var col=['#ff44ff','#cc00ff','#ff00cc','#8800ff'][Math.floor(Math.random()*4)];
+    parts.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,col,life:35,maxLife:35,size:1.5+Math.random()*3,type:'arcane'});
+  }
+}
+
+function spawnDivineBurst(x,y){
+  for(var i=0;i<20;i++){
+    var ang=Math.random()*Math.PI*2;
+    var spd=1+Math.random()*5;
+    var col=i%2===0?'#ffcc44':'#ffffff';
+    parts.push({x,y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-2,col,life:40,maxLife:40,size:1.5+Math.random()*3,type:'divine'});
+  }
+  // Golden ring
+  for(var i=0;i<12;i++){
+    var ang=(i/12)*Math.PI*2;
+    parts.push({x:x+Math.cos(ang)*25,y:y+Math.sin(ang)*25,vx:Math.cos(ang),vy:Math.sin(ang),col:'#ffcc44',life:20,maxLife:20,size:3,type:'divine'});
+  }
+}
+
+function spawnWaveBurst(x,y,col){
+  for(var r=0;r<3;r++){
+    var ring=r;
+    setTimeout((function(rr){return function(){
+      for(var i=0;i<16;i++){
+        var ang=(i/16)*Math.PI*2;
+        var rad=20+rr*15;
+        parts.push({x:x+Math.cos(ang)*rad,y:y+Math.sin(ang)*rad,vx:Math.cos(ang)*2,vy:Math.sin(ang)*2,col,life:25,maxLife:25,size:3,type:'wave'});
+      }
+    }})(ring),ring*60);
+  }
+}
+
+function spawnSummonCircle(x,y){
+  for(var i=0;i<24;i++){
+    var ang=(i/24)*Math.PI*2;
+    var t=i;
+    setTimeout((function(ii){return function(){
+      var a2=(ii/24)*Math.PI*2;
+      parts.push({x:x+Math.cos(a2)*40,y:y+Math.sin(a2)*10-20,vx:0,vy:-.3,col:'#cc44ff',life:40,maxLife:40,size:3,type:'summon'});
+    }})(i),i*15);
+  }
+  spawnMagicBurst(x,y,'#cc44ff',20);
+}
+
+function spawnGoldBurst(x,y){
+  for(var i=0;i<20;i++){
+    var ang=Math.random()*Math.PI*2;
+    parts.push({x,y,vx:Math.cos(ang)*3,vy:Math.sin(ang)*3-2,col:'#ffd700',life:40,maxLife:40,size:2+Math.random()*3,type:'gold'});
+  }
+}
+
+function spawnCrystalBurst(x,y){
+  for(var i=0;i<8;i++){
+    var ang=(i/8)*Math.PI*2;
+    for(var r=0;r<3;r++){
+      parts.push({x:x+Math.cos(ang)*(r*12),y:y+Math.sin(ang)*(r*12),vx:Math.cos(ang)*.5,vy:Math.sin(ang)*.5-1,col:r===0?'#00ffee':r===1?'#44ffcc':'#88ffff',life:50,maxLife:50,size:4-r,type:'crystal'});
+    }
+  }
+}
+
+function spawnBigExplosion(x,y,col){
+  spawnMagicBurst(x,y,col,30);
+  for(var i=0;i<8;i++){
+    var ang=(i/8)*Math.PI*2;
+    parts.push({x:x+Math.cos(ang)*20,y:y+Math.sin(ang)*20,vx:Math.cos(ang)*2,vy:Math.sin(ang)*2,col,life:30,maxLife:30,size:5,type:'magic'});
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   TAB
+═══════════════════════════════════════════════ */
+function tab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  document.getElementById('t'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('on');
+  document.getElementById(t+'Pnl').classList.add('on');
+  if(t==='shop'){renderShop();updateMerchant();}
+  if(t==='dex'){renderDex();}
+  if(t==='upgrade'){renderUpgradePanel();}
+  if(t==='achieve'){renderAchievements();}
+  if(t==='arena'){requestAnimationFrame(function(){resizeCanvas();PL.y=Math.min(PL.y,GROUND-PL.h);});}
+}
+
+/* ═══════════════════════════════════════════════
+   SPAWN ENEMY
+═══════════════════════════════════════════════ */
+function spawnEnemyObj(typeKey,x,variant){
+  var td=ENEMY_TYPES[typeKey];
+  var hpBonus=(round-1)*4;
+  var hp=td.hp+hpBonus,atk=td.atk,spd=td.spd,coin=td.coin;
+  var variantKey=null;
+  var isSecret=false;
+
+  if(!variant){
+    if(Math.random()<1/100){
+      isSecret=true;variantKey='secret';
+      if(typeKey==='boss'){
+        var fg=FALLEN_GOD;
+        var obj={id:Math.random(),typeKey:'boss',variantKey:'secret',isFallenGod:true,
+          name:fg.name,icon:fg.icon,col:fg.col,x,y:GROUND-fg.h,
+          maxHp:fg.hp,hp:fg.hp,atk:fg.atk,spd:fg.spd,coin:fg.coin,rage:fg.rage,raging:false,
+          w:fg.w,h:fg.h,vx:0,vy:0,onGround:true,facing:-1,state:'idle',stTimer:0,aiTick:70,atkCd:50,stun:0,slowTicks:0,animT:Math.random()*100};
+        setTimeout(function(){showSecretBanner('☠ 타락신 강림! ☠');},400);
+        return obj;
+      }
+    } else if(Math.random()<1/30){variantKey='rainbow';}
+    else if(Math.random()<1/20){variantKey='diamond';}
+    else if(Math.random()<1/10){variantKey='gold';}
+  }
+
+  if(variantKey){var v=VARIANTS[variantKey];hp=Math.floor(hp*v.hpMul);atk=Math.floor(atk*v.atkMul);coin=Math.floor(coin*v.coinMul);}
+
+  var obj2=Object.assign({},td,{id:Math.random(),typeKey:typeKey,variantKey:variantKey,isFallenGod:false,x:x,y:GROUND-td.h,
+    maxHp:hp,hp:hp,atk:atk,spd:spd,coin:coin,vx:0,vy:0,onGround:true,facing:-1,state:'idle',stTimer:0,
+    aiTick:typeKey==='boss'?80:20+Math.random()*30,atkCd:typeKey==='boss'?60:0,
+    stun:0,slowTicks:0,rage:false,raging:false,animT:Math.random()*100});
+  if(isSecret) setTimeout(function(){showSecretBanner('🌑 시크릿 '+td.name+' 등장!');onVariantSpawn('secret');},400);
+  else if(variantKey) onVariantSpawn(variantKey);
+  return obj2;
+}
+
+/* ═══════════════════════════════════════════════
+   ROUND
+═══════════════════════════════════════════════ */
+function startRound(){
+  resizeCanvas();
+  enemies=[];projs=[];parts=[];dmgNums=[];lavaTicks=0;allies=[];
+  camX=0;
+  onRoundStart();
+  PL.x=80;PL.y=GROUND-PL.h;PL.vx=0;PL.vy=0;
+  PL.hp=Math.min(PL.maxHp,PL.hp+Math.floor(PL.maxHp*.3));
+  PL.sp=0;PL.onGround=true;PL.state='idle';PL.stTimer=0;
+  PL.atkCd=0;PL.sklCd=0;PL.iframes=0;PL.facing=1;
+
+  var wIdx=(round-1)%WAVES.length;
+  var wave=WAVES[wIdx];
+  var spawnX=WORLD_W-80;
+  wave.forEach(function(w){
+    for(var i=0;i<w.n;i++) enemies.push(spawnEnemyObj(w.t,spawnX-(i*60)));
+    spawnX-=w.n*70+40;
+  });
+
+  var bossRound=Math.random()<1/25;
+  if(bossRound){enemies=[];enemies.push(spawnEnemyObj('boss',WORLD_W-120));onBossSpawn();}
+  roundActive=true;
+  if(bossRound) showMsg('💀 BOSS ROUND!','#ff3366',2800);
+  else showMsg('ROUND '+round,'#ffcc44',2000);
+  updateHUD();
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN LOOP
+═══════════════════════════════════════════════ */
+var lastT=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  var dt=Math.min((ts-lastT)/16.67,3);lastT=ts;
+  if(roundActive)update(dt);
+  draw();
+}
+
+function update(dt){
+  updatePlayer(dt);
+  enemies.forEach(function(e){updateEnemy(e,dt);});
+  updateAllies(dt);
+  updateProjs(dt);
+  updateParts(dt);
+  updateDmgNums(dt);
+  if(lavaTicks>0){lavaTicks--;if(lavaTicks%18===0) enemies.forEach(function(e){dealToEnemyDirect(e,4,'#00ff88');});}
+  if(shakeDur>0){shakeDur--;shakeX=(Math.random()-.5)*3;shakeY=(Math.random()-.5)*2;}else{shakeX=0;shakeY=0;}
+  checkRoundEnd();
+  clearEdge();
+}
+
+/* ── PLAYER ── */
+function updatePlayer(dt){
+  if(PL.state==='dead')return;
+  if(PL.stTimer>0)PL.stTimer--;
+  if(PL.atkCd>0)PL.atkCd--;
+  if(PL.sklCd>0)PL.sklCd--;
+  if(PL.iframes>0)PL.iframes--;
+
+  if(PL.stTimer===0)
+    if(PL.state==='attack'||PL.state==='skill'||PL.state==='hurt') PL.state='idle';
+
+  var busy=PL.state==='attack'||PL.state==='skill'||PL.state==='hurt';
+  PL.isBlocking=K.defend&&PL.onGround&&!busy&&PL.state!=='dead';
+
+  var mv=false;
+  if(K.left){PL.vx=-4.5;PL.facing=-1;mv=true;}
+  if(K.right){PL.vx=4.5;PL.facing=1;mv=true;}
+  if(!mv)PL.vx*=0.65;
+  if(KP.jump&&PL.onGround){PL.vy=-9;PL.onGround=false;}
+
+  if(!busy){
+    var isRage=equipped==='staff_rage';
+    if(KP.atk&&PL.atkCd===0){
+      PL.state='attack';PL.stTimer=12;PL.atkCd=isRage?240:16;
+      var sw=STAVES[equipped];
+      // Ranged cast — spawn spell projectile
+      spawnSpell(PL.x+(PL.facing>0?PL.w+5:-10),PL.y+PL.h*0.4,PL.facing,sw.col,7,3,sw.atk+randInt(0,4));
+      spawnMagicBurst(PL.x+(PL.facing>0?PL.w:0),PL.y+PL.h*0.4,sw.col,5);
+      gainSp(8);
+    }
+    if(KP.skill&&PL.sklCd===0&&PL.sp>=50){
+      PL.state='skill';PL.stTimer=20;PL.sklCd=80;PL.sp=Math.max(0,PL.sp-50);
+      var sw2=STAVES[equipped];
+      var nearForSkill=enemies.find(function(e){return Math.abs((e.x+e.w/2)-(PL.x+PL.w/2))<120&&e.state!=='dead';});
+      sw2.skill(PL,nearForSkill||enemies[0]||{x:CW/2,y:GROUND/2,w:40,h:50});
+      onSkillUsed(equipped,nearForSkill||null);
+    }
+    if(PL.state==='idle'||PL.state==='walk'||PL.state==='jump')
+      PL.state=PL.onGround?(Math.abs(PL.vx)>.3?'walk':'idle'):'jump';
+  }
+
+  PL.vy+=0.5*dt;
+  PL.x+=PL.vx*dt;PL.y+=PL.vy*dt;
+  if(PL.y>=GROUND-PL.h){PL.y=GROUND-PL.h;PL.vy=0;PL.onGround=true;}else PL.onGround=false;
+  PL.x=clamp(PL.x,2,WORLD_W-PL.w-2);
+  var targetCamX=PL.x-CW/2+PL.w/2;
+  camX=clamp(targetCamX,0,WORLD_W-CW);
+}
+
+function gainSp(n){PL.sp=Math.min(PL.maxSp,PL.sp+n);}
+
+/* ── ENEMY ── */
+function updateEnemy(e,dt){
+  if(e.state==='dead')return;
+  if(e.stun>0){e.stun-=dt;return;}
+  if(e.slowTicks>0)e.slowTicks-=dt;
+  e.animT+=dt;
+  var spd=e.spd*(e.slowTicks>0?0.3:1)*(e.raging?1.7:1);
+  var dx=PL.x-e.x;
+  e.facing=dx>0?1:-1;
+  e.aiTick-=dt;
+  if(e.aiTick<=0){
+    e.aiTick=20+Math.random()*25;
+    if(Math.abs(dx)>50) e.vx=e.facing*spd;
+    else e.vx=0;
+    if(e.atkCd<=0&&Math.abs(dx)<60){
+      if(PL.iframes===0&&PL.state!=='dead'){
+        if(PL.isBlocking){
+          spawnMagicBurst(PL.x+PL.w/2,PL.y+PL.h/2,'#44cc88',6);
+          showAbilityMsg('🛡 막았다!','#44cc88');
+          e.vx=-e.facing*3;e.stun=20;
+        } else {
+          PL.hp=Math.max(0,PL.hp-e.atk-randInt(0,4));
+          PL.state='hurt';PL.stTimer=12;PL.iframes=28;
+          flashFn('#ff336644',80);
+          spawnDmgNum(PL.x+PL.w/2,PL.y,-(e.atk+randInt(0,3)),'#ff3366');
+        }
+      }
+      e.atkCd=40;
+    }
+  }
+  if(e.atkCd>0)e.atkCd-=dt;
+  var rage=e.rage&&e.hp<e.maxHp*.35&&!e.raging;
+  if(rage){e.raging=true;}
+  e.x+=e.vx*dt;
+  e.vy+=0.5*dt;e.y+=e.vy*dt;
+  if(e.y>=GROUND-e.h){e.y=GROUND-e.h;e.vy=0;}
+  e.x=clamp(e.x,2,WORLD_W-e.w-2);
+}
+
+/* ── PROJS ── */
+function updateProjs(dt){
+  projs=projs.filter(function(p){
+    p.trail.push({x:p.x,y:p.y});
+    if(p.trail.length>8)p.trail.shift();
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    p.life-=dt;
+    if(p.dmg>0){
+      var hit=enemies.find(function(e){return e.state!=='dead'&&Math.abs(e.x+e.w/2-p.x)<(e.w/2+p.size)&&Math.abs(e.y+e.h/2-p.y)<(e.h/2+p.size);});
+      if(hit){dealToEnemyDirect(hit,p.dmg,p.col);spawnMagicBurst(p.x,p.y,p.col,6);return false;}
+    }
+    return p.life>0&&p.x>camX-20&&p.x<camX+CW+20;
+  });
+}
+
+function updateParts(dt){
+  parts=parts.filter(function(p){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    if(p.type!=='lightning'&&p.type!=='flash')p.vy+=0.15*dt;
+    p.vx*=0.94;p.life-=dt;
+    return p.life>0;
+  });
+}
+
+function updateDmgNums(dt){
+  dmgNums=dmgNums.filter(function(d){d.y+=d.vy*dt;d.vy*=0.9;d.life--;return d.life>0;});
+}
+
+/* ── DEAL DAMAGE ── */
+function dealToEnemyDirect(e,dmg,col){
+  if(e.state==='dead')return;
+  var actual=Math.floor(dmg);
+  e.hp=Math.max(0,e.hp-actual);
+  e.state='hurt';e.stTimer=8;
+  spawnMagicBurst(e.x+e.w/2,e.y+e.h/2,col,4);
+  spawnDmgNum(e.x+e.w/2,e.y,-actual,col);
+  gainSp(5);
+  onDmgDealt(actual);
+  if(BOSS_NAMES.includes(e.name))onBossHpUpdate(e);
+  updateHUD();
+}
+
+function dealToEnemy(dmg,col){
+  var near=enemies.find(function(e){return Math.abs((e.x+e.w/2)-(PL.x+PL.w/2))<80&&e.state!=='dead';});
+  if(near)dealToEnemyDirect(near,dmg,col);
+}
+
+/* ── ROUND END ── */
+function checkRoundEnd(){
+  var alive=enemies.filter(function(e){return e.state!=='dead';});
+  var allDead=alive.length===0&&enemies.length>0; // enemies.length>0 ensures round actually started
+
+  if(PL.hp<=0&&PL.state!=='dead'){
+    PL.state='dead';roundActive=false;
+    var liveBoss=enemies.find(function(e){return(e.typeKey==='boss'||BOSS_NAMES.includes(e.name))&&e.state!=='dead';});
+    if(liveBoss&&liveBoss.hp<=10)unlockAchievement('closeCall');
+    showMsg('GAME OVER','#ff3366',3000);
+    flashFn('#ff003355',400);
+    setTimeout(function(){round=1;PL.hp=PL.maxHp;PL.sp=0;startRound();updateHUD();},3200);
+    return;
+  }
+
+  if(allDead&&roundActive){
+    roundActive=false; // 즉시 비활성화 — 매 프레임 반복 방지
+    var totalCoins=enemies.reduce(function(s,e){return s+e.coin;},0)+randInt(1,3);
+    coins+=totalCoins;
+    enemies.forEach(function(e){
+      e.state='dead'; // 모두 dead 처리
+      var typeKey=e.typeKey||Object.keys(ENEMY_TYPES).find(function(k){return ENEMY_TYPES[k].name===e.name;})||'normal';
+      recordKill(typeKey,e.variantKey||null,e.isFallenGod||false);
+      onEnemyKilled(e);
+      spawnBigExplosion(e.x+e.w/2,e.y+e.h/2,e.col);
+    });
+    onRoundClear();
+    showMsg('CLEAR! +'+totalCoins+'🪙','#44ffaa',2400);
+    setTimeout(function(){round++;document.getElementById('rndTxt').textContent='RND '+round;startRound();},2800);
+    updateHUD();saveData();
+  } else {
+    enemies.forEach(function(e){
+      if(e.hp<=0&&e.state!=='dead'){
+        e.state='dead';
+        var typeKey=e.typeKey||Object.keys(ENEMY_TYPES).find(function(k){return ENEMY_TYPES[k].name===e.name;})||'normal';
+        recordKill(typeKey,e.variantKey||null,e.isFallenGod||false);
+        onEnemyKilled(e);
+        spawnBigExplosion(e.x+e.w/2,e.y+e.h/2,e.col);
+        flashFn(e.col+'44',80);
+      }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   DRAW
+═══════════════════════════════════════════════ */
+function draw(){
+  ctx.clearRect(0,0,CW,CH);
+  ctx.save();
+  if(shakeDur>0)ctx.translate(~~shakeX,~~shakeY);
+  drawBgFixed();
+  ctx.restore();
+
+  ctx.save();
+  if(shakeDur>0)ctx.translate(~~shakeX,~~shakeY);
+  ctx.translate(-Math.round(camX),0);
+  drawBgGround();
+  if(lavaTicks>0)drawPoisonCloud();
+  drawParts();
+  drawProjs();
+  enemies.forEach(function(e){if(e.state!=='dead')drawEnemy(e);});
+  drawAllies();
+  drawPlayer();
+  drawDmgNums();
+  drawMiniHpBars();
+  ctx.restore();
+
+  drawBossHpBars();
+  drawWorldProgress();
+}
+
+/* ── BACKGROUND ── */
+function drawBgFixed(){
+  var sky=ctx.createLinearGradient(0,0,0,GROUND);
+  if(bgMorning){
+    sky.addColorStop(0,'#0a1a05');sky.addColorStop(1,'#1a3a0a');
+  } else {
+    sky.addColorStop(0,'#05030f');sky.addColorStop(1,'#0d0522');
+  }
+  ctx.fillStyle=sky;ctx.fillRect(0,0,CW,GROUND);
+
+  if(!bgMorning){
+    // Stars
+    ctx.fillStyle='rgba(220,200,255,.5)';
+    var starOff=((camX*.2)|0)%(CW+100);
+    for(var i=0;i<55;i++){
+      var sx=((i*137+7-starOff)%(CW+20)+CW+20)%(CW+20);
+      var sy=(i*89+13)%(GROUND-20);
+      ctx.fillRect(~~sx,~~sy,(i%4===0)?1.5:.8,(i%4===0)?1.5:.8);
+    }
+    // Moon
+    ctx.fillStyle='#eeddff';
+    ctx.beginPath();ctx.arc(CW-28,18,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#0d0522';
+    ctx.beginPath();ctx.arc(CW-24,16,8,0,Math.PI*2);ctx.fill();
+    // Magic particles floating in bg
+    var t=Date.now()/1000;
+    for(var i=0;i<6;i++){
+      var px2=((i*CW/6+t*20+camX*.1)%CW+CW)%CW;
+      var py2=GROUND*.3+Math.sin(t+i*1.2)*GROUND*.15;
+      ctx.globalAlpha=.15+Math.sin(t*2+i)*.08;
+      ctx.fillStyle=i%3===0?'#cc44ff':i%3===1?'#4488ff':'#ff44cc';
+      ctx.beginPath();ctx.arc(~~px2,~~py2,2+Math.sin(t+i)*.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  } else {
+    // Magic forest bg
+    ctx.fillStyle='#1a4400';ctx.shadowColor='#44ff44';ctx.shadowBlur=8;
+    for(var i=0;i<10;i++){
+      var tx=((i*(CW/9)-((camX*.15)|0)%(CW/9+30)+CW+30)%(CW+30))-15;
+      var th=30+((i*13)%20);
+      ctx.fillRect(~~tx,GROUND-th,12,th);
+      ctx.beginPath();ctx.moveTo(~~tx+6,GROUND-th-14);ctx.lineTo(~~tx-2,GROUND-th);ctx.lineTo(~~tx+14,GROUND-th);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+  }
+
+  // Trees/towers silhouette
+  var treeOff=((camX*.25)|0)%Math.floor(CW/10+1);
+  ctx.fillStyle=bgMorning?'#0a2a00':'#0a0520';
+  for(var i=0;i<13;i++){
+    var tx2=((i*(CW/11)-treeOff)%(CW+30)+CW+30)%(CW+30)-14;
+    var tw=10,th2=18+((i*7)%16);
+    ctx.fillRect(~~tx2,GROUND-th2,tw,th2);
+    ctx.beginPath();ctx.moveTo(~~tx2+tw/2,GROUND-th2-10);ctx.lineTo(~~tx2,GROUND-th2);ctx.lineTo(~~tx2+tw,GROUND-th2);ctx.fill();
+  }
+}
+
+function drawBgGround(){
+  // Magic ground tiles
+  for(var x=Math.floor(camX/4)*4;x<camX+CW+4;x+=4){
+    ctx.fillStyle=((x/4)%2===0)?'#1a0a30':'#120820';
+    ctx.fillRect(x,GROUND,4,3);
+  }
+  ctx.fillStyle='#08051a';ctx.fillRect(camX,GROUND+3,CW,CH-GROUND-3);
+  // Magic rune tiles
+  var t=Date.now()/3000;
+  ctx.strokeStyle='rgba(100,50,200,0.15)';ctx.lineWidth=.5;
+  var bStart=Math.floor(camX/24)*24;
+  for(var r=0;r<3;r++){
+    var off=(r%2)*12;
+    for(var bx=bStart-24;bx<camX+CW+24;bx+=24){
+      ctx.strokeRect(bx+off,GROUND+3+r*7,22,6);
+    }
+  }
+}
+
+function drawPoisonCloud(){
+  ctx.fillStyle='rgba(0,180,60,0.12)';
+  ctx.fillRect(camX,GROUND-20,CW,20);
+  for(var i=0;i<8;i++){
+    var cx2=(camX+i*(CW/7)+Date.now()/50*((i%2===0)?1:-1))%(camX+CW+40);
+    ctx.beginPath();ctx.arc(cx2,GROUND-8+Math.sin(Date.now()/800+i)*5,18,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,220,80,0.08)';ctx.fill();
+  }
+}
+
+/* ── DRAW PARTS (SPELLS) ── */
+function drawParts(){
+  parts.forEach(function(p){
+    var alpha=p.life/p.maxLife;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=p.col;
+    ctx.shadowColor=p.col;
+    if(p.type==='magic'||p.type==='arcane'||p.type==='void'||p.type==='divine'||p.type==='gold'||p.type==='summon'||p.type==='wave'||p.type==='nature'||p.type==='leaf'){
+      ctx.shadowBlur=p.size*2;
+      ctx.beginPath();ctx.arc(~~p.x,~~p.y,p.size,0,Math.PI*2);ctx.fill();
+    } else if(p.type==='frost'||p.type==='crystal'){
+      ctx.shadowBlur=4;
+      // Crystal shard
+      ctx.save();ctx.translate(~~p.x,~~p.y);ctx.rotate(p.life/10);
+      ctx.fillRect(-p.size/2,-p.size,p.size,p.size*2);ctx.restore();
+    } else if(p.type==='lightning'){
+      ctx.shadowBlur=8;
+      ctx.fillRect(~~p.x-p.size/2,~~p.y-p.size/2,p.size,p.size);
+    } else if(p.type==='flash'){
+      ctx.globalAlpha=alpha*.5;
+      ctx.beginPath();ctx.arc(~~p.x,~~p.y,p.size,0,Math.PI*2);ctx.fill();
+    } else {
+      ctx.shadowBlur=3;
+      ctx.fillRect(~~p.x-p.size/2,~~p.y-p.size/2,p.size,p.size);
+    }
+    ctx.shadowBlur=0;
+  });
+  ctx.globalAlpha=1;
+}
+
+/* ── DRAW PROJS ── */
+function drawProjs(){
+  projs.forEach(function(p){
+    // Trail
+    p.trail.forEach(function(t2,i){
+      ctx.globalAlpha=(i/p.trail.length)*.5*(p.life/80);
+      ctx.fillStyle=p.col;ctx.shadowColor=p.col;ctx.shadowBlur=4;
+      var s=p.size*(i/p.trail.length);
+      ctx.beginPath();ctx.arc(~~t2.x,~~t2.y,Math.max(.5,s),0,Math.PI*2);ctx.fill();
+    });
+    // Main orb
+    ctx.globalAlpha=p.life/80;
+    ctx.fillStyle=p.col;ctx.shadowColor=p.col;ctx.shadowBlur=p.size*3;
+    ctx.beginPath();ctx.arc(~~p.x,~~p.y,p.size,0,Math.PI*2);ctx.fill();
+    // Inner bright core
+    ctx.fillStyle='#ffffff';ctx.shadowBlur=2;
+    ctx.beginPath();ctx.arc(~~p.x,~~p.y,p.size*.4,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  });
+}
+
+/* ── DRAW PLAYER (MAGE) ── */
+function drawPlayer(){
+  if(!STAVES[equipped])equipped='basic';
+  var px=~~(PL.x+PL.w/2),py=~~(PL.y+PL.h/2);
+  var t=Date.now()/1000;
+  ctx.save();ctx.translate(px,py);
+  if(PL.facing===-1)ctx.scale(-1,1);
+  if(PL.iframes>0&&Math.floor(PL.iframes/3)%2===0){ctx.globalAlpha=.4;}
+
+  var sw=STAVES[equipped];
+  var walk=PL.state==='walk';
+  var bob=walk?Math.sin(t*10)*2:0;
+  var cast=PL.state==='attack'||PL.state==='skill';
+
+  // Robe
+  ctx.fillStyle='#3a1a6a';
+  ctx.fillRect(-11,~~(-PL.h*0.4)+~~bob,22,~~(PL.h*.7));
+  // Robe detail
+  ctx.fillStyle='#5522aa';
+  ctx.fillRect(-10,~~(-PL.h*0.35)+~~bob,4,~~(PL.h*.55));
+  ctx.fillRect(6,~~(-PL.h*0.35)+~~bob,4,~~(PL.h*.55));
+  // Belt
+  ctx.fillStyle='#ffcc44';
+  ctx.fillRect(-11,~~(-PL.h*0.05)+~~bob,22,3);
+  // Legs
+  ctx.fillStyle='#22103a';
+  var legA=walk?Math.sin(t*10)*5:0;
+  ctx.fillRect(-9,~~(-PL.h*0.3+PL.h*.45)+~~bob,8,~~(PL.h*.3)+legA);
+  ctx.fillRect(1,~~(-PL.h*0.3+PL.h*.45)+~~bob,8,~~(PL.h*.3)-legA);
+  // Body
+  ctx.fillStyle='#5522aa';ctx.fillRect(-11,~~(-PL.h*0.4)+~~bob,22,~~(PL.h*.38));
+  // Cloak
+  ctx.fillStyle='#220088';
+  ctx.beginPath();ctx.moveTo(11,~~(-PL.h*0.38)+~~bob);ctx.lineTo(15,~~(-PL.h*0.38+PL.h*.5)+~~bob);ctx.lineTo(11,~~(-PL.h*0.38+PL.h*.4)+~~bob);ctx.fill();
+  // Head
+  ctx.fillStyle='#f0c080';ctx.fillRect(-8,~~(-PL.h*0.4+~~bob-18),16,16);
+  // Hat
+  ctx.fillStyle='#1a0844';ctx.fillRect(-10,~~(-PL.h*0.4+~~bob-22),20,6);
+  ctx.fillRect(-6,~~(-PL.h*0.4+~~bob-36),12,18);
+  // Hat star
+  ctx.fillStyle='#ffcc44';ctx.shadowColor='#ffcc44';ctx.shadowBlur=4;
+  ctx.beginPath();ctx.arc(0,~~(-PL.h*0.4+~~bob-38),3,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  // Eyes
+  ctx.fillStyle='#44aaff';ctx.shadowColor='#44aaff';ctx.shadowBlur=3;
+  ctx.beginPath();ctx.arc(-3,~~(-PL.h*0.4+~~bob-10),2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(3,~~(-PL.h*0.4+~~bob-10),2,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Staff
+  var staffAng=cast?0.4:walk?Math.sin(t*10)*0.1:0;
+  ctx.save();ctx.rotate(staffAng);
+  ctx.fillStyle='#8855aa';
+  ctx.fillRect(10,-PL.h*.35+~~bob,4,~~(PL.h*.6));
+  // Staff orb
+  ctx.fillStyle=sw.col;ctx.shadowColor=sw.col;ctx.shadowBlur=cast?16:8;
+  ctx.beginPath();ctx.arc(12,-PL.h*.38+~~bob,6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.shadowBlur=2;
+  ctx.beginPath();ctx.arc(11,-PL.h*.4+~~bob,2.5,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Casting sparkles
+  if(cast){
+    var spd2=Date.now()/200;
+    for(var i=0;i<6;i++){
+      var sang=(i/6)*Math.PI*2+spd2;
+      var sr=8+Math.sin(spd2+i)*3;
+      ctx.fillStyle=sw.col;ctx.globalAlpha=.7;ctx.shadowColor=sw.col;ctx.shadowBlur=6;
+      ctx.beginPath();ctx.arc(12+Math.cos(sang)*sr,-PL.h*.38+~~bob+Math.sin(sang)*sr,2,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+  }
+  ctx.restore();
+
+  // Blocking shield
+  if(PL.isBlocking){
+    ctx.fillStyle='rgba(68,204,136,0.3)';ctx.strokeStyle='#44cc88';ctx.lineWidth=2;ctx.shadowColor='#44cc88';ctx.shadowBlur=10;
+    ctx.beginPath();ctx.arc(0,~~bob,20,0,Math.PI*2);ctx.stroke();ctx.fill();
+    ctx.shadowBlur=0;
+  }
+
+  // HP bar above player
+  var pct=PL.hp/PL.maxHp;
+  ctx.fillStyle='#0a0518';ctx.fillRect(-14,-PL.h*.38+~~bob-12,28,5);
+  ctx.fillStyle=pct>0.5?'#44cc88':pct>0.25?'#ffcc44':'#ff3366';
+  ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=4;
+  ctx.fillRect(-14,-PL.h*.38+~~bob-12,~~(28*pct),5);ctx.shadowBlur=0;
+
+  ctx.restore();
+  ctx.globalAlpha=1;
+}
+
+/* ── DRAW ENEMY ── */
+function drawEnemy(e){
+  var rage=e.raging;
+  var t=e.animT/60;
+  var bob=e.state==='idle'?Math.sin(t*3)*1:0;
+  var vCol=e.variantKey?VARIANTS[e.variantKey].col:null;
+  var drawCol=vCol||e.col;
+
+  ctx.save();
+  ctx.translate(~~(e.x+e.w/2),~~(e.y+e.h/2+~~bob));
+  if(e.facing===1)ctx.scale(-1,1);
+
+  if(e.isFallenGod) drawFallenGod(e,t,rage);
+  else if(e.name==='좀비')drawZombie(e,t,rage,drawCol);
+  else if(e.name==='빠른좀비')drawZombieFast(e,t,drawCol);
+  else if(e.name==='강한좀비')drawZombieStrong(e,t,rage,drawCol);
+  else if(e.name==='유령')drawGhost(e,t);
+  else if(e.name==='해골전사')drawSkeleton(e,t);
+  else if(e.name==='슬라임')drawSlime(e,t,drawCol);
+  else if(e.name==='데몬')drawDemon(e,t,rage);
+  else if(e.name==='드래곤')drawDragon(e,t,rage);
+  else if(e.name==='대악마 보스')drawBossFinal(e,t,rage);
+  else drawZombie(e,t,rage,drawCol);
+
+  // Variant glow
+  if(e.variantKey&&e.variantKey!=='secret'){
+    var v=VARIANTS[e.variantKey];
+    ctx.fillStyle='rgba('+hexToRgb(v.glow)+',0.15)';
+    ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);
+    ctx.strokeStyle=v.col;ctx.lineWidth=1.5;ctx.shadowColor=v.col;ctx.shadowBlur=8;
+    ctx.strokeRect(-e.w/2,-e.h/2,e.w,e.h);ctx.shadowBlur=0;
+  }
+  // Secret silver overlay
+  if(e.variantKey==='secret'||e.isFallenGod){
+    ctx.fillStyle='rgba(200,200,230,0.2)';ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);
+    var sp2=Date.now()/1000;
+    for(var si=0;si<5;si++){
+      var sx2=Math.cos(sp2*2+si*1.26)*(e.w/2+4);
+      var sy2=Math.sin(sp2*2+si*1.26)*(e.h/2+4);
+      ctx.fillStyle='rgba(220,220,255,'+(0.4+Math.sin(sp2*3+si)*.3)+')';
+      ctx.fillRect(sx2-1.5,sy2-1.5,3,3);
+    }
+  }
+  ctx.restore();
+
+  // Stun
+  if(e.stun>0){
+    var t2=Date.now()/200;
+    for(var i=0;i<3;i++){
+      var ang=(i/3)*Math.PI*2+t2;
+      ctx.fillStyle='#ffff88';ctx.shadowColor='#ffff88';ctx.shadowBlur=4;
+      ctx.beginPath();ctx.arc(~~(e.x+e.w/2+Math.cos(ang)*12),~~(e.y-6+Math.sin(ang)*4),2,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+  }
+
+  // Slow ice
+  if(e.slowTicks>0){
+    ctx.fillStyle='rgba(136,220,255,0.2)';ctx.fillRect(~~e.x,~~e.y,e.w,e.h);
+    ctx.strokeStyle='#88ddff';ctx.lineWidth=1;
+    ctx.strokeRect(~~e.x,~~e.y,e.w,e.h);
+  }
+
+  // Variant label
+  if(e.variantKey&&e.variantKey!=='secret'){
+    var vLabels={gold:'★GOLD',diamond:'◆DIAM',rainbow:'✦RAIN'};
+    var by=~~e.y-3;
+    ctx.font='bold 5px monospace';ctx.textAlign='center';
+    ctx.fillStyle=VARIANTS[e.variantKey].col;ctx.shadowColor=VARIANTS[e.variantKey].col;ctx.shadowBlur=4;
+    ctx.fillText(vLabels[e.variantKey],~~e.x+e.w/2,by-1);ctx.shadowBlur=0;
+  }
+}
+
+/* ── ENEMY SPRITES (simplified for this game) ── */
+function drawZombie(e,t,rage,col){
+  var legA=Math.sin(t*7)*4;
+  ctx.fillStyle=rage?'#99ff44':'#225522';ctx.fillRect(-7,4,6,16+legA);ctx.fillRect(2,4,6,16-legA);
+  ctx.fillStyle=col;ctx.fillRect(-10,-14,20,20);
+  ctx.fillStyle=rage?'#aaffaa':'#337733';ctx.fillRect(-9,-22,18,10);
+  ctx.fillStyle='#ff2244';ctx.beginPath();ctx.arc(-3,-16,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(4,-16,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#222';ctx.fillRect(-14,-6,10,5);ctx.fillRect(5,-6,10,5);
+}
+function drawZombieFast(e,t,col){
+  var legA=Math.sin(t*12)*6;
+  ctx.fillStyle='#224422';ctx.fillRect(-5,2,5,14+legA);ctx.fillRect(1,2,5,14-legA);
+  ctx.fillStyle=col;ctx.fillRect(-8,-12,16,16);
+  ctx.fillStyle='#33aa33';ctx.fillRect(-7,-20,14,10);
+  ctx.fillStyle='#ff4444';ctx.beginPath();ctx.arc(-2,-14,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(3,-14,2.5,0,Math.PI*2);ctx.fill();
+}
+function drawZombieStrong(e,t,rage,col){
+  var legA=Math.sin(t*5)*3;
+  ctx.fillStyle='#552211';ctx.fillRect(-10,6,9,18+legA);ctx.fillRect(2,6,9,18-legA);
+  ctx.fillStyle=col;ctx.fillRect(-13,-16,26,24);
+  ctx.fillStyle=rage?'#ff4400':'#993322';ctx.fillRect(-20,-8,8,6);ctx.fillRect(13,-8,8,6);
+  ctx.fillStyle='#662211';ctx.fillRect(-12,-26,24,12);
+  ctx.fillStyle=rage?'#ff8800':'#ff4422';ctx.beginPath();ctx.arc(-3,-20,4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(4,-20,4,0,Math.PI*2);ctx.fill();
+}
+function drawGhost(e,t){
+  var fl=0.4+Math.sin(t*8)*.35;
+  ctx.globalAlpha=fl;ctx.fillStyle='#8866cc';
+  ctx.beginPath();ctx.ellipse(0,0,14,18,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#6644aa';
+  for(var i=-2;i<=2;i++){ctx.beginPath();ctx.ellipse(i*5,14,3,6,0,0,Math.PI*2);ctx.fill();}
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#44ffee';ctx.shadowColor='#44ffee';ctx.shadowBlur=6;
+  ctx.beginPath();ctx.arc(-5,-3,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(5,-3,3,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+}
+function drawSkeleton(e,t){
+  var legA=Math.sin(t*7)*4;
+  ctx.fillStyle='#ccccaa';ctx.fillRect(-8,8,6,14+legA);ctx.fillRect(3,8,6,14-legA);
+  ctx.fillStyle='#ddddbb';ctx.fillRect(-10,-10,20,20);
+  ctx.fillStyle='#ccccaa';ctx.fillRect(-17,-8,8,5);ctx.fillRect(10,-8,8,5);
+  ctx.fillStyle='#aaaaaa';ctx.fillRect(17,-16,3,22);ctx.fillRect(17,-18,10,4);
+  ctx.fillStyle='#ddddbb';ctx.fillRect(-9,-24,18,16);
+  ctx.fillStyle='#000';ctx.fillRect(-6,-20,5,5);ctx.fillRect(2,-20,5,5);
+}
+function drawSlime(e,t,col){
+  var sq=1+Math.sin(t*5)*.08;
+  ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(0,0,16*sq,12/sq,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.ellipse(-4,-3,6,4,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#003322';ctx.beginPath();ctx.arc(-5,-1,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(5,-1,3,0,Math.PI*2);ctx.fill();
+}
+function drawDemon(e,t,rage){
+  var legA=Math.sin(t*6)*5;
+  var c=rage?'#ff2200':'#880022';
+  ctx.fillStyle='#550011';ctx.fillRect(-10,8,9,16+legA);ctx.fillRect(2,8,9,16-legA);
+  ctx.fillStyle=c;ctx.fillRect(-12,-12,24,22);
+  ctx.fillStyle='#330011';ctx.beginPath();ctx.moveTo(-12,-12);ctx.lineTo(-24,-24);ctx.lineTo(-12,-2);ctx.fill();ctx.beginPath();ctx.moveTo(12,-12);ctx.lineTo(24,-24);ctx.lineTo(12,-2);ctx.fill();
+  ctx.fillStyle='#ff4400';ctx.fillRect(-10,-26,20,16);
+  ctx.fillStyle='#ff6600';ctx.shadowColor='#ff4400';ctx.shadowBlur=rage?8:3;
+  ctx.beginPath();ctx.arc(-3,-18,4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(4,-18,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
+function drawDragon(e,t,rage){
+  var legA=Math.sin(t*5)*4;
+  ctx.fillStyle='#662200';ctx.fillRect(-12,10,10,18+legA);ctx.fillRect(3,10,10,18-legA);
+  ctx.fillStyle=rage?'#ff4400':'#993300';ctx.fillRect(-14,-14,28,26);
+  ctx.fillStyle='#440000';ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-28,-8);ctx.lineTo(-14,-14);ctx.fill();ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(28,-8);ctx.lineTo(14,-14);ctx.fill();
+  ctx.fillStyle='#440000';ctx.beginPath();ctx.moveTo(0,-14);ctx.lineTo(-10,-30);ctx.lineTo(10,-30);ctx.fill();
+  ctx.fillStyle='#cc3300';ctx.fillRect(-11,-28,22,16);
+  ctx.fillStyle='#ff6600';ctx.shadowColor='#ff4400';ctx.shadowBlur=rage?10:4;
+  ctx.beginPath();ctx.arc(-4,-20,4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(4,-20,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
+function drawBossFinal(e,t,rage){
+  var legA=Math.sin(t*4)*3;
+  var c=rage?'#ff00aa':'#660044';
+  ctx.fillStyle='#330022';ctx.fillRect(-14,12,12,20+legA);ctx.fillRect(3,12,12,20-legA);
+  ctx.fillStyle=c;ctx.fillRect(-16,-18,32,32);
+  ctx.fillStyle='#220011';ctx.beginPath();ctx.moveTo(-16,-18);ctx.lineTo(-32,-36);ctx.lineTo(-16,-4);ctx.fill();ctx.beginPath();ctx.moveTo(16,-18);ctx.lineTo(32,-36);ctx.lineTo(16,-4);ctx.fill();
+  ctx.fillStyle='#440022';ctx.fillRect(-24,-12,10,8);ctx.fillRect(15,-12,10,8);
+  ctx.fillStyle='#660033';ctx.fillRect(-13,-32,26,16);
+  ctx.fillStyle='#ff0066';ctx.shadowColor='#ff0066';ctx.shadowBlur=rage?12:6;
+  ctx.beginPath();ctx.arc(-4,-24,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(4,-24,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#880033';ctx.fillRect(-14,-42,28,12);
+  ctx.fillStyle='#553311';ctx.fillRect(-10,-46,6,10);ctx.fillRect(5,-46,6,10);
+  ctx.shadowBlur=0;
+}
+function drawFallenGod(e,t,rage){
+  var pulse=Math.sin(t*3)*2;
+  ctx.fillStyle='rgba(180,180,220,0.07)';ctx.beginPath();ctx.arc(0,0,40,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#22222f';ctx.fillRect(-15,14,13,20+pulse);ctx.fillRect(4,14,13,20-pulse);
+  ctx.fillStyle='#aaaacc';for(var i=0;i<3;i++){ctx.fillRect(-20+i*4,32,2,7);ctx.fillRect(5+i*4,32,2,7);}
+  ctx.fillStyle='#111122';ctx.fillRect(-18,-16,36,32);
+  ctx.fillStyle='rgba(180,180,255,0.2)';ctx.fillRect(-4,-12,8,20);
+  ctx.fillStyle='#111120';ctx.beginPath();ctx.moveTo(-18,-16);ctx.lineTo(-44,-50);ctx.lineTo(-18,4);ctx.fill();ctx.beginPath();ctx.moveTo(18,-16);ctx.lineTo(44,-50);ctx.lineTo(18,4);ctx.fill();
+  ctx.strokeStyle='rgba(160,160,200,0.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(-18,-16);ctx.lineTo(-36,-38);ctx.stroke();ctx.beginPath();ctx.moveTo(18,-16);ctx.lineTo(36,-38);ctx.stroke();
+  ctx.fillStyle='#1a1a28';ctx.fillRect(-10,-34,20,20);ctx.fillStyle='#111122';ctx.fillRect(-14,-52,28,20);
+  ctx.fillStyle='#888899';ctx.fillRect(-12,-58,4,10);ctx.fillRect(9,-58,4,10);ctx.fillRect(-17,-54,4,8);ctx.fillRect(14,-54,4,8);
+  ctx.fillStyle='#ffffff';ctx.shadowColor='#ffffff';ctx.shadowBlur=rage?14:8;
+  ctx.beginPath();ctx.arc(-5,-44,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(5,-44,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111122';ctx.beginPath();ctx.arc(-5,-44,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(5,-44,2,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+}
+
+/* ── ALLIES ── */
+var allies=[];
+function spawnAlly(typeKey){
+  var td=ENEMY_TYPES[typeKey]||ENEMY_TYPES['demon'];
+  allies.push({id:Math.random(),typeKey,name:'[아군] '+td.name,col:'#4488ff',
+    x:PL.x+(PL.facing>0?60:-80),y:GROUND-td.h,hp:td.hp*2,maxHp:td.hp*2,
+    w:td.w,h:td.h,atk:td.atk,spd:td.spd*.8,vx:0,vy:0,onGround:true,
+    facing:1,state:'idle',stTimer:0,aiTick:30,atkCd:0,stun:0,slowTicks:0,
+    rage:false,raging:false,animT:Math.random()*100,isAlly:true,ttl:600});
+}
+function updateAllies(dt){
+  allies=allies.filter(function(a){
+    a.ttl-=dt;if(a.ttl<=0)return false;
+    a.atkCd=Math.max(0,a.atkCd-dt);a.animT+=dt;
+    var tgt=null,minD=Infinity;
+    enemies.forEach(function(e){if(e.state==='dead')return;var d=(a.x-e.x)**2+(a.y-e.y)**2;if(d<minD){minD=d;tgt=e;}});
+    if(tgt){var dx=tgt.x-a.x,d=Math.sqrt(dx*dx+(tgt.y-a.y)**2);
+      if(d>50){a.vx=Math.sign(dx)*a.spd;a.vy+=.5*dt;}
+      else{a.vx*=.5;if(a.atkCd===0){a.atkCd=50;dealToEnemyDirect(tgt,a.atk,'#4488ff');}}
+    } else a.vx*=.7;
+    a.x+=a.vx*dt;a.y+=a.vy*dt;
+    if(a.y>=GROUND-a.h){a.y=GROUND-a.h;a.vy=0;}
+    a.x=clamp(a.x,2,WORLD_W-a.w-2);
+    return true;
+  });
+}
+function drawAllies(){
+  allies.forEach(function(a){
+    var isFallen=a.name.includes('타락신');
+    ctx.save();ctx.translate(~~(a.x+a.w/2),~~(a.y+a.h/2));if(a.facing===1)ctx.scale(-1,1);
+    ctx.globalAlpha=.9;
+    if(isFallen){drawFallenGod(a,a.animT/60,false);ctx.fillStyle='rgba(200,200,255,0.25)';ctx.fillRect(-a.w/2,-a.h/2,a.w,a.h);}
+    else if(a.name.includes('데몬')){drawDemon(a,a.animT/60,false);ctx.fillStyle='rgba(68,170,255,0.35)';ctx.fillRect(-a.w/2,-a.h/2,a.w,a.h);}
+    else if(a.name.includes('드래곤')){drawDragon(a,a.animT/60,false);ctx.fillStyle='rgba(68,170,255,0.35)';ctx.fillRect(-a.w/2,-a.h/2,a.w,a.h);}
+    else{drawBossFinal(a,a.animT/60,false);ctx.fillStyle='rgba(68,170,255,0.35)';ctx.fillRect(-a.w/2,-a.h/2,a.w,a.h);}
+    ctx.globalAlpha=1;ctx.restore();
+    var pct=a.hp/a.maxHp;var bc=isFallen?'#aaaacc':'#44aaff';
+    ctx.fillStyle='#001133';ctx.fillRect(~~a.x,~~a.y-7,a.w,4);
+    ctx.fillStyle=bc;ctx.fillRect(~~a.x,~~a.y-7,~~(a.w*pct),4);
+  });
+}
+
+/* ── DMG NUMBERS ── */
+function spawnDmgNum(x,y,n,col){dmgNums.push({x,y,vy:-1.4,life:36,maxLife:36,txt:(n>0?'+':'')+n,col});}
+function drawDmgNums(){
+  dmgNums.forEach(function(d){
+    ctx.globalAlpha=d.life/d.maxLife;
+    ctx.fillStyle=d.col;ctx.shadowColor=d.col;ctx.shadowBlur=4;
+    ctx.font='bold '+(4+~~((1-d.life/d.maxLife)*2))+'px monospace';
+    ctx.textAlign='center';ctx.fillText(d.txt,~~d.x,~~d.y);
+  });
+  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign='left';
+}
+
+/* ── MINI HP BARS ── */
+function drawMiniHpBars(){
+  enemies.forEach(function(e){
+    if(e.state==='dead')return;
+    var pct=Math.max(0,e.hp/e.maxHp);
+    var rage=e.raging;
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(~~e.x,~~e.y-7,e.w,5);
+    ctx.fillStyle=rage?'#ff3300':pct>.5?'#44cc88':pct>.25?'#ffcc44':'#ff3366';
+    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=3;
+    ctx.fillRect(~~e.x,~~e.y-7,~~(e.w*pct),5);ctx.shadowBlur=0;
+  });
+}
+
+/* ── BOSS HP BAR ── */
+function drawBossHpBars(){
+  var bosses=enemies.filter(function(e){return BOSS_NAMES.includes(e.name)&&e.state!=='dead';});
+  if(!bosses.length)return;
+  var barW=Math.floor(CW*.55),barH=10,startX=Math.floor((CW-barW)/2);
+  var offsetY=6;
+  bosses.forEach(function(e){
+    var pct=Math.max(0,e.hp/e.maxHp),rage=e.hp<e.maxHp*.35;
+    ctx.fillStyle='rgba(0,0,0,0.8)';ctx.fillRect(startX-2,offsetY-2,barW+4,barH+16);
+    ctx.strokeStyle=rage?'#ff4400':'#440033';ctx.lineWidth=1;ctx.strokeRect(startX-2,offsetY-2,barW+4,barH+16);
+    ctx.font='bold '+Math.floor(barH*.85)+'px monospace';ctx.textAlign='center';
+    ctx.fillStyle=rage?'#ff8800':'#ff3366';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=6;
+    ctx.fillText('👑 '+e.name+' '+e.hp+'/'+e.maxHp,startX+barW/2,offsetY+barH-1);ctx.shadowBlur=0;
+    ctx.fillStyle='#1a0018';ctx.fillRect(startX,offsetY+barH,barW,barH);
+    var fillW=Math.floor(barW*pct);
+    if(fillW>0){
+      var grad=ctx.createLinearGradient(startX,0,startX+barW,0);
+      if(rage){grad.addColorStop(0,'#ff0044');grad.addColorStop(1,'#ff6600');}
+      else{grad.addColorStop(0,'#880033');grad.addColorStop(1,'#cc0066');}
+      ctx.fillStyle=grad;ctx.shadowColor=rage?'#ff0044':'#cc0066';ctx.shadowBlur=rage?6:0;
+      ctx.fillRect(startX,offsetY+barH,fillW,barH);ctx.shadowBlur=0;
+    }
+    ctx.strokeStyle=rage?'#ff4400':'#440033';ctx.lineWidth=1;ctx.strokeRect(startX,offsetY+barH,barW,barH);
+    offsetY+=barH*2+16;
+  });
+}
+
+/* ── WORLD PROGRESS ── */
+function drawWorldProgress(){
+  if(!roundActive)return;
+  var pct=Math.min(1,(PL.x-50)/(WORLD_W-CW));
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(4,CH-6,CW-8,3);
+  ctx.fillStyle='#cc44ff';ctx.shadowColor='#cc44ff';ctx.shadowBlur=4;
+  ctx.fillRect(4,CH-6,~~((CW-8)*pct),3);ctx.shadowBlur=0;
+  // Player dot
+  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(4+~~((CW-8)*pct),CH-4,3,0,Math.PI*2);ctx.fill();
+}
+
+/* ═══════════════════════════════════════════════
+   HUD / UI
+═══════════════════════════════════════════════ */
+function updateHUD(){
+  if(!STAVES[equipped])equipped='basic';
+  var sw=STAVES[equipped];
+  var p1=document.getElementById('p1Hp');if(p1)p1.style.width=(PL.hp/PL.maxHp*100)+'%';
+  var sp=document.getElementById('spBar');if(sp)sp.style.width=(PL.sp/PL.maxSp*100)+'%';
+  var alive=enemies.filter(function(e){return e.state!=='dead';});
+  var avgHp=alive.length?alive.reduce(function(s,e){return s+e.hp/e.maxHp;},0)/alive.length:0;
+  var p2=document.getElementById('p2Hp');if(p2)p2.style.width=(avgHp*100)+'%';
+  var rage=alive.some(function(e){return e.raging;});
+  var er=document.getElementById('enRage');if(er)er.style.width=rage?'100%':'0%';
+  var ch=document.getElementById('coinHud');if(ch)ch.textContent=coins;
+  var sc=document.getElementById('shopCoins');if(sc)sc.textContent=coins;
+  var uc=document.getElementById('upgradeCoins');if(uc)uc.textContent=coins;
+  var sh=document.getElementById('swHud');
+  if(sh){sh.textContent=sw.icon+' '+sw.name;sh.style.color=sw.col;sh.style.textShadow='0 0 8px '+sw.col;}
+  var sl=document.getElementById('swLabel');
+  if(sl){sl.textContent=sw.icon+' '+sw.name;sl.style.color=sw.col;sl.style.textShadow='0 0 10px '+sw.col;}
+  var ub=document.getElementById('upgBtn');if(ub)ub.disabled=coins<10;
+}
+
+var msgTO=null;
+function showMsg(txt,col,dur){
+  var el=document.getElementById('msg');
+  el.textContent=txt;el.style.color=col;el.style.opacity='1';
+  clearTimeout(msgTO);msgTO=setTimeout(function(){el.style.opacity='0';},dur);
+}
+var abiTO=null;
+function showAbilityMsg(txt,col){
+  var el=document.getElementById('abilityMsg');
+  el.textContent=txt;el.style.color=col;el.style.opacity='1';
+  el.style.textShadow='0 0 12px '+col;
+  clearTimeout(abiTO);abiTO=setTimeout(function(){el.style.opacity='0';},1800);
+}
+var secTO=null;
+function showSecretBanner(txt){
+  var el=document.getElementById('secretBanner');if(!el)return;
+  el.textContent=txt;el.style.opacity='1';el.style.transform='translateX(-50%) scale(1.1)';
+  clearTimeout(secTO);secTO=setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(-50%) scale(1)';},3200);
+}
+function flashFn(col,dur){
+  var f=document.getElementById('flash');f.style.background=col;f.style.opacity='1';
+  setTimeout(function(){f.style.opacity='0';},dur);
+}
+function shakeScreen(){shakeDur=18;}
+
+/* ═══════════════════════════════════════════════
+   ACHIEVEMENT SYSTEM
+═══════════════════════════════════════════════ */
+function unlockAchievement(key){
+  if(achievements[key]&&!achievements[key].done){
+    achievements[key].done=true;
+    var sk=ACHIEVE_STAFF_MAP[key];
+    if(sk&&!inventory.includes(sk))inventory.push(sk);
+    setTimeout(function(){
+      showSecretBanner('🏆 '+achievements[key].name+' 달성!'+(sk&&STAVES[sk]?' → '+STAVES[sk].name:''));
+    },300);
+    saveData();renderAchievements();renderShop();
+  }
+}
+function checkAchievements(){
+  if(Object.keys(ENEMY_TYPES).every(function(k){return dexKills[k]&&dexKills[k].count>0;}))unlockAchievement('normalDexFull');
+  if(SECRET_REQUIRED.every(function(k){return dexKills[k]&&dexKills[k].count>0;}))unlockAchievement('secretDexFull');
+  if(Object.keys(ENEMY_TYPES).every(function(k){return dexKills[k+'_gold']&&dexKills[k+'_gold'].count>0;}))unlockAchievement('goldDex');
+  if(Object.keys(ENEMY_TYPES).every(function(k){return dexKills[k+'_diamond']&&dexKills[k+'_diamond'].count>0;}))unlockAchievement('diamondDex');
+  if(Object.keys(ENEMY_TYPES).every(function(k){return dexKills[k+'_rainbow']&&dexKills[k+'_rainbow'].count>0;}))unlockAchievement('rainbowDex');
+}
+function onEnemyKilled(e){
+  if(e.typeKey==='boss'||BOSS_NAMES.includes(e.name))unlockAchievement('firstBoss');
+  if(e.name==='대악마 보스'||e.isFallenGod)unlockAchievement('firstDemon');
+  if((e.typeKey==='boss'||BOSS_NAMES.includes(e.name))&&roundBossMinHp<=10)unlockAchievement('closeCall');
+  if(e.typeKey==='boss'||e.name==='대악마 보스'||e.isFallenGod){
+    var total=((dexKills['boss']?dexKills['boss'].count:0)||0)+((dexKills['fallenGod_secret']?dexKills['fallenGod_secret'].count:0)||0);
+    if(total>=100)unlockAchievement('youCrazy');
+  }
+}
+function onRoundStart(){roundRainbow=false;roundSecret=false;roundBossCount=0;roundTotalDmg=0;roundBossMinHp=9999;}
+function onRoundClear(){if(roundBossCount>=5)unlockAchievement('superBoss');if(roundTotalDmg>=444)unlockAchievement('madNight');checkAchievements();}
+function onVariantSpawn(vk){if(vk==='rainbow')roundRainbow=true;if(vk==='secret')roundSecret=true;if(roundRainbow&&roundSecret)unlockAchievement('luckyDay');}
+function onBossSpawn(){roundBossCount++;}
+function onDmgDealt(dmg){roundTotalDmg+=dmg;}
+function onSkillUsed(sk,tgt){if(!tgt)return;var w=WEAKNESS_MAP[tgt.name];if(w&&w===sk)unlockAchievement('smartFight');}
+function onBossHpUpdate(e){if(e.hp<roundBossMinHp)roundBossMinHp=e.hp;}
+
+/* ═══════════════════════════════════════════════
+   SHOP / GACHA
+═══════════════════════════════════════════════ */
+var GACHA_POOL=['fire','frost','thunder','void','nature','arcane','divinity'];
+var GACHA_RARITY={'fire':'UNCOMMON','frost':'UNCOMMON','thunder':'RARE','void':'RARE','nature':'EPIC','arcane':'EPIC','divinity':'LEGENDARY'};
+var GACHA_WEIGHTS={'COMMON':0,'UNCOMMON':38,'RARE':28,'EPIC':22,'LEGENDARY':12};
+
+function doGacha(){
+  if(coins<5){showAbilityMsg('코인 부족!','#ff3366');return;}
+  coins-=5;updateHUD();
+  var pool=GACHA_POOL;
+  var notOwned=pool.filter(function(k){return !inventory.includes(k);});
+  var drawn=notOwned.length>0?notOwned[Math.floor(Math.random()*notOwned.length)]:pool[Math.floor(Math.random()*pool.length)];
+  var sw=STAVES[drawn];
+  var isNew=!inventory.includes(drawn);
+  if(isNew)inventory.push(drawn);
+  document.getElementById('gpIcon').textContent=sw.icon;
+  document.getElementById('gpIcon').style.textShadow='0 0 20px '+sw.col;
+  document.getElementById('gpRar').textContent=sw.rarity;
+  document.getElementById('gpRar').style.color=RARITY_COL[sw.rarity];
+  document.getElementById('gpName').textContent=sw.name;
+  document.getElementById('gpAtk').textContent='ATK: '+sw.atk;
+  document.getElementById('gpAbi').textContent=sw.abi;
+  document.getElementById('gpNew').textContent=isNew?'✨ NEW!':'';
+  document.getElementById('gPop').classList.add('on');
+  saveData();
+}
+function closeGacha(){document.getElementById('gPop').classList.remove('on');renderShop();}
+function updateMerchant(){
+  var m=document.getElementById('mSprite');
+  var sprites=['🧙','🧝','🧟','👴'];
+  if(m)m.textContent=sprites[Math.floor(Date.now()/5000)%sprites.length];
+  var q=document.getElementById('mQuote');
+  if(q)q.textContent=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  var gb=document.getElementById('gachaBtn');
+  if(gb)gb.disabled=coins<5;
+}
+
+function renderShop(){
+  var grid=document.getElementById('sGrid');if(!grid)return;
+  grid.innerHTML='';
+  // Normal staves
+  var nh=document.createElement('div');
+  nh.style.cssText='grid-column:1/-1;font-size:clamp(.17rem,1vw,.26rem);color:#2a1a4a;letter-spacing:2px;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid var(--b);';
+  nh.textContent='🪄 일반 지팡이';grid.appendChild(nh);
+
+  Object.entries(STAVES).forEach(function(entry){
+    var key=entry[0],sw=entry[1];
+    if(sw.category!=='normal')return;
+    var owned=inventory.includes(key),eq=equipped===key;
+    var card=document.createElement('div');
+    card.className='sc'+(eq?' eq':'')+(owned?'':' locked');
+    card.style.borderColor=owned?sw.col:'#1a0a2a';
+    card.innerHTML='<span class="si" style="text-shadow:0 0 8px '+sw.col+'">'+sw.icon+'</span>'+
+      '<div class="sn" style="color:'+(owned?sw.col:'#1a0a2a')+'">'+sw.name+'</div>'+
+      '<div class="sa">ATK: '+sw.atk+'</div>'+
+      '<div class="sr" style="color:'+RARITY_COL[sw.rarity]+'">'+sw.rarity+'</div>'+
+      '<div class="sab">'+sw.abi+'</div>'+
+      (owned&&!eq?'<div style="font-size:.18rem;color:#3a2a5a;margin-top:3px;letter-spacing:.5px">탭하여 장착</div>':'')+
+      (!owned?'<div style="font-size:.18rem;color:#1a0a2a;margin-top:3px">🔒 미획득</div>':'');
+    if(owned)card.onclick=function(){equipped=key;updateHUD();renderShop();};
+    grid.appendChild(card);
+  });
+
+  // Achieve staves
+  var ah=document.createElement('div');
+  ah.style.cssText='grid-column:1/-1;font-size:clamp(.17rem,1vw,.26rem);color:#5a3a00;letter-spacing:2px;margin:8px 0 4px;padding-bottom:4px;border-bottom:1px solid #2a1a00;';
+  ah.textContent='🏆 업적 지팡이';grid.appendChild(ah);
+
+  Object.entries(STAVES).forEach(function(entry){
+    var key=entry[0],sw=entry[1];
+    if(sw.category!=='achieve')return;
+    var owned=inventory.includes(key),eq=equipped===key;
+    var card=document.createElement('div');
+    card.className='sc'+(eq?' eq':'')+(owned?'':' locked');
+    card.style.borderColor=owned?sw.col:'#1a0a00';
+    card.innerHTML='<span class="si" style="text-shadow:0 0 8px '+(owned?sw.col:'#222')+'">'+sw.icon+'</span>'+
+      '<div class="sn" style="color:'+(owned?sw.col:'#2a1a00')+'">'+sw.name+'</div>'+
+      (owned?'<div class="sa">ATK: '+sw.atk+'</div>'+
+      '<div class="sab">'+sw.abi+'</div>'+
+      '<div style="font-size:.16rem;color:#5a3a00;margin-top:2px;letter-spacing:.5px">업적 보상</div>':'')+
+      (owned&&!eq?'<div style="font-size:.16rem;color:#3a2a5a;margin-top:3px">탭하여 장착</div>':'');
+    if(owned)card.onclick=function(){equipped=key;updateHUD();renderShop();};
+    grid.appendChild(card);
+  });
+
+  // Forbidden
+  var fh=document.createElement('div');
+  fh.style.cssText='grid-column:1/-1;font-size:clamp(.17rem,1vw,.26rem);color:#440000;letter-spacing:2px;margin:8px 0 4px;padding-bottom:4px;border-bottom:1px solid #330000;';
+  fh.textContent='⛔ 금지된 지팡이';grid.appendChild(fh);
+
+  var ssw=STAVES['secret'],sOwned=inventory.includes('secret'),sEq=equipped==='secret';
+  var sec=document.createElement('div');
+  var ss=document.createElement('div');
+  ss.style.cssText='grid-column:1/-1;font-size:clamp(.17rem,1vw,.26rem);color:'+(sOwned?'#aaaacc':'#440000')+';letter-spacing:2px;margin-bottom:4px;';
+  ss.textContent=sOwned?'🌑 시크릿 지팡이 해금됨':'⛔ 봉인된 지팡이';grid.appendChild(ss);
+
+  sec.className='sc'+(sEq?' eq':'')+(sOwned?'':' locked');
+  if(sOwned){
+    sec.style.cssText='border-color:#ccccff;background:rgba(200,200,255,0.05);cursor:pointer;touch-action:manipulation;';
+    sec.innerHTML='<span class="si" style="text-shadow:0 0 10px #ccccff">🌑</span>'+
+      '<div class="sn" style="color:#ccccff;text-shadow:0 0 8px #aaaaee">'+ssw.name+'</div>'+
+      '<div class="sa" style="color:#ff8844">ATK: '+ssw.atk+'</div>'+
+      '<div class="sab">'+ssw.abi+'</div>'+
+      (!sEq?'<div style="font-size:.18rem;color:#aaaacc;margin-top:4px">탭하여 장착</div>':'');
+    sec.onclick=function(){equipped='secret';updateHUD();renderShop();};
+    sec.addEventListener('touchend',function(e){e.preventDefault();equipped='secret';updateHUD();renderShop();},{passive:false});
+  } else {
+    var done=SECRET_REQUIRED.filter(function(k){return dexKills[k]&&dexKills[k].count>0;}).length;
+    var pct2=Math.round(done/SECRET_REQUIRED.length*100);
+    sec.style.cssText='border:2px solid #550000;background:rgba(40,0,0,0.6);position:relative;overflow:hidden;cursor:not-allowed;';
+    sec.innerHTML='<div style="position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 6px,rgba(120,0,0,0.18) 6px,rgba(120,0,0,0.18) 8px);pointer-events:none;"></div>'+
+      '<div style="position:relative;z-index:1;text-align:center;">'+
+      '<div style="font-size:1.4rem;filter:grayscale(1) brightness(.2);margin-bottom:3px;">🌑</div>'+
+      '<div style="font-family:var(--px);font-size:clamp(.15rem,.9vw,.22rem);color:#660000;letter-spacing:2px;margin-bottom:2px;">ACCESS DENIED</div>'+
+      '<div style="font-size:clamp(.13rem,.75vw,.18rem);color:#440000;margin-bottom:4px;">시크릿 도감 완성 필요</div>'+
+      '<div style="font-size:clamp(.13rem,.75vw,.18rem);color:#553333;margin-bottom:3px;">'+done+' / '+SECRET_REQUIRED.length+' 수집됨</div>'+
+      '<div style="height:4px;background:#1a0000;border:1px solid #550000;border-radius:2px;overflow:hidden;">'+
+      '<div style="height:100%;width:'+pct2+'%;background:linear-gradient(90deg,#660000,#aa2200);box-shadow:0 0 4px #aa0000;"></div></div></div>';
+  }
+  grid.appendChild(sec);
+  updateHUD();
+}
+
+/* ═══════════════════════════════════════════════
+   DEX
+═══════════════════════════════════════════════ */
+function recordKill(typeKey,variantKey,isFallenGod){
+  if(isFallenGod){if(!dexKills['fallenGod_secret'])dexKills['fallenGod_secret']={count:0};dexKills['fallenGod_secret'].count++;saveData();return;}
+  if(!dexKills[typeKey])dexKills[typeKey]={count:0};dexKills[typeKey].count++;
+  if(variantKey){var vk=typeKey+'_'+variantKey;if(!dexKills[vk])dexKills[vk]={count:0};dexKills[vk].count++;}
+  checkSecretSwordUnlock();saveData();
+}
+
+function checkSecretSwordUnlock(){
+  if(SECRET_REQUIRED.every(function(k){return dexKills[k]&&dexKills[k].count>0;})&&!inventory.includes(SECRET_SWORD_KEY)){
+    inventory.push(SECRET_SWORD_KEY);saveData();
+    setTimeout(function(){showSecretBanner('🌑 시크릿 지팡이 해금!');flashFn('#ffffff66',500);shakeScreen();},400);
+    renderShop();
+  }
+}
+
+function renderDex(){
+  var grid=document.getElementById('dexGrid');if(!grid)return;grid.innerHTML='';
+  Object.entries(ENEMY_TYPES).forEach(function(entry){
+    var key=entry[0],et=entry[1];
+    var found=!!dexKills[key];
+    var gotG=((dexKills[key+'_gold']?dexKills[key+'_gold'].count:0)||0)>0,gotD=((dexKills[key+'_diamond']?dexKills[key+'_diamond'].count:0)||0)>0,gotR=((dexKills[key+'_rainbow']?dexKills[key+'_rainbow'].count:0)||0)>0;
+    var card=document.createElement('div');
+    card.className='dex-card'+(found?' found':' locked');
+    if(found){
+      card.style.borderColor=et.rage?'#cc0044':et.coin>=4?'#cc44ff':et.coin>=2?'#ffcc44':'#2a1a4a';
+      var badges='<div style="display:flex;gap:4px;justify-content:center;margin-top:4px;font-size:clamp(.18rem,1vw,.3rem);">'+
+        '<span style="opacity:'+(gotG?1:.15)+';color:#ffd700;text-shadow:'+(gotG?'0 0 6px #ffd700':'none')+'">★</span>'+
+        '<span style="opacity:'+(gotD?1:.15)+';color:#aaddff;text-shadow:'+(gotD?'0 0 6px #88ccff':'none')+'">◆</span>'+
+        '<span style="opacity:'+(gotR?1:.15)+';color:#ff44ff;text-shadow:'+(gotR?'0 0 8px #ff44ff':'none')+'">✦</span></div>';
+      card.innerHTML='<div class="dex-badge">✓</div><span class="dex-icon">'+et.icon+'</span><div class="dex-name" style="color:'+(et.rage?'#cc0044':et.coin>=4?'#cc44ff':'#9966cc')+'">'+et.name+'</div><div class="dex-coin">🪙 '+et.coin+'</div><div class="dex-count" style="font-size:.16rem;color:#3a2a5a;">'+dexKills[key].count+'마리</div>'+badges;
+      card.onclick=function(){openDexDetail(key);};
+    } else {
+      card.innerHTML='<span class="dex-icon" style="filter:grayscale(1) brightness(.2)">❓</span><div class="dex-name" style="color:#1a0a2a">???</div><div style="display:flex;gap:4px;justify-content:center;margin-top:4px;font-size:.28rem;"><span style="opacity:.1;color:#ffd700">★</span><span style="opacity:.1;color:#aaddff">◆</span><span style="opacity:.1;color:#ff44ff">✦</span></div>';
+    }
+    grid.appendChild(card);
+  });
+  // Secret section
+  var sg=document.getElementById('secretGrid');if(!sg)return;sg.innerHTML='';
+  var stypes=Object.keys(ENEMY_TYPES).filter(function(k){return k!=='boss';}).concat(['fallenGod']);
+  stypes.forEach(function(key){
+    var isFG=key==='fallenGod';
+    var et=isFG?FALLEN_GOD:ENEMY_TYPES[key];
+    var skKey=isFG?'fallenGod_secret':key+'_secret';
+    var found=!!(dexKills[skKey]&&dexKills[skKey].count>0);
+    var card=document.createElement('div');
+    card.className='dex-card'+(found?' found':' locked');
+    if(found){
+      card.style.borderColor='#aaaacc';card.style.background='rgba(180,180,220,0.05)';
+      card.innerHTML='<div class="dex-badge" style="color:#aaaacc">✓</div><span class="dex-icon">'+et.icon+'</span><div class="dex-name" style="color:#ccccee;font-size:clamp(.15rem,.85vw,.22rem)">'+(isFG?'타락신':'시크릿 '+et.name)+'</div><div class="dex-coin" style="color:#aaaacc">🪙 '+(isFG?50:et.coin*20)+'</div><div style="font-size:.14rem;color:#3a3a5a;margin-top:2px">'+dexKills[skKey].count+'회 처치</div>';
+      card.onclick=function(){openSecretDetail(key);};
+    } else {
+      card.innerHTML='<span class="dex-icon" style="filter:grayscale(1) brightness(.15)">'+(isFG?'☠':'❓')+'</span><div class="dex-name" style="color:#0a0518">???</div><div style="font-size:.15rem;color:#1a0a2a;margin-top:2px">미발견</div>';
+    }
+    sg.appendChild(card);
+  });
+}
+
+function openDexDetail(key){
+  var et=ENEMY_TYPES[key],k=(dexKills[key]?dexKills[key].count:0)||0;
+  var gk=(dexKills[key+'_gold']?dexKills[key+'_gold'].count:0)||0,dk=(dexKills[key+'_diamond']?dexKills[key+'_diamond'].count:0)||0,rk=(dexKills[key+'_rainbow']?dexKills[key+'_rainbow'].count:0)||0;
+  document.getElementById('dpIcon').textContent=et.icon;
+  document.getElementById('dpName').textContent=et.name;
+  document.getElementById('dpStat').innerHTML='HP: '+et.hp+' | ATK: '+et.atk+' | SPD: '+et.spd+'<br>처치: '+k+'회 &nbsp; ★골드: '+gk+' ◆다이아: '+dk+' ✦무지개: '+rk;
+  document.getElementById('dpDesc').textContent=et.desc||'';
+  document.getElementById('dpDrops').textContent='💰 '+et.drops;
+  document.getElementById('dpWeak').textContent='⚠ 약점: '+et.weakness;
+  document.getElementById('dexPop').classList.add('on');
+}
+function openSecretDetail(key){
+  var isFG=key==='fallenGod',et=isFG?FALLEN_GOD:ENEMY_TYPES[key];
+  var sk=isFG?'fallenGod_secret':key+'_secret';
+  document.getElementById('dpIcon').textContent=et.icon;
+  document.getElementById('dpName').style.color='#ccccee';
+  document.getElementById('dpName').textContent='🌑 '+(isFG?'타락신':'시크릿 '+et.name);
+  document.getElementById('dpStat').innerHTML='처치: '+((dexKills[sk]?dexKills[sk].count:0)||0)+'회';
+  document.getElementById('dpDesc').textContent=isFG?FALLEN_GOD.desc:'시크릿 변종. 은빛으로 빛난다.';
+  document.getElementById('dpDrops').textContent='💰 코인 '+(isFG?50:et.coin*20)+'개';
+  document.getElementById('dpWeak').textContent='⚠ 등장: 1/100 확률';
+  document.getElementById('dexPop').classList.add('on');
+}
+function closeDex(){document.getElementById('dexPop').classList.remove('on');}
+
+/* ═══════════════════════════════════════════════
+   UPGRADE
+═══════════════════════════════════════════════ */
+var UPGRADE_BASE_COST=10,UPGRADE_BASE_DMG=5;
+function getUpgradeSuccessChance(){return Math.max(0.20,1.0-upgradeLevel*.08);}
+function getNextDmgBonus(){return Math.round(UPGRADE_BASE_DMG*Math.pow(1.10,upgradeLevel));}
+function doUpgrade(){
+  if(coins<UPGRADE_BASE_COST){showUpgResult('코인 부족!','#ff3366');return;}
+  coins-=UPGRADE_BASE_COST;updateHUD();
+  var chance=getUpgradeSuccessChance(),success=Math.random()<chance;
+  if(success){
+    var gain=getNextDmgBonus();upgradeBonusDmg+=gain;upgradeLevel++;
+    upgradeHistory.unshift('Lv'+upgradeLevel+': +'+gain+' 성공!');
+    showUpgResult('✅ 성공! +'+gain+' 데미지','#44ffaa');
+  } else {
+    upgradeHistory.unshift('Lv'+(upgradeLevel+1)+': 실패');
+    showUpgResult('❌ 강화 실패...','#ff3366');
+  }
+  upgradeHistory=upgradeHistory.slice(0,12);
+  renderUpgradePanel();updateHUD();saveData();
+}
+function showUpgResult(txt,col){
+  var el=document.getElementById('upgResult');if(!el)return;
+  el.textContent=txt;el.style.color=col;
+  setTimeout(function(){el.textContent='';},2200);
+}
+function renderUpgradePanel(){
+  var el=document.getElementById('upgradeCoins');if(el)el.textContent=coins;
+  var lv=document.getElementById('upgLevelTxt');if(lv)lv.textContent='강화 레벨 '+upgradeLevel;
+  var dm=document.getElementById('upgDmgTxt');if(dm)dm.textContent='추가 데미지: +'+upgradeBonusDmg;
+  var inf=document.getElementById('upgInfoTxt');if(inf)inf.textContent='강화 비용: '+UPGRADE_BASE_COST+'코인 · 성공 시 +'+getNextDmgBonus()+' 데미지';
+  var ch=document.getElementById('upgChanceTxt');
+  if(ch){var c2=getUpgradeSuccessChance();ch.textContent='성공 확률: '+Math.round(c2*100)+'%';ch.style.color=c2>.6?'#44ffaa':c2>.35?'#ffcc44':'#ff3366';}
+  var hi=document.getElementById('upgHistory');if(hi)hi.innerHTML=upgradeHistory.length?upgradeHistory.map(function(h){return '<div>'+h+'</div>';}).join(''):'아직 강화 기록 없음';
+  var btn=document.getElementById('upgBtn');if(btn)btn.disabled=coins<UPGRADE_BASE_COST;
+}
+
+/* ═══════════════════════════════════════════════
+   ACHIEVEMENTS RENDER
+═══════════════════════════════════════════════ */
+function renderAchievements(){
+  var grid=document.getElementById('achieveGrid');if(!grid)return;grid.innerHTML='';
+  var done2=Object.values(achievements).filter(function(a){return a.done;}).length;
+  var total=Object.keys(achievements).length;
+  var hdr=document.createElement('div');
+  hdr.style.cssText='text-align:center;font-size:clamp(.16rem,.95vw,.26rem);color:#2a1a4a;margin-bottom:4px;letter-spacing:.5px;';
+  hdr.textContent=done2+' / '+total+' 달성';grid.appendChild(hdr);
+  var barW=document.createElement('div');
+  barW.style.cssText='height:4px;background:#0a0518;border:1px solid var(--b);border-radius:2px;overflow:hidden;margin-bottom:8px;';
+  barW.innerHTML='<div style="height:100%;width:'+Math.round(done2/total*100)+'%;background:linear-gradient(90deg,#ffcc44,#ff8800);transition:width .3s;"></div>';
+  grid.appendChild(barW);
+  Object.entries(achievements).forEach(function(entry){
+    var key=entry[0],a=entry[1];
+    var sk=ACHIEVE_STAFF_MAP[key];var sw2=sk&&STAVES[sk]?STAVES[sk]:null;
+    var card=document.createElement('div');
+    card.className='ach-card'+(a.done?' done':'');
+    var reward=sw2?'<span style="font-size:.18rem;color:'+(a.done?sw2.col:'#1a0a2a')+';margin-top:2px;display:block;">'+(a.done?'보상: '+sw2.name:'보상: ???')+'</span>':'';
+    card.innerHTML='<div class="ach-icon" style="'+(a.done?'':'filter:grayscale(1) brightness(.3);')+'">'+a.icon+'</div>'+
+      '<div class="ach-info"><div class="ach-name">'+a.name+'</div><div class="ach-desc" style="color:'+(a.done?'#7a7a9a':'#1a0a2a')+'">'+a.desc+'</div>'+reward+'</div>'+
+      '<div class="ach-badge">'+(a.done?'✓':'')+'</div>';
+    grid.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   SAVE / LOAD
+═══════════════════════════════════════════════ */
+var SAVE_KEY='wizardClashSave_v1';
+function saveData(){
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify({inventory,equipped,dexKills,upgradeLevel,upgradeBonusDmg,upgradeHistory,coins,achievements,bgMorning}));}catch(e){}
+}
+function loadData(){
+  try{
+    var raw=localStorage.getItem(SAVE_KEY);if(!raw)return;
+    var d=JSON.parse(raw);
+    if(d.inventory)inventory=d.inventory;
+    if(d.equipped&&inventory.includes(d.equipped)&&STAVES[d.equipped])equipped=d.equipped;else equipped='basic';
+    if(d.dexKills)Object.assign(dexKills,d.dexKills);
+    if(typeof d.upgradeLevel==='number')upgradeLevel=d.upgradeLevel;
+    if(typeof d.upgradeBonusDmg==='number')upgradeBonusDmg=d.upgradeBonusDmg;
+    if(Array.isArray(d.upgradeHistory))upgradeHistory=d.upgradeHistory;
+    if(typeof d.coins==='number')coins=d.coins;
+    if(d.achievements)Object.keys(d.achievements).forEach(function(k){if(achievements[k])achievements[k].done=d.achievements[k].done||false;});
+    if(typeof d.bgMorning==='boolean')bgMorning=d.bgMorning;
+    checkSecretSwordUnlock();
+  }catch(e){}
+}
+function resetSave(){document.getElementById('resetConfirm').style.display='flex';}
+function doResetConfirmed(){
+  document.getElementById('resetConfirm').style.display='none';
+  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+  inventory=['basic'];equipped='basic';
+  for(var k in dexKills)delete dexKills[k];
+  upgradeLevel=0;upgradeBonusDmg=0;upgradeHistory=[];coins=0;bgMorning=false;
+  Object.keys(achievements).forEach(function(k){achievements[k].done=false;});
+  round=1;PL.hp=PL.maxHp;PL.sp=0;
+  renderShop();renderUpgradePanel();renderAchievements();updateHUD();startRound();tab('arena');
+}
+
+/* ─ BG ─ */
+function setBg(m){
+  bgMorning=m;saveData();
+  var nb=document.getElementById('bgNightBtn');var db=document.getElementById('bgDayBtn');
+  if(nb)nb.style.borderColor=m?'#2a1a4a':'#cc44ff';
+  if(db)db.style.borderColor=m?'#44ff88':'#2a4a1a';
+}
+
+/* ═══════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════ */
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function randInt(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function hexToRgb(h){try{h=h.replace('#','');return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);}catch(e){return '80,80,80';}}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+window.addEventListener('resize',function(){if(roundActive){resizeCanvas();PL.y=Math.min(PL.y,GROUND-PL.h);}});
+
+window.addEventListener('load',function(){
+  setTimeout(function(){
+    loadData();resizeCanvas();startRound();requestAnimationFrame(loop);
+    renderShop();renderUpgradePanel();updateHUD();
+
+    // Touch controls
+    var pairs=[['btnL','left'],['btnR','right'],['btnJ','jump'],['btnA','atk'],['btnS','skill'],['btnD','defend']];
+    pairs.forEach(function(p){
+      var el=document.getElementById(p[0]);if(!el)return;
+      el.addEventListener('touchstart',function(e){e.preventDefault();kdn(p[1]);},{passive:false});
+      el.addEventListener('touchend',function(e){e.preventDefault();kup(p[1]);},{passive:false});
+      el.addEventListener('mousedown',function(){kdn(p[1]);});
+      el.addEventListener('mouseup',function(){kup(p[1]);});
+      el.addEventListener('mouseleave',function(){kup(p[1]);});
+    });
+
+    var rBtn=document.getElementById('resetBtn');
+    if(rBtn){rBtn.addEventListener('touchend',function(e){e.preventDefault();resetSave();},{passive:false});rBtn.addEventListener('click',resetSave);}
+    var yBtn=document.getElementById('resetConfirmYes');
+    if(yBtn){yBtn.addEventListener('touchend',function(e){e.preventDefault();doResetConfirmed();},{passive:false});yBtn.addEventListener('click',doResetConfirmed);}
+    var nBtn=document.getElementById('resetConfirmNo');
+    if(nBtn){nBtn.addEventListener('touchend',function(e){e.preventDefault();document.getElementById('resetConfirm').style.display='none';},{passive:false});nBtn.addEventListener('click',function(){document.getElementById('resetConfirm').style.display='none';});}
+
+    // Clear dex on init
+    var dg=document.getElementById('dexGrid'),sg=document.getElementById('secretGrid');
+    if(dg)dg.innerHTML='';if(sg)sg.innerHTML='';
+  },80);
+});
+</script>
+</body>
+</html>

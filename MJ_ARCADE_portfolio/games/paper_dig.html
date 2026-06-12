@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>시험지 더미</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Black+Han+Sans&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --paper-f: #f0ece0;
+  --paper-a: #eef0e5;
+  --ink: #2a2010;
+  --desk: #8b6914;
+  --desk-dark: #5a4209;
+  --red-stamp: #c0392b;
+  --blue-stamp: #1a5276;
+  --ui-bg: #1a1208;
+  --ui-text: #f0e8d0;
+  --gold: #d4a017;
+}
+
+body {
+  background: var(--ui-bg);
+  font-family: 'Nanum Myeongjo', serif;
+  overflow: hidden;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  touch-action: none;
+}
+
+/* ── HUD ── */
+#hud {
+  background: #120e06;
+  border-bottom: 2px solid #3a2a0a;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.hud-cell { text-align: center; }
+.hud-lbl { font-size: 0.6rem; color: #6a5a30; letter-spacing: 0.12em; text-transform: uppercase; }
+.hud-val {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.3rem; color: var(--gold);
+  line-height: 1.1;
+}
+.hud-val.danger { color: #e74c3c; animation: blink 0.4s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
+#pile-counter {
+  font-size: 0.7rem; color: #6a5a30;
+  text-align: center;
+}
+
+/* ── DESK / PLAY AREA ── */
+#desk {
+  flex: 1;
+  background: radial-gradient(ellipse at 50% 60%, #7a5c10 0%, #4a3208 60%, #2a1e04 100%);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#desk::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,0,0,0.04) 40px, rgba(0,0,0,0.04) 41px),
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.04) 40px, rgba(0,0,0,0.04) 41px);
+  pointer-events: none;
+}
+
+/* ── PAPER PILE ── */
+#pile-container {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, 90vw);
+  height: min(460px, 72vh);
+}
+
+/* each paper sits absolutely inside pile-container */
+.paper {
+  position: absolute;
+  width: 100%; height: 100%;
+  background: var(--paper-f);
+  border-radius: 2px;
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2);
+  padding: 20px 22px 16px;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  overflow: hidden;
+}
+
+.paper:active { transform: scale(0.98) !important; }
+
+/* paper texture lines */
+.paper::after {
+  content: '';
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0px, transparent 22px,
+    rgba(100,120,180,0.12) 22px, rgba(100,120,180,0.12) 23px
+  );
+  pointer-events: none;
+}
+
+/* margin line */
+.paper-margin {
+  position: absolute;
+  left: 48px; top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(220,100,100,0.2);
+  pointer-events: none;
+}
+
+.paper-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 10px;
+  position: relative; z-index: 1;
+}
+
+.paper-subject {
+  font-size: 0.72rem; color: #444;
+  font-weight: 700; letter-spacing: 0.05em;
+}
+
+.paper-date { font-size: 0.62rem; color: #888; }
+
+.paper-title {
+  font-size: 0.9rem; font-weight: 800; color: #1a1a1a;
+  text-align: center; margin-bottom: 14px;
+  letter-spacing: 0.08em;
+  position: relative; z-index: 1;
+}
+
+.paper-lines {
+  position: relative; z-index: 1;
+}
+
+.paper-line {
+  height: 0.55rem;
+  background: rgba(0,0,0,0.06);
+  border-radius: 2px;
+  margin-bottom: 9px;
+}
+
+/* GRADE STAMP */
+.grade-stamp {
+  position: absolute;
+  top: 18px; right: 18px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.8rem;
+  transform: rotate(-12deg);
+  z-index: 2;
+}
+
+.grade-stamp.f-stamp {
+  color: var(--red-stamp);
+  border-color: var(--red-stamp);
+  text-shadow: 0 0 0 var(--red-stamp);
+  opacity: 0.85;
+}
+
+.grade-stamp.a-stamp {
+  color: var(--blue-stamp);
+  border-color: var(--blue-stamp);
+  font-size: 1.6rem;
+  opacity: 0;  /* hidden initially - revealed when found */
+}
+
+.paper.is-a .grade-stamp.a-stamp {
+  /* still hidden until dug up */
+}
+
+/* score written */
+.paper-score {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  font-size: 0.75rem; color: #666;
+  z-index: 2;
+}
+
+/* ── LIFT ANIMATION ── */
+.paper.lifting {
+  animation: lift-away 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes lift-away {
+  0%   { transform: var(--base-transform) scale(1); opacity: 1; }
+  30%  { transform: var(--base-transform) scale(1.04) translateY(-10px); opacity: 1; }
+  100% { transform: var(--base-transform) translateY(-120px) rotate(var(--lift-spin)) scale(0.9); opacity: 0; }
+}
+
+/* ── FOUND ANIMATION ── */
+.paper.found-reveal {
+  animation: found-glow 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes found-glow {
+  0%   { box-shadow: 2px 3px 8px rgba(0,0,0,0.35); }
+  40%  { box-shadow: 0 0 0 6px rgba(26,82,118,0.4), 0 0 40px rgba(26,82,118,0.6); }
+  100% { box-shadow: 0 0 0 4px rgba(26,82,118,0.3), 0 0 20px rgba(26,82,118,0.3); }
+}
+
+/* ── COUNT BADGE ── */
+#count-badge {
+  position: absolute;
+  bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.5);
+  color: rgba(255,255,255,0.5);
+  font-size: 0.7rem;
+  padding: 3px 12px;
+  border-radius: 20px;
+  pointer-events: none;
+  letter-spacing: 0.1em;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: flex; }
+
+#start-screen, #result-screen, #board-screen {
+  position: fixed; inset: 0;
+  background: rgba(10,8,3,0.96);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 500;
+  padding: 24px;
+}
+
+/* start */
+.pile-preview {
+  position: relative;
+  width: 120px; height: 160px;
+  margin: 0 auto 20px;
+}
+
+.preview-paper {
+  position: absolute; inset: 0;
+  background: var(--paper-f);
+  border-radius: 2px;
+  box-shadow: 2px 3px 6px rgba(0,0,0,0.4);
+}
+
+.preview-paper:nth-child(1) { transform: rotate(-5deg) translateY(6px) translateX(-4px); }
+.preview-paper:nth-child(2) { transform: rotate(3deg) translateY(3px) translateX(3px); }
+.preview-paper:nth-child(3) { transform: rotate(-1deg); }
+.preview-paper:nth-child(4) { transform: rotate(6deg) translateY(2px) translateX(-2px); }
+
+.preview-paper::after {
+  content: 'F';
+  position: absolute; top: 10px; right: 10px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.4rem; color: var(--red-stamp);
+  opacity: 0.7;
+}
+
+.preview-paper:last-child::after {
+  content: 'A';
+  color: var(--blue-stamp);
+  opacity: 0;
+}
+
+.start-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.8rem; color: var(--gold);
+  text-align: center; margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.start-sub {
+  color: #6a5a30; font-size: 0.82rem;
+  text-align: center; margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.start-sub em { color: var(--gold); font-style: normal; }
+
+/* DIFF */
+.diff-row {
+  display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;
+}
+
+.diff-btn {
+  padding: 8px 16px;
+  background: #1e1608;
+  border: 1px solid #3a2a0a;
+  color: #8a7040; border-radius: 6px;
+  cursor: pointer; font-family: 'Nanum Myeongjo', serif;
+  font-size: 0.82rem; transition: all 0.15s;
+}
+
+.diff-btn.active, .diff-btn:hover {
+  background: #2a1e08; border-color: var(--gold); color: var(--gold);
+}
+
+.play-btn {
+  padding: 14px 48px;
+  background: var(--gold); color: #1a1208;
+  border: none; border-radius: 8px;
+  font-family: 'Black Han Sans', sans-serif; font-size: 1.1rem;
+  cursor: pointer; transition: all 0.15s;
+  box-shadow: 0 4px 16px rgba(212,160,23,0.4);
+}
+
+.play-btn:hover { transform: scale(1.04); box-shadow: 0 6px 24px rgba(212,160,23,0.6); }
+
+.board-btn-small {
+  margin-top: 10px;
+  padding: 8px 24px;
+  background: transparent;
+  border: 1px solid #3a2a0a; color: #6a5a30;
+  border-radius: 6px; cursor: pointer;
+  font-family: 'Nanum Myeongjo', serif; font-size: 0.8rem;
+  transition: all 0.15s;
+}
+
+.board-btn-small:hover { border-color: var(--gold); color: var(--gold); }
+
+/* RESULT */
+.result-big {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 4rem; color: var(--blue-stamp);
+  margin-bottom: 4px;
+  text-shadow: 0 0 30px rgba(26,82,118,0.6);
+}
+
+.result-label {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.3rem; color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.stats-row {
+  display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;
+}
+
+.stat-box {
+  background: #1e1608; border: 1px solid #3a2a0a;
+  border-radius: 8px; padding: 12px 16px; text-align: center;
+  min-width: 80px;
+}
+
+.stat-v { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: var(--gold); }
+.stat-l { font-size: 0.62rem; color: #6a5a30; margin-top: 2px; }
+
+.result-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 280px; }
+
+.result-btns button {
+  padding: 12px; border-radius: 8px; cursor: pointer;
+  font-family: 'Nanum Myeongjo', serif; font-size: 0.9rem;
+  transition: all 0.15s;
+}
+
+.result-btns .btn-primary {
+  background: var(--gold); color: #1a1208; border: none;
+  font-family: 'Black Han Sans', sans-serif;
+}
+
+.result-btns .btn-secondary {
+  background: #1e1608; border: 1px solid #3a2a0a; color: #8a7040;
+}
+
+.result-btns .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+/* BOARD */
+#board-screen { padding: 20px; overflow-y: auto; justify-content: flex-start; padding-top: 40px; }
+
+.board-back {
+  position: fixed; top: 14px; left: 14px;
+  background: #1e1608; border: 1px solid #3a2a0a; color: #8a7040;
+  padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  font-family: 'Nanum Myeongjo', serif; font-size: 0.8rem;
+  z-index: 10;
+}
+
+.board-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.4rem; color: var(--gold);
+  text-align: center; margin-bottom: 16px; width: 100%;
+}
+
+.board-tabs {
+  display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+}
+
+.board-tab {
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid #3a2a0a; background: #1e1608;
+  color: #6a5a30; cursor: pointer; font-size: 0.75rem;
+  font-family: 'Nanum Myeongjo', serif; transition: all 0.15s;
+}
+
+.board-tab.active { background: var(--gold); color: #1a1208; border-color: var(--gold); }
+
+.board-entries { width: 100%; max-width: 420px; }
+
+.b-entry {
+  display: flex; align-items: center;
+  padding: 10px 12px; margin-bottom: 6px;
+  background: #1a1208; border: 1px solid #2a1e08; border-radius: 8px;
+}
+
+.b-entry.top1 { border-color: var(--gold); }
+.b-entry.top2 { border-color: #aaa; }
+.b-entry.top3 { border-color: #cd7f32; }
+
+.b-rank {
+  font-family: 'Black Han Sans', sans-serif; font-size: 1rem;
+  width: 32px; text-align: center; color: #6a5a30;
+  flex-shrink: 0;
+}
+
+.b-rank.r1 { color: var(--gold); }
+.b-rank.r2 { color: #bbb; }
+.b-rank.r3 { color: #cd7f32; }
+
+.b-info { flex: 1; margin: 0 8px; }
+.b-name { font-size: 0.85rem; color: var(--ui-text); font-weight: 700; }
+.b-meta { font-size: 0.65rem; color: #5a4a20; margin-top: 1px; }
+.b-score { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; color: var(--gold); }
+
+.board-empty { color: #5a4a20; text-align: center; padding: 32px; font-size: 0.85rem; }
+
+/* NAME MODAL */
+#name-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  display: none; align-items: center; justify-content: center;
+  z-index: 600;
+}
+
+#name-modal.show { display: flex; }
+
+.name-box {
+  background: #1a1208; border: 2px solid var(--gold);
+  border-radius: 14px; padding: 28px; text-align: center; width: 280px;
+}
+
+.name-box h3 {
+  font-family: 'Black Han Sans', sans-serif; color: var(--gold);
+  font-size: 1.2rem; margin-bottom: 6px;
+}
+
+.name-box p { color: #6a5a30; font-size: 0.78rem; margin-bottom: 14px; }
+
+.name-input {
+  width: 100%; padding: 10px;
+  background: #0e0a04; border: 1px solid #3a2a0a;
+  border-radius: 6px; color: var(--ui-text); font-size: 1rem;
+  font-family: 'Nanum Myeongjo', serif;
+  text-align: center; outline: none;
+  transition: border-color 0.15s;
+}
+
+.name-input:focus { border-color: var(--gold); }
+
+.name-confirm {
+  margin-top: 12px; padding: 11px 0; width: 100%;
+  background: var(--gold); color: #1a1208; border: none;
+  border-radius: 8px; cursor: pointer;
+  font-family: 'Black Han Sans', sans-serif; font-size: 0.95rem;
+  transition: all 0.15s;
+}
+
+.name-confirm:hover { transform: scale(1.03); }
+
+/* HINT RIPPLE */
+.hint-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  pointer-events: none;
+  animation: ring-expand 0.6s ease-out forwards;
+  z-index: 10;
+}
+
+@keyframes ring-expand {
+  from { width: 30px; height: 30px; margin: -15px; opacity: 0.6; }
+  to   { width: 100px; height: 100px; margin: -50px; opacity: 0; }
+}
+
+/* FOUND FLASH */
+#found-flash {
+  position: fixed; inset: 0;
+  background: rgba(26,82,118,0.25);
+  pointer-events: none;
+  opacity: 0; z-index: 100;
+  transition: opacity 0.3s;
+}
+
+#found-flash.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- GAME AREA (always present underneath) -->
+<div id="hud">
+  <div class="hud-cell">
+    <div class="hud-lbl">라운드</div>
+    <div class="hud-val" id="h-round">1/5</div>
+  </div>
+  <div class="hud-cell">
+    <div class="hud-lbl">남은 시간</div>
+    <div class="hud-val" id="h-timer">60.0</div>
+  </div>
+  <div class="hud-cell">
+    <div class="hud-lbl">걷어낸 수</div>
+    <div class="hud-val" id="h-removed">0</div>
+  </div>
+  <div class="hud-cell">
+    <div class="hud-lbl">점수</div>
+    <div class="hud-val" id="h-score">0</div>
+  </div>
+</div>
+
+<div id="desk">
+  <div id="pile-container"></div>
+  <div id="count-badge">F 시험지 더미</div>
+</div>
+
+<div id="found-flash"></div>
+
+<!-- SCREENS -->
+<div id="start-screen" class="screen active">
+  <div class="pile-preview">
+    <div class="preview-paper"></div>
+    <div class="preview-paper"></div>
+    <div class="preview-paper"></div>
+    <div class="preview-paper"></div>
+  </div>
+  <div class="start-title">시험지 더미</div>
+  <div class="start-sub">
+    수북이 쌓인 <em>F 시험지들</em>을 걷어내<br>
+    맨 아래 숨어있는 <em>A 시험지</em>를 찾아라
+  </div>
+  <div class="diff-row" id="diff-row">
+    <div class="diff-btn active" data-diff="easy">쉬움<br><span style="font-size:0.65rem;color:#5a4a20">30장 · 60초</span></div>
+    <div class="diff-btn" data-diff="normal">보통<br><span style="font-size:0.65rem;color:#5a4a20">60장 · 45초</span></div>
+    <div class="diff-btn" data-diff="hard">어려움<br><span style="font-size:0.65rem;color:#5a4a20">100장 · 35초</span></div>
+    <div class="diff-btn" data-diff="hell">헬<br><span style="font-size:0.65rem;color:#5a4a20">150장 · 25초</span></div>
+  </div>
+  <button class="play-btn" onclick="startGame()">시작!</button>
+  <button class="board-btn-small" onclick="openBoard()">🏆 랭킹 보기</button>
+</div>
+
+<div id="result-screen" class="screen">
+  <div class="result-big">A</div>
+  <div class="result-label" id="res-label">찾았다!</div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-v" id="res-time">0.0</div><div class="stat-l">총 시간(초)</div></div>
+    <div class="stat-box"><div class="stat-v" id="res-score">0</div><div class="stat-l">점수</div></div>
+    <div class="stat-box"><div class="stat-v" id="res-removed">0</div><div class="stat-l">걷어낸 수</div></div>
+    <div class="stat-box"><div class="stat-v" id="res-rounds">0/5</div><div class="stat-l">라운드</div></div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-primary" onclick="submitScore()">🏆 기록 등록</button>
+    <button class="btn-secondary" onclick="startGame()">🔄 다시 도전</button>
+    <button class="btn-secondary" onclick="showStart()">🏠 처음으로</button>
+  </div>
+</div>
+
+<div id="board-screen" class="screen">
+  <button class="board-back" onclick="closeBoard()">← 뒤로</button>
+  <div class="board-title">🏆 랭킹보드</div>
+  <div class="board-tabs" id="board-tabs">
+    <div class="board-tab active" data-diff="all" onclick="switchBoardTab(this)">전체</div>
+    <div class="board-tab" data-diff="easy" onclick="switchBoardTab(this)">쉬움</div>
+    <div class="board-tab" data-diff="normal" onclick="switchBoardTab(this)">보통</div>
+    <div class="board-tab" data-diff="hard" onclick="switchBoardTab(this)">어려움</div>
+    <div class="board-tab" data-diff="hell" onclick="switchBoardTab(this)">헬</div>
+  </div>
+  <div class="board-entries" id="board-entries"></div>
+</div>
+
+<!-- NAME MODAL -->
+<div id="name-modal">
+  <div class="name-box">
+    <h3>🎉 기록 등록</h3>
+    <p>닉네임을 입력하세요</p>
+    <input class="name-input" id="name-input" maxlength="10" placeholder="닉네임 (최대 10자)" />
+    <button class="name-confirm" onclick="confirmScore()">등록!</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const DIFFS = {
+  easy:   { count: 30,  timeLimit: 60, rounds: 5, label: '쉬움' },
+  normal: { count: 60,  timeLimit: 45, rounds: 5, label: '보통' },
+  hard:   { count: 100, timeLimit: 35, rounds: 5, label: '어려움' },
+  hell:   { count: 150, timeLimit: 25, rounds: 5, label: '헬' },
+};
+
+const SUBJECTS = ['수학','영어','국어','과학','사회','역사','물리','화학','생물','지리'];
+const F_NOTES  = ['47점','32점','18점','55점','29점','41점','11점','38점','22점','49점'];
+const A_NOTES  = ['98점','97점','100점','95점','96점','99점'];
+
+// sheet content variety
+const LINE_WIDTHS = [
+  [0.8,0.5,0.9,0.4,0.7,0.6,0.85,0.5],
+  [0.6,0.9,0.4,0.8,0.55,0.7,0.4,0.9],
+  [0.7,0.6,0.85,0.5,0.8,0.4,0.9,0.6],
+];
+
+// ── STATE ──
+let G = {
+  diff: 'easy',
+  round: 0,
+  maxRounds: 5,
+  score: 0,
+  totalRemoved: 0,
+  totalTime: 0,
+  roundTimes: [],
+  timerInterval: null,
+  timeLeft: 60,
+  roundStart: 0,
+  papers: [],       // DOM elements, index 0 = bottom
+  aPos: -1,         // index in papers array (always 0 = buried at bottom)
+  remaining: 0,
+  active: false,
+  pendingScore: null,
+};
+
+// ── SCREENS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  if (id) document.getElementById(id).classList.add('active');
+}
+
+function showStart() {
+  showScreen('start-screen');
+}
+
+function openBoard() {
+  showScreen('board-screen');
+  renderBoard('all');
+}
+
+function closeBoard() {
+  showScreen('start-screen');
+}
+
+// diff selection
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    G.diff = btn.dataset.diff;
+  });
+});
+
+// ── START ──
+function startGame() {
+  const cfg = DIFFS[G.diff];
+  G.round = 0;
+  G.score = 0;
+  G.totalRemoved = 0;
+  G.totalTime = 0;
+  G.roundTimes = [];
+  G.maxRounds = cfg.rounds;
+  showScreen(null); // hide overlays, show game
+  nextRound();
+}
+
+function nextRound() {
+  G.round++;
+  const cfg = DIFFS[G.diff];
+  G.timeLeft = cfg.timeLimit;
+  G.active = true;
+  G.roundStart = performance.now();
+
+  document.getElementById('h-round').textContent = `${G.round}/${G.maxRounds}`;
+  document.getElementById('h-score').textContent = G.score;
+  document.getElementById('h-removed').textContent = G.totalRemoved;
+  updateTimer();
+
+  buildPile(cfg.count);
+
+  clearInterval(G.timerInterval);
+  G.timerInterval = setInterval(tick, 50);
+}
+
+// ── BUILD PILE ──
+function buildPile(count) {
+  const container = document.getElementById('pile-container');
+  container.innerHTML = '';
+  G.papers = [];
+  G.aPos = 0; // A is at the very bottom (index 0)
+  G.remaining = count;
+
+  document.getElementById('count-badge').textContent = `F 시험지 더미 (${count}장)`;
+
+  // Build from bottom (index 0 = A, buried under F papers)
+  for (let i = 0; i < count; i++) {
+    const isA = (i === 0);
+    const el = createPaper(isA, i, count);
+    G.papers.push(el);
+    container.appendChild(el);
+  }
+
+  // Position papers: index 0 is bottom, count-1 is top
+  layoutPile();
+}
+
+function createPaper(isA, idx, total) {
+  const el = document.createElement('div');
+  el.className = 'paper' + (isA ? ' is-a' : '');
+  el.dataset.idx = idx;
+  el.dataset.isA = isA ? '1' : '0';
+
+  // paper content
+  const subj = SUBJECTS[Math.floor(Math.random() * SUBJECTS.length)];
+  const score = isA ? A_NOTES[Math.floor(Math.random() * A_NOTES.length)]
+                    : F_NOTES[Math.floor(Math.random() * F_NOTES.length)];
+  const year = 2024;
+  const lineSet = LINE_WIDTHS[Math.floor(Math.random() * LINE_WIDTHS.length)];
+
+  el.innerHTML = `
+    <div class="paper-margin"></div>
+    <div class="paper-header">
+      <div class="paper-subject">${subj} 시험지</div>
+      <div class="paper-date">${year}.${String(Math.floor(Math.random()*12)+1).padStart(2,'0')}.${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}</div>
+    </div>
+    <div class="paper-title">${subj} 기말고사</div>
+    <div class="paper-lines">
+      ${lineSet.map(w => `<div class="paper-line" style="width:${w*100}%"></div>`).join('')}
+    </div>
+    <div class="grade-stamp ${isA ? 'a-stamp' : 'f-stamp'}">${isA ? 'A' : 'F'}</div>
+    <div class="paper-score">${score}</div>
+  `;
+
+  // A stamp: slightly different color/tint but NOT obvious
+  if (isA) {
+    // make paper very slightly off-white - nearly indistinguishable
+    el.style.background = '#eef0e8';
+  } else {
+    // slight random tint variation for F papers to blend with A
+    const r = 240 + Math.floor(Math.random()*8);
+    const g = 236 + Math.floor(Math.random()*8);
+    const b = 220 + Math.floor(Math.random()*8);
+    el.style.background = `rgb(${r},${g},${b})`;
+  }
+
+  el.addEventListener('click', () => clickPaper(el));
+  el.addEventListener('touchend', (e) => { e.preventDefault(); clickPaper(el); });
+
+  return el;
+}
+
+function layoutPile() {
+  const count = G.papers.length;
+  // papers[0] = bottom (lowest z-index, most offset)
+  // papers[count-1] = top (highest z-index, least offset)
+  G.papers.forEach((el, i) => {
+    const depth = count - 1 - i; // 0 = top, count-1 = bottom
+    // random offsets that are "set" per paper (use idx as seed)
+    const seed = parseInt(el.dataset.idx) + 1;
+    const rx = ((seed * 137) % 20) - 10; // -10 to +10
+    const ry = ((seed * 97) % 16) - 8;
+    const rot = ((seed * 53) % 16) - 8;  // -8 to +8 deg
+
+    // top papers have less extreme offsets (they're more recently placed)
+    const spreadFactor = Math.min(1, depth / 10);
+    const tx = rx * spreadFactor;
+    const ty = ry * spreadFactor - depth * 0.4; // stack height
+    const tr = rot * spreadFactor;
+
+    el.style.zIndex = i + 1;
+    const transformStr = `translate(${tx}px, ${ty}px) rotate(${tr}deg)`;
+    el.style.transform = transformStr;
+    el.dataset.baseTransform = transformStr;
+    el.dataset.liftSpin = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 15) + 'deg';
+
+    // A paper at bottom: its stamp is hidden (covered)
+    if (el.dataset.isA === '1') {
+      el.querySelector('.a-stamp').style.opacity = '0';
+    }
+  });
+}
+
+// ── CLICK ──
+function clickPaper(el) {
+  if (!G.active) return;
+  const isA = el.dataset.isA === '1';
+
+  if (isA) {
+    // Found it!
+    G.active = false;
+    clearInterval(G.timerInterval);
+
+    const elapsed = (performance.now() - G.roundStart) / 1000;
+    G.roundTimes.push(elapsed);
+    G.totalTime += elapsed;
+
+    // Reveal stamp
+    el.querySelector('.a-stamp').style.opacity = '1';
+    el.querySelector('.a-stamp').style.transition = 'opacity 0.3s';
+    el.classList.add('found-reveal');
+
+    // Flash
+    const flash = document.getElementById('found-flash');
+    flash.classList.add('show');
+    setTimeout(() => flash.classList.remove('show'), 400);
+
+    // Score: fewer removed = better, faster = better
+    const cfg = DIFFS[G.diff];
+    const removedCount = cfg.count - G.remaining;
+    const timeBonus = Math.max(0, Math.floor((cfg.timeLimit - elapsed) * 80));
+    const efficiencyBonus = Math.max(0, Math.floor((cfg.count - removedCount) * 5));
+    const diffMult = {easy:1, normal:1.5, hard:2, hell:3}[G.diff];
+    const roundScore = Math.floor((timeBonus + efficiencyBonus) * diffMult);
+    G.score += roundScore;
+    G.totalRemoved += removedCount;
+
+    document.getElementById('h-score').textContent = G.score;
+
+    // Next or result
+    setTimeout(() => {
+      if (G.round >= G.maxRounds) {
+        showResult();
+      } else {
+        nextRound();
+      }
+    }, 900);
+
+  } else {
+    // Remove (lift away)
+    liftPaper(el);
+  }
+}
+
+function liftPaper(el) {
+  if (el.classList.contains('lifting')) return;
+
+  // ripple
+  spawnRipple(el);
+
+  el.style.setProperty('--base-transform', el.dataset.baseTransform);
+  el.style.setProperty('--lift-spin', el.dataset.liftSpin);
+  el.classList.add('lifting');
+
+  // remove from array and decrement remaining
+  const idx = G.papers.indexOf(el);
+  if (idx !== -1) G.papers.splice(idx, 1);
+  G.remaining--;
+
+  document.getElementById('h-removed').textContent = G.totalRemoved + (DIFFS[G.diff].count - G.remaining);
+  document.getElementById('count-badge').textContent = `F 시험지 더미 (${G.remaining}장)`;
+
+  // As papers are removed, partially reveal A hint (just show corner of stack depth)
+  // When only a few papers left, give slight visual tell
+  checkRevealHint();
+
+  setTimeout(() => el.remove(), 400);
+}
+
+function checkRevealHint() {
+  // When very few papers remain above A, slightly increase A paper's tint
+  // but keep it subtle - not obvious
+  const aEl = G.papers[0];
+  if (!aEl || aEl.dataset.isA !== '1') return;
+
+  if (G.remaining <= 3) {
+    // very subtle - just a tiny border glow
+    aEl.style.boxShadow = '2px 3px 8px rgba(0,0,0,0.35), 0 0 8px rgba(26,82,118,0.1)';
+  }
+}
+
+function spawnRipple(el) {
+  const rect = el.getBoundingClientRect();
+  const deskRect = document.getElementById('desk').getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'hint-ring';
+  r.style.left = (rect.left + rect.width/2 - deskRect.left) + 'px';
+  r.style.top  = (rect.top  + rect.height/2 - deskRect.top) + 'px';
+  document.getElementById('desk').appendChild(r);
+  setTimeout(() => r.remove(), 700);
+}
+
+// ── TIMER ──
+function tick() {
+  G.timeLeft -= 0.05;
+  updateTimer();
+  if (G.timeLeft <= 0) {
+    G.timeLeft = 0;
+    G.active = false;
+    clearInterval(G.timerInterval);
+    timeUp();
+  }
+}
+
+function updateTimer() {
+  const el = document.getElementById('h-timer');
+  el.textContent = Math.max(0, G.timeLeft).toFixed(1);
+  el.classList.toggle('danger', G.timeLeft <= 8);
+}
+
+function timeUp() {
+  G.roundTimes.push(DIFFS[G.diff].timeLimit);
+  G.totalTime += DIFFS[G.diff].timeLimit;
+  G.totalRemoved += DIFFS[G.diff].count - G.remaining;
+
+  if (G.round >= G.maxRounds) {
+    showResult();
+  } else {
+    nextRound();
+  }
+}
+
+// ── RESULT ──
+function showResult() {
+  document.getElementById('res-time').textContent = G.totalTime.toFixed(2);
+  document.getElementById('res-score').textContent = G.score;
+  document.getElementById('res-removed').textContent = G.totalRemoved;
+  document.getElementById('res-rounds').textContent = `${G.maxRounds}/${G.maxRounds}`;
+
+  G.pendingScore = {
+    diff: G.diff,
+    score: G.score,
+    totalTime: G.totalTime,
+    removed: G.totalRemoved,
+    date: new Date().toLocaleDateString('ko-KR'),
+  };
+
+  showScreen('result-screen');
+}
+
+// ── SCORE SUBMIT ──
+function submitScore() {
+  document.getElementById('name-input').value = '';
+  document.getElementById('name-modal').classList.add('show');
+  setTimeout(() => document.getElementById('name-input').focus(), 100);
+}
+
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmScore();
+});
+
+function confirmScore() {
+  const name = document.getElementById('name-input').value.trim() || '익명';
+  const entry = { ...G.pendingScore, name };
+
+  const recs = getRecords();
+  recs.push(entry);
+  recs.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
+  if (recs.length > 200) recs.splice(200);
+  saveRecords(recs);
+
+  document.getElementById('name-modal').classList.remove('show');
+  openBoard();
+}
+
+// ── LEADERBOARD ──
+let boardDiff = 'all';
+
+function switchBoardTab(el) {
+  document.querySelectorAll('.board-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderBoard(el.dataset.diff);
+}
+
+function renderBoard(diff) {
+  boardDiff = diff || boardDiff;
+  let recs = getRecords();
+  if (boardDiff !== 'all') recs = recs.filter(r => r.diff === boardDiff);
+
+  const list = document.getElementById('board-entries');
+  if (!recs.length) {
+    list.innerHTML = '<div class="board-empty">아직 기록이 없습니다<br>첫 도전자가 되어보세요!</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  recs.slice(0, 50).forEach((r, i) => {
+    const e = document.createElement('div');
+    e.className = 'b-entry' + (i===0?' top1':i===1?' top2':i===2?' top3':'');
+    const rc = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const ri = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    const dlabel = DIFFS[r.diff]?.label || r.diff;
+    e.innerHTML = `
+      <div class="b-rank ${rc}">${ri}</div>
+      <div class="b-info">
+        <div class="b-name">${esc(r.name)}</div>
+        <div class="b-meta">${dlabel} · ${r.totalTime.toFixed(2)}초 · ${r.removed}장 걷어냄 · ${r.date}</div>
+      </div>
+      <div class="b-score">${r.score}</div>
+    `;
+    list.appendChild(e);
+  });
+}
+
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem('paperpile_records') || '[]'); } catch { return []; }
+}
+
+function saveRecords(r) {
+  try { localStorage.setItem('paperpile_records', JSON.stringify(r)); } catch {}
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

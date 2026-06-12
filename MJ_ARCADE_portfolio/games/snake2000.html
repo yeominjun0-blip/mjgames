@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNAKE 2000 - EXTREME EDITION</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+  }
+
+  /* 배경 별 */
+  .starfield {
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(1px 1px at 10% 20%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 50%, #aaf 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 10%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 80%, #faa 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 30%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 70%, #afa 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 60%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 15%, #ffa 0%, transparent 100%),
+      radial-gradient(2px 2px at 15% 85%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 45%, #aff 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 55%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 25%, #faf 0%, transparent 100%),
+      #040408;
+    z-index: 0;
+  }
+
+  /* CRT 스캔라인 오버레이 */
+  .crt-overlay {
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* CRT 곡면 효과 */
+  .crt-vignette {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  /* 메인 컨테이너 */
+  .container {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 타이틀 바 (윈도우 스타일) */
+  .title-bar {
+    width: 520px;
+    background: linear-gradient(90deg, #000080, #1084d0);
+    border: 2px solid;
+    border-color: #fff #808080 #808080 #fff;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .title-bar-text {
+    color: #fff;
+    font-size: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .title-icon {
+    width: 14px;
+    height: 14px;
+    background: #0f0;
+    border: 1px solid #0a0;
+    display: inline-block;
+    image-rendering: pixelated;
+    box-shadow: 0 0 4px #0f0;
+  }
+
+  .title-buttons {
+    display: flex;
+    gap: 3px;
+  }
+
+  .win-btn {
+    width: 16px;
+    height: 14px;
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #fff #808080 #808080 #fff;
+    font-size: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1;
+  }
+
+  .win-btn:active {
+    border-color: #808080 #fff #fff #808080;
+  }
+
+  /* 게임 윈도우 */
+  .game-window {
+    width: 520px;
+    background: #c0c0c0;
+    border: 3px solid;
+    border-color: #fff #808080 #808080 #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 4px 4px 0 #000;
+  }
+
+  /* 점수판 */
+  .scoreboard {
+    background: #000;
+    border: 2px inset #808080;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .score-label {
+    color: #ff0;
+    font-size: 5px;
+    letter-spacing: 1px;
+  }
+
+  .score-value {
+    color: #0f0;
+    font-size: 11px;
+    text-shadow: 0 0 8px #0f0, 0 0 16px #0f0;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .level-value {
+    color: #f80;
+    font-size: 11px;
+    text-shadow: 0 0 8px #f80;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .hi-value {
+    color: #f0f;
+    font-size: 11px;
+    text-shadow: 0 0 8px #f0f;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  /* 게임 캔버스 영역 */
+  .canvas-wrapper {
+    position: relative;
+    border: 3px solid;
+    border-color: #808080 #fff #fff #808080;
+    background: #000;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  /* 오버레이 (시작/게임오버 화면) */
+  .screen-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 50;
+  }
+
+  .overlay-title {
+    color: #0f0;
+    font-size: 18px;
+    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+    animation: blink-glow 1s infinite;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .overlay-sub {
+    color: #ff0;
+    font-size: 7px;
+    text-align: center;
+    line-height: 2;
+    text-shadow: 0 0 6px #ff0;
+  }
+
+  .overlay-score-display {
+    color: #f0f;
+    font-size: 10px;
+    text-shadow: 0 0 8px #f0f;
+    text-align: center;
+    line-height: 2;
+  }
+
+  .start-btn {
+    background: #000080;
+    color: #fff;
+    border: 3px solid;
+    border-color: #fff #808080 #808080 #fff;
+    padding: 8px 20px;
+    font-size: 9px;
+    font-family: 'Press Start 2P', monospace;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: 8px;
+    transition: all 0.1s;
+  }
+
+  .start-btn:hover {
+    background: #0000c0;
+    box-shadow: 0 0 10px #00f, 0 0 20px #00f;
+  }
+
+  .start-btn:active {
+    border-color: #808080 #fff #fff #808080;
+    transform: translate(1px, 1px);
+  }
+
+  /* 하단 상태바 */
+  .status-bar {
+    background: #c0c0c0;
+    border-top: 2px solid #808080;
+    padding: 3px 6px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .status-panel {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #808080 #fff #fff #808080;
+    padding: 2px 8px;
+    font-size: 5px;
+    color: #000;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* 컨트롤 가이드 */
+  .controls-guide {
+    width: 520px;
+    background: #000;
+    border: 2px solid #333;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 4px 4px 0 #000;
+  }
+
+  .key-hint {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #888;
+    font-size: 5px;
+  }
+
+  .key {
+    background: #222;
+    border: 1px solid #555;
+    border-bottom: 3px solid #555;
+    padding: 2px 4px;
+    color: #ccc;
+    font-size: 5px;
+    font-family: 'Press Start 2P', monospace;
+    min-width: 18px;
+    text-align: center;
+    box-shadow: 0 2px 0 #111;
+  }
+
+  /* 애니메이션 */
+  @keyframes blink-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes scanline-move {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100px; }
+  }
+
+  /* 깜빡임 효과용 */
+  .blink {
+    animation: blink-glow 0.8s step-end infinite;
+  }
+
+  /* 모바일 패드 */
+  .mobile-pad {
+    display: none;
+    width: 520px;
+    justify-content: center;
+    padding: 8px 0;
+    gap: 0;
+  }
+
+  .pad-row {
+    display: flex;
+    justify-content: center;
+  }
+
+  .pad-btn {
+    width: 56px;
+    height: 56px;
+    background: #222;
+    border: 3px solid #444;
+    border-bottom-color: #111;
+    color: #0f0;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  .pad-btn:active {
+    background: #111;
+    border-bottom-color: #444;
+    transform: translateY(2px);
+  }
+
+  .pad-center {
+    background: #111;
+    border-color: #333;
+  }
+
+  @media (max-width: 540px) {
+    .title-bar, .game-window, .controls-guide, .mobile-pad { width: 100vw; }
+    canvas { width: 100vw !important; height: auto !important; }
+    .mobile-pad { display: flex; flex-direction: column; }
+    .controls-guide { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="starfield"></div>
+<div class="crt-vignette"></div>
+<div class="crt-overlay"></div>
+
+<div class="container">
+  <!-- 타이틀 바 -->
+  <div class="title-bar">
+    <div class="title-bar-text">
+      <span class="title-icon"></span>
+      SNAKE 2000 - EXTREME EDITION v3.7
+    </div>
+    <div class="title-buttons">
+      <div class="win-btn">_</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn">✕</div>
+    </div>
+  </div>
+
+  <!-- 게임 윈도우 -->
+  <div class="game-window">
+    <!-- 점수판 -->
+    <div class="scoreboard">
+      <div class="score-item">
+        <div class="score-label">SCORE</div>
+        <div class="score-value" id="score">000000</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">HI-SCORE</div>
+        <div class="hi-value" id="hiscore">000000</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">LEVEL</div>
+        <div class="level-value" id="level">01</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">LENGTH</div>
+        <div class="score-value" id="length" style="color:#0ff;text-shadow:0 0 8px #0ff;">003</div>
+      </div>
+    </div>
+
+    <!-- 캔버스 -->
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="500" height="380"></canvas>
+
+      <!-- 시작 화면 -->
+      <div class="screen-overlay" id="startScreen">
+        <div class="overlay-title">🐍 SNAKE 2000</div>
+        <div style="color:#f80;font-size:9px;text-shadow:0 0 8px #f80;font-family:'Press Start 2P',monospace;text-align:center;line-height:1.8">
+          EXTREME EDITION<br>
+          <span style="font-size:6px;color:#888">© 2001 RETRO SOFT CO.,LTD</span>
+        </div>
+        <div class="overlay-sub">
+          ★ EAT FOOD TO GROW ★<br>
+          ★ DON'T HIT WALLS OR YOURSELF ★<br>
+          ★ SPEED INCREASES EVERY 5 FOODS ★
+        </div>
+        <button class="start-btn" id="startBtn" onclick="startGame()">▶ GAME START</button>
+        <div style="color:#555;font-size:5px;font-family:'Press Start 2P',monospace;text-align:center;animation: blink-glow 1.2s infinite;">
+          PRESS ENTER OR CLICK TO START
+        </div>
+      </div>
+
+      <!-- 게임오버 화면 -->
+      <div class="screen-overlay" id="gameOverScreen" style="display:none">
+        <div class="overlay-title" style="color:#f00;text-shadow:0 0 10px #f00, 0 0 20px #f00;">
+          GAME OVER
+        </div>
+        <div class="overlay-score-display" id="finalScore">
+          SCORE: 000000<br>
+          LENGTH: 000
+        </div>
+        <div id="newRecordMsg" style="display:none;color:#ff0;font-size:9px;font-family:'Press Start 2P',monospace;text-shadow:0 0 8px #ff0;animation:blink-glow 0.6s infinite;">
+          ★ NEW RECORD! ★
+        </div>
+        <button class="start-btn" onclick="startGame()" style="background:#800000;">▶ RETRY</button>
+        <div style="color:#555;font-size:5px;font-family:'Press Start 2P',monospace;text-align:center;">
+          PRESS ENTER OR CLICK TO RETRY
+        </div>
+      </div>
+    </div>
+
+    <!-- 상태바 -->
+    <div class="status-bar">
+      <div class="status-panel" id="statusMsg">Ready to play...</div>
+      <div class="status-panel" style="flex:0;white-space:nowrap;" id="fpsDisplay">FPS: --</div>
+    </div>
+  </div>
+
+  <!-- 키보드 가이드 -->
+  <div class="controls-guide">
+    <div class="key-hint"><span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> MOVE</div>
+    <div class="key-hint"><span class="key">WASD</span> MOVE</div>
+    <div class="key-hint"><span class="key">P</span> PAUSE</div>
+    <div class="key-hint"><span class="key">ENTER</span> START/RETRY</div>
+  </div>
+
+  <!-- 모바일 패드 -->
+  <div class="mobile-pad" id="mobilePad">
+    <div class="pad-row">
+      <div class="pad-btn" ontouchstart="mobileDir(0,-1)" onclick="mobileDir(0,-1)">▲</div>
+    </div>
+    <div class="pad-row">
+      <div class="pad-btn" ontouchstart="mobileDir(-1,0)" onclick="mobileDir(-1,0)">◄</div>
+      <div class="pad-btn pad-center"></div>
+      <div class="pad-btn" ontouchstart="mobileDir(1,0)" onclick="mobileDir(1,0)">►</div>
+    </div>
+    <div class="pad-row">
+      <div class="pad-btn" ontouchstart="mobileDir(0,1)" onclick="mobileDir(0,1)">▼</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const COLS = 25, ROWS = 19;
+const CW = canvas.width / COLS;
+const CH = canvas.height / ROWS;
+
+// 색상 팔레트 (2000년대 네온)
+const COLORS = {
+  bg: '#000',
+  grid: '#0a1a0a',
+  snake_head: '#00ff41',
+  snake_body: '#00cc33',
+  snake_tail: '#007a1f',
+  food_normal: '#ff3300',
+  food_bonus: '#ffcc00',
+  food_rare: '#ff00ff',
+  wall: '#003300',
+  text: '#00ff41',
+};
+
+let snake, dir, nextDir, food, score, hiscore, level, gameState, paused;
+let foodEaten, frameCount, lastTime, fps;
+let bonusFood = null, bonusTimer = 0;
+let particles = [];
+let flashTimer = 0;
+
+hiscore = parseInt(localStorage.getItem('snake2000_hi') || '0');
+updateHiScore();
+
+function initGame() {
+  const startX = Math.floor(COLS / 2);
+  const startY = Math.floor(ROWS / 2);
+  snake = [
+    {x: startX, y: startY},
+    {x: startX-1, y: startY},
+    {x: startX-2, y: startY},
+  ];
+  dir = {x: 1, y: 0};
+  nextDir = {x: 1, y: 0};
+  score = 0;
+  level = 1;
+  foodEaten = 0;
+  paused = false;
+  bonusFood = null;
+  bonusTimer = 0;
+  particles = [];
+  flashTimer = 0;
+  spawnFood();
+  updateUI();
+}
+
+function spawnFood() {
+  let pos;
+  do {
+    pos = {x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS)};
+  } while (snake.some(s => s.x===pos.x && s.y===pos.y));
+  food = pos;
+}
+
+function spawnBonusFood() {
+  let pos;
+  do {
+    pos = {x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS)};
+  } while (snake.some(s=>s.x===pos.x&&s.y===pos.y) || (food.x===pos.x&&food.y===pos.y));
+  bonusFood = pos;
+  bonusTimer = 80;
+}
+
+function getSpeed() {
+  return Math.max(60, 150 - (level-1)*15);
+}
+
+let lastMove = 0;
+
+function gameLoop(timestamp) {
+  if (gameState !== 'playing') return;
+
+  const dt = timestamp - (lastTime||timestamp);
+  lastTime = timestamp;
+  frameCount = (frameCount||0)+1;
+
+  // FPS
+  if (frameCount % 30 === 0) {
+    fps = Math.round(1000/dt);
+    document.getElementById('fpsDisplay').textContent = 'FPS: '+fps;
+  }
+
+  if (!paused) {
+    lastMove += dt;
+    if (lastMove >= getSpeed()) {
+      lastMove = 0;
+      update();
+    }
+  }
+
+  draw(timestamp);
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  dir = {...nextDir};
+
+  const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+  // 벽 충돌
+  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+    triggerDeath(); return;
+  }
+  // 자기 충돌
+  if (snake.some(s => s.x===head.x && s.y===head.y)) {
+    triggerDeath(); return;
+  }
+
+  snake.unshift(head);
+
+  // 음식 먹기
+  let ate = false;
+  if (head.x===food.x && head.y===food.y) {
+    const pts = level * 10;
+    score += pts;
+    foodEaten++;
+    ate = true;
+    spawnParticles(head.x*CW+CW/2, head.y*CH+CH/2, COLORS.food_normal, 8);
+    flashTimer = 3;
+    spawnFood();
+    if (foodEaten % 5 === 0) {
+      level++;
+      flashTimer = 6;
+      document.getElementById('statusMsg').textContent = 'LEVEL UP! SPEED INCREASE!';
+      setTimeout(()=>{ if(gameState==='playing') document.getElementById('statusMsg').textContent = 'Keep going!'; }, 1200);
+    }
+    // 보너스 푸드 스폰 (랜덤)
+    if (!bonusFood && Math.random() < 0.3) spawnBonusFood();
+  } else if (bonusFood && head.x===bonusFood.x && head.y===bonusFood.y) {
+    const pts = level * 50;
+    score += pts;
+    ate = true;
+    spawnParticles(head.x*CW+CW/2, head.y*CH+CH/2, COLORS.food_bonus, 14);
+    flashTimer = 6;
+    bonusFood = null;
+    document.getElementById('statusMsg').textContent = 'BONUS! +'+pts+' POINTS!!!';
+    setTimeout(()=>{ if(gameState==='playing') document.getElementById('statusMsg').textContent = 'Keep going!'; }, 1200);
+  } else {
+    snake.pop();
+  }
+
+  // 보너스 타이머
+  if (bonusFood) {
+    bonusTimer--;
+    if (bonusTimer <= 0) bonusFood = null;
+  }
+
+  if (score > hiscore) {
+    hiscore = score;
+    localStorage.setItem('snake2000_hi', hiscore);
+    updateHiScore();
+  }
+  updateUI();
+}
+
+function triggerDeath() {
+  spawnParticles(snake[0].x*CW+CW/2, snake[0].y*CH+CH/2, '#ff0000', 20);
+  gameState = 'dead';
+  setTimeout(showGameOver, 800);
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i=0; i<count; i++) {
+    const angle = (Math.PI*2/count)*i + Math.random()*0.5;
+    const speed = 1+Math.random()*3;
+    particles.push({
+      x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      color, life: 1, decay: 0.04+Math.random()*0.04, size: 2+Math.random()*3
+    });
+  }
+}
+
+function updateParticles() {
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.1;
+    p.life -= p.decay;
+    p.vx *= 0.95;
+  });
+}
+
+function draw(ts) {
+  // 배경
+  ctx.fillStyle = COLORS.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 그리드
+  ctx.strokeStyle = COLORS.grid;
+  ctx.lineWidth = 0.5;
+  for (let x=0; x<=COLS; x++) {
+    ctx.beginPath(); ctx.moveTo(x*CW, 0); ctx.lineTo(x*CW, canvas.height); ctx.stroke();
+  }
+  for (let y=0; y<=ROWS; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y*CH); ctx.lineTo(canvas.width, y*CH); ctx.stroke();
+  }
+
+  // 플래시
+  if (flashTimer > 0) {
+    ctx.fillStyle = `rgba(0,255,65,${flashTimer*0.04})`;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    flashTimer--;
+  }
+
+  // 음식
+  drawFood(food, ts);
+  if (bonusFood) drawBonusFood(bonusFood, ts);
+
+  // 뱀
+  drawSnake(ts);
+
+  // 파티클
+  updateParticles();
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 6;
+    ctx.fillRect(p.x-p.size/2, p.y-p.size/2, p.size, p.size);
+    ctx.restore();
+  });
+
+  // 일시정지
+  if (paused) {
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#ff0';
+    ctx.font = '16px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#ff0';
+    ctx.shadowBlur = 12;
+    ctx.fillText('PAUSED', canvas.width/2, canvas.height/2);
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillStyle = '#888';
+    ctx.shadowBlur = 0;
+    ctx.fillText('PRESS P TO RESUME', canvas.width/2, canvas.height/2+24);
+    ctx.textAlign = 'left';
+  }
+
+  // 죽을 때 효과
+  if (gameState === 'dead') {
+    ctx.fillStyle = 'rgba(255,0,0,0.1)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+}
+
+function drawFood(pos, ts) {
+  const pulse = 0.7 + 0.3*Math.sin(ts*0.008);
+  ctx.save();
+  ctx.shadowColor = COLORS.food_normal;
+  ctx.shadowBlur = 10*pulse;
+  ctx.fillStyle = COLORS.food_normal;
+  const px = pos.x*CW+2, py = pos.y*CH+2, pw = CW-4, ph = CH-4;
+  ctx.fillRect(px, py, pw, ph);
+  ctx.fillStyle = '#ff8866';
+  ctx.fillRect(px+2, py+2, 4, 4);
+  ctx.restore();
+}
+
+function drawBonusFood(pos, ts) {
+  const pulse = 0.5+0.5*Math.abs(Math.sin(ts*0.015));
+  const alpha = bonusTimer > 20 ? 1 : bonusTimer/20;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.shadowColor = COLORS.food_bonus;
+  ctx.shadowBlur = 16*pulse;
+  ctx.fillStyle = COLORS.food_bonus;
+  const px = pos.x*CW+1, py = pos.y*CH+1, pw = CW-2, ph = CH-2;
+  ctx.fillRect(px, py, pw, ph);
+  ctx.fillStyle = '#fff';
+  ctx.font = `${CW*0.55}px "Press Start 2P"`;
+  ctx.textAlign = 'center';
+  ctx.fillText('★', pos.x*CW+CW/2, pos.y*CH+CH*0.78);
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+function drawSnake(ts) {
+  snake.forEach((seg, i) => {
+    const isHead = i === 0;
+    const ratio = 1 - i/snake.length;
+    const px = seg.x*CW+1, py = seg.y*CH+1, pw = CW-2, ph = CH-2;
+
+    ctx.save();
+    if (isHead) {
+      ctx.shadowColor = COLORS.snake_head;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = COLORS.snake_head;
+    } else {
+      const g = Math.floor(0x33 + ratio*(0xcc-0x33)).toString(16).padStart(2,'0');
+      ctx.fillStyle = `#00${g}1a`;
+      ctx.shadowColor = '#00ff41';
+      ctx.shadowBlur = 3*ratio;
+    }
+
+    ctx.fillRect(px, py, pw, ph);
+
+    // 머리 눈
+    if (isHead) {
+      ctx.fillStyle = '#000';
+      ctx.shadowBlur = 0;
+      const eyeSize = Math.max(2, CW*0.18);
+      if (dir.x === 1) {
+        ctx.fillRect(px+pw-eyeSize-2, py+3, eyeSize, eyeSize);
+        ctx.fillRect(px+pw-eyeSize-2, py+ph-eyeSize-3, eyeSize, eyeSize);
+      } else if (dir.x === -1) {
+        ctx.fillRect(px+2, py+3, eyeSize, eyeSize);
+        ctx.fillRect(px+2, py+ph-eyeSize-3, eyeSize, eyeSize);
+      } else if (dir.y === -1) {
+        ctx.fillRect(px+3, py+2, eyeSize, eyeSize);
+        ctx.fillRect(px+pw-eyeSize-3, py+2, eyeSize, eyeSize);
+      } else {
+        ctx.fillRect(px+3, py+ph-eyeSize-2, eyeSize, eyeSize);
+        ctx.fillRect(px+pw-eyeSize-3, py+ph-eyeSize-2, eyeSize, eyeSize);
+      }
+    }
+    ctx.restore();
+  });
+}
+
+function updateUI() {
+  document.getElementById('score').textContent = String(score).padStart(6,'0');
+  document.getElementById('level').textContent = String(level).padStart(2,'0');
+  document.getElementById('length').textContent = String(snake.length).padStart(3,'0');
+}
+
+function updateHiScore() {
+  document.getElementById('hiscore').textContent = String(hiscore).padStart(6,'0');
+}
+
+function showGameOver() {
+  const isNew = score >= hiscore && score > 0;
+  document.getElementById('finalScore').innerHTML =
+    `SCORE: ${String(score).padStart(6,'0')}<br>LENGTH: ${String(snake.length).padStart(3,'0')}<br>LEVEL: ${String(level).padStart(2,'0')}`;
+  document.getElementById('newRecordMsg').style.display = isNew ? 'block' : 'none';
+  document.getElementById('gameOverScreen').style.display = 'flex';
+  gameState = 'over';
+}
+
+function startGame() {
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('gameOverScreen').style.display = 'none';
+  document.getElementById('statusMsg').textContent = 'EAT THE RED FOOD!';
+  initGame();
+  gameState = 'playing';
+  lastMove = 0;
+  lastTime = null;
+  frameCount = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+function mobileDir(dx, dy) {
+  if (gameState !== 'playing' || paused) return;
+  if (dx !== 0 && dir.x !== 0) return;
+  if (dy !== 0 && dir.y !== 0) return;
+  nextDir = {x: dx, y: dy};
+}
+
+document.addEventListener('keydown', e => {
+  const key = e.key;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(key)) e.preventDefault();
+
+  if ((key==='Enter'||key===' ') && gameState!=='playing') { startGame(); return; }
+  if (key==='p'||key==='P') { if(gameState==='playing') paused=!paused; return; }
+
+  if (gameState!=='playing'||paused) return;
+
+  if ((key==='ArrowUp'||key==='w'||key==='W') && dir.y!==1) nextDir={x:0,y:-1};
+  if ((key==='ArrowDown'||key==='s'||key==='S') && dir.y!==-1) nextDir={x:0,y:1};
+  if ((key==='ArrowLeft'||key==='a'||key==='A') && dir.x!==1) nextDir={x:-1,y:0};
+  if ((key==='ArrowRight'||key==='d'||key==='D') && dir.x!==-1) nextDir={x:1,y:0};
+});
+
+// 초기 상태
+gameState = 'start';
+// 시작화면에 미리 그리기
+(function initDraw() {
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#0a1a0a';
+  ctx.lineWidth=0.5;
+  for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CW,0);ctx.lineTo(x*CW,canvas.height);ctx.stroke();}
+  for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CH);ctx.lineTo(canvas.width,y*CH);ctx.stroke();}
+})();
+</script>
+</body>
+</html>

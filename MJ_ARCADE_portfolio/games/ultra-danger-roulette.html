@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💀 ULTRA DANGER ROULETTE</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #040408;
+  --panel: #0c0c14;
+  --red: #ff1a1a;
+  --orange: #ff6600;
+  --yellow: #ffe500;
+  --cyan: #00eeff;
+  --green: #00ff88;
+  --purple: #dd00ff;
+  --pink: #ff0099;
+  --blue: #1166ff;
+  --white: #f0f0ff;
+  --dim: #3a3a5a;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html,body{
+  width:100%;min-height:100vh;
+  background:var(--bg);
+  font-family:'Noto Sans KR',sans-serif;
+  color:var(--white);
+  overflow-x:hidden;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.18) 2px,rgba(0,0,0,0.18) 4px);
+  pointer-events:none;z-index:9999;
+}
+
+/* ── ANIMATED BG ── */
+#bgCanvas{position:fixed;inset:0;z-index:0;opacity:0.35;}
+
+/* ── MULTIPLIER TICKER ── */
+#ticker{
+  position:fixed;top:0;left:0;right:0;
+  height:36px;background:#0a0010;
+  border-bottom:1px solid #ff00ff30;
+  display:flex;align-items:center;overflow:hidden;
+  z-index:100;
+}
+.ticker-inner{
+  display:flex;gap:60px;white-space:nowrap;
+  animation:tickerScroll 18s linear infinite;
+  font-size:0.75rem;letter-spacing:2px;
+}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tick-item{color:var(--dim);}
+.tick-item.hot{color:var(--red);font-weight:900;}
+.tick-item.good{color:var(--green);}
+
+/* ── WRAPPER ── */
+#app{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:44px;padding-bottom:60px;
+  min-height:100vh;
+}
+
+/* ── HEADER ── */
+.hdr{
+  width:100%;max-width:960px;
+  padding:16px 20px 0;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,6vw,3.8rem);
+  line-height:1;
+  background:linear-gradient(135deg,var(--red),var(--orange),var(--yellow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;
+  letter-spacing:2px;
+  position:relative;
+}
+.logo::after{
+  content:attr(data-text);
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--red),var(--orange),var(--yellow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:blur(12px);
+  opacity:0.6;
+}
+.logo-sub{
+  font-size:0.65rem;letter-spacing:4px;color:var(--dim);margin-top:2px;
+  text-transform:uppercase;
+}
+
+/* ── LIVE SCORE PANEL ── */
+.score-cluster{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;
+}
+.score-box{
+  background:var(--panel);
+  border:1px solid #ffffff10;
+  border-radius:12px;
+  padding:10px 18px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.score-box::before{
+  content:'';position:absolute;inset:-1px;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--red),transparent,var(--orange));
+  opacity:0.15;pointer-events:none;
+}
+.score-box .lbl{font-size:0.6rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;}
+.score-box .val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.6rem,4vw,2.4rem);
+  line-height:1;color:var(--yellow);
+  text-shadow:0 0 20px rgba(255,229,0,0.5);
+  transition:transform 0.12s;
+}
+.score-box .val.bump{transform:scale(1.4);}
+.score-box .val.mega{color:var(--purple);text-shadow:0 0 30px var(--purple);}
+.score-box .sub{font-size:0.65rem;color:var(--dim);margin-top:2px;}
+
+/* ── STREAK ── */
+.streak-bar{
+  width:100%;max-width:960px;
+  padding:10px 20px 0;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.streak-pill{
+  background:var(--panel);
+  border:1px solid #ffffff10;
+  border-radius:999px;
+  padding:6px 16px;
+  font-size:0.78rem;
+  display:flex;align-items:center;gap:8px;
+}
+.streak-pill .fire{
+  font-size:1.1rem;
+  animation:fireWobble 0.5s ease-in-out infinite alternate;
+}
+@keyframes fireWobble{from{transform:scale(1) rotate(-5deg)}to{transform:scale(1.15) rotate(5deg)}}
+.streak-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.2rem;color:var(--orange);
+}
+.status-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.spill{
+  background:var(--panel);border:1px solid #ffffff10;
+  border-radius:999px;padding:5px 14px;
+  font-size:0.75rem;display:flex;gap:5px;align-items:center;
+}
+.spill strong{font-weight:900;}
+
+/* ── LEADERBOARD STRIP ── */
+.lb-strip{
+  width:100%;max-width:960px;
+  padding:10px 20px 0;
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+}
+.lb-label{font-size:0.65rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;white-space:nowrap;}
+.lb-chip{
+  background:var(--panel);border:1px solid #ffffff10;
+  border-radius:8px;padding:6px 12px;
+  font-size:0.78rem;display:flex;gap:8px;align-items:center;
+}
+.lb-chip .rk{color:var(--dim);font-weight:900;font-size:0.7rem;}
+.lb-chip .rk.g{color:var(--yellow);}
+.lb-chip .rk.s{color:#c0c0d0;}
+.lb-chip .rk.b{color:#cd8d52;}
+.lb-chip .nm{color:var(--white);}
+.lb-chip .sc{color:var(--yellow);font-weight:900;margin-left:auto;}
+
+/* ── MAIN GAME AREA ── */
+.game-area{
+  width:100%;max-width:960px;
+  padding:20px;
+  display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;justify-content:center;
+}
+
+/* ── WHEEL ── */
+.wheel-section{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.wheel-glow-ring{
+  position:absolute;inset:-16px;border-radius:50%;
+  background:transparent;
+  box-shadow:0 0 60px rgba(255,26,26,0.4),0 0 120px rgba(255,102,0,0.2);
+  animation:ringPulse 1.8s ease-in-out infinite;pointer-events:none;
+}
+@keyframes ringPulse{
+  0%,100%{box-shadow:0 0 40px rgba(255,26,26,0.3),0 0 80px rgba(255,102,0,0.15);}
+  50%{box-shadow:0 0 80px rgba(255,26,26,0.7),0 0 160px rgba(255,102,0,0.35);}
+}
+.wheel-wrap{
+  position:relative;
+  width:clamp(270px,58vw,380px);
+  height:clamp(270px,58vw,380px);
+}
+#wheel{width:100%;height:100%;display:block;}
+.ptr{
+  position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+  width:0;height:0;
+  border-left:16px solid transparent;
+  border-right:16px solid transparent;
+  border-top:40px solid #ffffff;
+  filter:drop-shadow(0 0 10px rgba(255,255,255,0.8));
+  z-index:20;
+}
+.ptr::after{
+  content:'';position:absolute;top:-44px;left:-10px;
+  width:20px;height:20px;background:#fff;border-radius:50%;
+  box-shadow:0 0 10px rgba(255,255,255,0.8);
+}
+.spin-btn{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:clamp(60px,14vw,80px);height:clamp(60px,14vw,80px);
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffffff,#888888);
+  border:4px solid #222;
+  cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(0.75rem,2vw,1rem);
+  color:#111;letter-spacing:1px;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  box-shadow:0 6px 20px rgba(0,0,0,0.8),0 0 30px rgba(255,60,0,0.3),inset 0 2px 4px rgba(255,255,255,0.5);
+  transition:transform 0.12s,box-shadow 0.12s;
+  z-index:30;
+}
+.spin-btn:hover:not(:disabled){
+  transform:translate(-50%,-50%) scale(1.1);
+  box-shadow:0 8px 30px rgba(0,0,0,0.9),0 0 50px rgba(255,60,0,0.6),inset 0 2px 4px rgba(255,255,255,0.6);
+}
+.spin-btn:active:not(:disabled){transform:translate(-50%,-50%) scale(0.93);}
+.spin-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* ── ODDS PANEL ── */
+.odds-panel{
+  flex:1;min-width:220px;max-width:300px;
+  background:var(--panel);
+  border:1px solid #ffffff0a;
+  border-radius:16px;
+  padding:18px;
+  display:flex;flex-direction:column;gap:0;
+}
+.odds-panel h3{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;letter-spacing:3px;color:var(--dim);
+  margin-bottom:14px;
+}
+.odds-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 0;border-bottom:1px solid #ffffff08;
+  position:relative;overflow:hidden;
+}
+.odds-row::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;
+  background:currentColor;opacity:0.07;
+  width:var(--pct);transition:width 0.3s;
+}
+.odds-row:last-child{border-bottom:none;}
+.odds-icon{font-size:1.3rem;width:26px;text-align:center;flex-shrink:0;}
+.odds-info{flex:1;}
+.odds-name{font-size:0.85rem;font-weight:900;}
+.odds-desc{font-size:0.68rem;color:var(--dim);margin-top:1px;line-height:1.3;}
+.odds-pct{
+  font-family:'Bebas Neue',sans-serif;font-size:0.95rem;
+  padding:3px 10px;border-radius:6px;
+  background:rgba(255,255,255,0.05);flex-shrink:0;
+}
+
+/* ── DANGER METER ── */
+.danger-section{
+  width:100%;max-width:960px;
+  padding:0 20px;
+}
+.danger-meter-wrap{
+  background:var(--panel);border:1px solid #ffffff0a;border-radius:14px;
+  padding:16px 20px;
+}
+.danger-title{
+  font-family:'Bebas Neue',sans-serif;letter-spacing:3px;font-size:1rem;
+  color:var(--dim);margin-bottom:10px;
+}
+.meter-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.meter-label{font-size:0.7rem;width:60px;color:var(--dim);text-align:right;flex-shrink:0;}
+.meter-track{flex:1;height:8px;background:#ffffff0a;border-radius:999px;overflow:hidden;}
+.meter-fill{height:100%;border-radius:999px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);}
+.meter-val{font-size:0.72rem;width:40px;color:var(--dim);flex-shrink:0;}
+
+/* ── COMBO DISPLAY ── */
+.combo-display{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(4rem,14vw,9rem);
+  color:#fff;
+  text-align:center;
+  pointer-events:none;
+  z-index:800;
+  opacity:0;
+  text-shadow:0 0 40px currentColor;
+  transition:opacity 0.1s;
+  white-space:nowrap;
+}
+.combo-display.show{opacity:1;}
+.combo-display.hide{
+  animation:comboPop 0.5s ease-out forwards;
+}
+@keyframes comboPop{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-60%) scale(1.4);}
+}
+
+/* ── OVERLAYS ── */
+
+/* WATER */
+#waterOverlay{
+  position:fixed;inset:0;pointer-events:none;z-index:200;
+  display:flex;flex-direction:column-reverse;
+}
+#waterFill{
+  width:100%;height:0%;
+  background:linear-gradient(180deg,rgba(0,120,255,0.5) 0%,rgba(0,40,200,0.85) 100%);
+  transition:height 1s cubic-bezier(0.4,0,0.2,1);
+  position:relative;
+}
+#waterFill::before{
+  content:'';position:absolute;top:-22px;left:-20%;
+  width:140%;height:44px;border-radius:50%;
+  background:rgba(80,180,255,0.4);
+  animation:wv 1.8s linear infinite;
+}
+#waterFill::after{
+  content:'';position:absolute;top:-12px;left:-20%;
+  width:140%;height:24px;border-radius:50%;
+  background:rgba(150,220,255,0.25);
+  animation:wv 1.2s linear infinite reverse;
+}
+@keyframes wv{from{transform:translateX(0)}to{transform:translateX(20%)}}
+.water-hud{
+  position:fixed;bottom:16px;left:16px;z-index:300;
+  display:flex;gap:4px;align-items:center;
+}
+.wdrop{font-size:1.3rem;filter:grayscale(1) brightness(0.5);transition:filter 0.3s,transform 0.3s;}
+.wdrop.on{filter:none;transform:scale(1.15);}
+
+/* EXPLOSION */
+#explosionOverlay{
+  position:fixed;inset:0;z-index:600;
+  display:none;align-items:center;justify-content:center;flex-direction:column;
+}
+#explosionOverlay.show{display:flex;}
+.exp-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,#fff 0%,#ffcc00 20%,#ff4400 50%,#220000 100%);
+  animation:expBg 0.4s ease-out forwards;
+}
+@keyframes expBg{
+  0%{opacity:0;transform:scale(0.1);}
+  60%{opacity:1;transform:scale(1.05);}
+  100%{opacity:1;transform:scale(1);}
+}
+.exp-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.exp-p{
+  position:absolute;border-radius:50%;
+  animation:expFly 1s ease-out forwards;
+}
+@keyframes expFly{
+  0%{opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:var(--t) scale(0.1);}
+}
+.exp-content{position:relative;z-index:2;text-align:center;}
+.exp-txt{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(4rem,14vw,10rem);
+  color:#fff;letter-spacing:4px;
+  text-shadow:0 0 60px #ff6600,0 0 120px #ff0000;
+  animation:expShake 0.1s infinite;
+}
+@keyframes expShake{
+  0%,100%{transform:translate(-3px,-2px) rotate(-1deg);}
+  50%{transform:translate(3px,2px) rotate(1deg);}
+}
+.exp-sub{font-size:clamp(1rem,3vw,1.6rem);color:#ffe066;margin-top:10px;}
+
+/* DEATH */
+#deathOverlay{
+  position:fixed;inset:0;z-index:350;
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;
+  background:rgba(60,0,0,0.85);
+  animation:deathFlash 0.15s ease;
+}
+@keyframes deathFlash{from{opacity:0}to{opacity:1}}
+#deathOverlay.show{display:flex;}
+.death-txt{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,12vw,7rem);
+  color:var(--red);
+  text-shadow:0 0 40px rgba(255,0,0,0.8);
+  animation:dPulse 0.4s ease-in-out infinite alternate;
+  letter-spacing:4px;
+}
+@keyframes dPulse{from{transform:scale(1);}to{transform:scale(1.06);}}
+.death-sub{color:#ff8888;font-size:0.9rem;}
+
+/* FREEZE */
+#freezeOverlay{
+  position:fixed;inset:0;z-index:310;
+  pointer-events:none;
+  background:linear-gradient(135deg,rgba(0,200,255,0.12),rgba(0,80,255,0.18));
+  border:4px solid rgba(0,220,255,0.4);
+  display:none;
+  animation:icePulse 1s ease-in-out infinite alternate;
+}
+#freezeOverlay.show{display:block;}
+@keyframes icePulse{
+  from{box-shadow:inset 0 0 60px rgba(0,200,255,0.2);}
+  to{box-shadow:inset 0 0 120px rgba(0,200,255,0.5);}
+}
+
+/* ??? JACKPOT */
+#jackpotOverlay{
+  position:fixed;inset:0;z-index:500;
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+  animation:rainbowBg 0.4s linear infinite;
+}
+@keyframes rainbowBg{
+  0%{background:rgba(255,0,0,0.3);}
+  16%{background:rgba(255,128,0,0.3);}
+  33%{background:rgba(255,255,0,0.3);}
+  50%{background:rgba(0,255,0,0.3);}
+  66%{background:rgba(0,128,255,0.3);}
+  83%{background:rgba(128,0,255,0.3);}
+  100%{background:rgba(255,0,255,0.3);}
+}
+#jackpotOverlay.show{display:flex;}
+.jp-txt{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,11vw,7rem);
+  color:#fff;
+  text-shadow:0 0 40px #fff,0 0 80px #ffff00;
+  animation:expShake 0.08s infinite;
+  letter-spacing:4px;text-align:center;
+}
+.jp-score{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,6vw,4rem);
+  color:var(--yellow);
+  text-shadow:0 0 30px var(--yellow);
+}
+.jp-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.jp-p{
+  position:absolute;
+  animation:jpFly 1.2s ease-out forwards;
+}
+@keyframes jpFly{
+  0%{opacity:1;transform:translate(0,0) scale(1) rotate(0deg);}
+  100%{opacity:0;transform:var(--t) scale(0) rotate(720deg);}
+}
+
+/* SCREEN CRACK */
+#crackOverlay{
+  position:fixed;inset:0;z-index:450;pointer-events:none;
+  display:none;
+  background:
+    linear-gradient(43deg,transparent 40%,rgba(255,255,255,0.6) 41%,transparent 42%),
+    linear-gradient(-30deg,transparent 55%,rgba(255,255,255,0.4) 56%,transparent 57%),
+    linear-gradient(70deg,transparent 30%,rgba(255,255,255,0.3) 31%,transparent 32%);
+  animation:crackFlash 0.3s ease-out forwards;
+}
+@keyframes crackFlash{
+  0%{opacity:0;}50%{opacity:1;}100%{opacity:0.3;}
+}
+#crackOverlay.show{display:block;}
+
+/* SCREEN SHAKE */
+@keyframes screenShake{
+  0%,100%{transform:translate(0,0) rotate(0deg);}
+  10%{transform:translate(-8px,4px) rotate(-0.5deg);}
+  20%{transform:translate(8px,-4px) rotate(0.5deg);}
+  30%{transform:translate(-6px,6px) rotate(-0.3deg);}
+  40%{transform:translate(6px,-6px) rotate(0.3deg);}
+  50%{transform:translate(-4px,4px) rotate(-0.2deg);}
+  60%{transform:translate(4px,-4px) rotate(0.2deg);}
+  70%{transform:translate(-2px,2px);}
+  80%{transform:translate(2px,-2px);}
+}
+.shake{animation:screenShake 0.5s ease-out;}
+
+/* GAME OVER */
+#gameOver{
+  position:fixed;inset:0;z-index:700;
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+  background:rgba(0,0,0,0.97);
+}
+#gameOver.show{display:flex;}
+.go-bg-text{
+  position:absolute;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(6rem,25vw,18rem);
+  color:rgba(255,26,26,0.06);
+  pointer-events:none;letter-spacing:8px;
+  top:50%;transform:translateY(-50%);
+  white-space:nowrap;
+}
+.go-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,10vw,6rem);
+  letter-spacing:6px;text-align:center;
+  text-shadow:0 0 40px currentColor;
+}
+.go-score{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.5rem,4vw,2.5rem);
+  color:var(--yellow);
+  text-shadow:0 0 20px rgba(255,229,0,0.4);
+}
+.go-stats{color:var(--dim);font-size:0.85rem;text-align:center;line-height:2;}
+.go-lb{
+  background:var(--panel);border:1px solid #ffffff10;
+  border-radius:14px;padding:16px 24px;
+  max-width:360px;width:100%;
+}
+.go-lb-title{font-size:0.65rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
+.go-lb-entry{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 0;border-bottom:1px solid #ffffff08;
+  font-size:0.82rem;
+}
+.go-lb-entry:last-child{border-bottom:none;}
+.restart-btn{
+  padding:14px 48px;
+  background:none;
+  border:2px solid var(--red);
+  color:var(--red);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.5rem;letter-spacing:3px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:background 0.2s,color 0.2s,box-shadow 0.2s;
+  position:relative;z-index:1;
+}
+.restart-btn:hover{
+  background:var(--red);color:#fff;
+  box-shadow:0 0 40px rgba(255,26,26,0.5);
+}
+
+/* RESULT CARD */
+#resultCard{
+  position:fixed;bottom:24px;right:24px;
+  z-index:150;
+  background:rgba(12,12,20,0.95);
+  border:1px solid #ffffff15;
+  border-radius:14px;
+  padding:14px 20px;
+  min-width:200px;max-width:260px;
+  text-align:center;
+  transform:translateY(120px);
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 8px 40px rgba(0,0,0,0.8);
+  backdrop-filter:blur(10px);
+}
+#resultCard.show{transform:translateY(0);}
+.rc-emoji{font-size:2.2rem;display:block;margin-bottom:4px;}
+.rc-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.6rem;letter-spacing:2px;line-height:1;
+}
+.rc-effect{font-size:0.75rem;color:var(--dim);margin-top:4px;}
+.rc-mult{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;margin-top:6px;
+}
+
+/* NAME MODAL */
+#nameModal{
+  position:fixed;inset:0;z-index:900;
+  background:#000;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;
+}
+.nm-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.5rem,8vw,5rem);
+  letter-spacing:4px;text-align:center;
+  background:linear-gradient(135deg,var(--red),var(--orange),var(--yellow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nm-sub{color:var(--dim);font-size:0.85rem;letter-spacing:2px;text-align:center;}
+.nm-input{
+  background:var(--panel);
+  border:2px solid #ffffff15;border-radius:12px;
+  padding:14px 24px;font-size:1.1rem;color:var(--white);
+  font-family:'Noto Sans KR',sans-serif;
+  width:280px;outline:none;text-align:center;
+  transition:border-color 0.2s;
+}
+.nm-input:focus{border-color:var(--red);}
+.nm-btn{
+  padding:14px 48px;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  border:none;border-radius:999px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;letter-spacing:3px;color:#fff;
+  cursor:pointer;
+  transition:transform 0.15s,box-shadow 0.15s;
+  box-shadow:0 4px 30px rgba(255,60,0,0.4);
+}
+.nm-btn:hover{transform:scale(1.05);box-shadow:0 6px 40px rgba(255,60,0,0.6);}
+.nm-hint{
+  color:var(--dim);font-size:0.75rem;text-align:center;line-height:1.8;
+  max-width:340px;
+}
+
+/* MULTIPLIER ANIMATION */
+.mult-popup{
+  position:fixed;z-index:800;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.5rem;
+  color:var(--yellow);
+  text-shadow:0 0 20px var(--yellow);
+  pointer-events:none;
+  animation:multFly 1s ease-out forwards;
+}
+@keyframes multFly{
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-80px) scale(1.5);}
+}
+
+/* CURSE MODE */
+.curse-mode{animation:curseBg 0.3s linear infinite;}
+@keyframes curseBg{
+  0%{filter:hue-rotate(0deg);}
+  100%{filter:hue-rotate(30deg);}
+}
+</style>
+</head>
+<body>
+
+<!-- BG CANVAS -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- TICKER -->
+<div id="ticker">
+  <div class="ticker-inner" id="tickerInner"></div>
+</div>
+
+<!-- NAME MODAL -->
+<div id="nameModal">
+  <div class="nm-logo">💀 ULTRA DANGER<br>ROULETTE</div>
+  <p class="nm-sub">EXTREME HARD MODE · SURVIVE IS IMPOSSIBLE</p>
+  <input class="nm-input" id="nameInput" type="text" placeholder="용감한 플레이어 이름" maxlength="12">
+  <button class="nm-btn" onclick="startGame()">운명에 도전</button>
+  <p class="nm-hint">
+    연속 생존 시 콤보 배율 상승 · 배율이 높을수록 점수 폭발<br>
+    💀사망 2회 · 💧물 5칸 · 💣폭탄 즉사 · ⚡저주 디버프 추가<br>
+    🛡️보호막 · 🔥더블찬스 · ❄️한턴동결 · ❓초대박!
+  </p>
+</div>
+
+<!-- WATER -->
+<div id="waterOverlay"><div id="waterFill"></div></div>
+<div class="water-hud" id="waterHud">
+  <span class="wdrop" id="wd0">💧</span>
+  <span class="wdrop" id="wd1">💧</span>
+  <span class="wdrop" id="wd2">💧</span>
+  <span class="wdrop" id="wd3">💧</span>
+  <span class="wdrop" id="wd4">💧</span>
+</div>
+
+<!-- EXPLOSION -->
+<div id="explosionOverlay">
+  <div class="exp-bg"></div>
+  <div class="exp-particles" id="expParts"></div>
+  <div class="exp-content">
+    <div class="exp-txt">💥 BOOM!</div>
+    <div class="exp-sub">폭탄이 터졌습니다 · 즉시 게임오버</div>
+  </div>
+</div>
+
+<!-- DEATH WARNING -->
+<div id="deathOverlay">
+  <div class="death-txt">💀 사망 경고!</div>
+  <div class="death-sub" id="deathSubTxt">한 번 더 → 즉사</div>
+</div>
+
+<!-- FREEZE -->
+<div id="freezeOverlay"></div>
+
+<!-- JACKPOT -->
+<div id="jackpotOverlay">
+  <div class="jp-particles" id="jpParts"></div>
+  <div class="jp-txt">❓ 대박!!!</div>
+  <div class="jp-score" id="jpScoreText">+10,000,000점!</div>
+</div>
+
+<!-- CRACK -->
+<div id="crackOverlay"></div>
+
+<!-- COMBO DISPLAY -->
+<div class="combo-display" id="comboDisplay"></div>
+
+<!-- GAME OVER -->
+<div id="gameOver">
+  <div class="go-bg-text">DEAD</div>
+  <div class="go-title" id="goTitle" style="color:var(--red)">GAME OVER</div>
+  <div class="go-score" id="goScore"></div>
+  <div class="go-stats" id="goStats"></div>
+  <div class="go-lb" id="goLb"></div>
+  <button class="restart-btn" onclick="restartGame()">다시 도전</button>
+</div>
+
+<!-- RESULT CARD -->
+<div id="resultCard">
+  <span class="rc-emoji" id="rcEmoji">🎰</span>
+  <div class="rc-name" id="rcName">—</div>
+  <div class="rc-effect" id="rcEffect"></div>
+  <div class="rc-mult" id="rcMult"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- HEADER -->
+  <div class="hdr">
+    <div>
+      <div class="logo" data-text="☠ ULTRA DANGER">☠ ULTRA DANGER</div>
+      <div class="logo-sub">ROULETTE · EXTREME HARD MODE</div>
+    </div>
+    <div class="score-cluster">
+      <div class="score-box">
+        <div class="lbl">SCORE</div>
+        <div class="val" id="scoreVal">0</div>
+        <div class="sub">스핀: <span id="spinVal">0</span>회</div>
+      </div>
+      <div class="score-box">
+        <div class="lbl">COMBO</div>
+        <div class="val" id="comboVal">x1.0</div>
+        <div class="sub">연속생존: <span id="streakVal">0</span></div>
+      </div>
+      <div class="score-box">
+        <div class="lbl">BEST</div>
+        <div class="val" id="bestVal">0</div>
+        <div class="sub">개인 최고</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STREAK & STATUS -->
+  <div class="streak-bar">
+    <div class="streak-pill">
+      <span class="fire">🔥</span>
+      <span>연속 생존</span>
+      <span class="streak-num" id="streakNum">0</span>
+    </div>
+    <div class="status-pills">
+      <div class="spill">🛡️ 보호막 <strong id="shieldSt" style="color:var(--green)">없음</strong></div>
+      <div class="spill">💀 사망경고 <strong id="deathSt" style="color:var(--red)">0/2</strong></div>
+      <div class="spill">💧 물 <strong id="waterSt" style="color:var(--blue)">0/5</strong></div>
+      <div class="spill">⚡ 저주 <strong id="curseSt" style="color:var(--purple)">없음</strong></div>
+      <div class="spill">🔥 더블 <strong id="doubleSt" style="color:var(--orange)">없음</strong></div>
+      <div class="spill">❄️ 동결 <strong id="freezeSt" style="color:var(--cyan)">없음</strong></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD STRIP -->
+  <div class="lb-strip">
+    <span class="lb-label">🏆 리더보드</span>
+    <div id="lbStrip"></div>
+  </div>
+
+  <!-- GAME AREA -->
+  <div class="game-area">
+    <div class="wheel-section">
+      <div class="wheel-wrap">
+        <div class="wheel-glow-ring"></div>
+        <canvas id="wheel" width="500" height="500"></canvas>
+        <div class="ptr"></div>
+        <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
+      </div>
+      <p style="font-size:0.72rem;color:var(--dim);text-align:center">연속 생존 시 콤보 배율 UP · 스핀마다 +1점</p>
+    </div>
+
+    <div class="odds-panel">
+      <h3>확률표</h3>
+      <div class="odds-row" style="color:var(--blue);--pct:22%">
+        <div class="odds-icon">💧</div>
+        <div class="odds-info">
+          <div class="odds-name">물</div>
+          <div class="odds-desc">5번 차오르면 익사</div>
+        </div>
+        <div class="odds-pct">22%</div>
+      </div>
+      <div class="odds-row" style="color:var(--orange);--pct:6%">
+        <div class="odds-icon">💣</div>
+        <div class="odds-info">
+          <div class="odds-name">폭탄</div>
+          <div class="odds-desc">즉시 폭발 → 게임오버</div>
+        </div>
+        <div class="odds-pct">6%</div>
+      </div>
+      <div class="odds-row" style="color:var(--green);--pct:20%">
+        <div class="odds-icon">✅</div>
+        <div class="odds-info">
+          <div class="odds-name">생존</div>
+          <div class="odds-desc">콤보 +1 · 배율 상승</div>
+        </div>
+        <div class="odds-pct">20%</div>
+      </div>
+      <div class="odds-row" style="color:var(--yellow);--pct:10%">
+        <div class="odds-icon">⭐</div>
+        <div class="odds-info">
+          <div class="odds-name">보너스</div>
+          <div class="odds-desc">스코어 ×배율 점수 추가</div>
+        </div>
+        <div class="odds-pct">10%</div>
+      </div>
+      <div class="odds-row" style="color:var(--red);--pct:15%">
+        <div class="odds-icon">💀</div>
+        <div class="odds-info">
+          <div class="odds-name">사망</div>
+          <div class="odds-desc">2회 누적 시 즉사</div>
+        </div>
+        <div class="odds-pct">15%</div>
+      </div>
+      <div class="odds-row" style="color:var(--green);--pct:12%">
+        <div class="odds-icon">🛡️</div>
+        <div class="odds-info">
+          <div class="odds-name">보호막</div>
+          <div class="odds-desc">다음 위험 1회 차단</div>
+        </div>
+        <div class="odds-pct">12%</div>
+      </div>
+      <div class="odds-row" style="color:var(--purple);--pct:5%">
+        <div class="odds-icon">⚡</div>
+        <div class="odds-info">
+          <div class="odds-name">저주</div>
+          <div class="odds-desc">다음 3턴 위험확률 2배</div>
+        </div>
+        <div class="odds-pct">5%</div>
+      </div>
+      <div class="odds-row" style="color:var(--orange);--pct:5%">
+        <div class="odds-icon">🔥</div>
+        <div class="odds-info">
+          <div class="odds-name">더블찬스</div>
+          <div class="odds-desc">이번 턴 룰렛 2회 추가!</div>
+        </div>
+        <div class="odds-pct">5%</div>
+      </div>
+      <div class="odds-row" style="color:var(--cyan);--pct:4%">
+        <div class="odds-icon">❄️</div>
+        <div class="odds-info">
+          <div class="odds-name">한턴동결</div>
+          <div class="odds-desc">이번 결과 무효(1회 면제)</div>
+        </div>
+        <div class="odds-pct">4%</div>
+      </div>
+      <div class="odds-row" style="color:var(--purple);--pct:1%">
+        <div class="odds-icon">❓</div>
+        <div class="odds-info">
+          <div class="odds-name">???</div>
+          <div class="odds-desc">×배율 × 1,000,000점!</div>
+        </div>
+        <div class="odds-pct">1%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DANGER METER -->
+  <div class="danger-section">
+    <div class="danger-meter-wrap">
+      <div class="danger-title">위험 지수</div>
+      <div class="meter-row">
+        <div class="meter-label" style="color:var(--blue)">💧 물</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="waterMeter" style="width:0%;background:linear-gradient(90deg,#1166ff,#00eeff);"></div>
+        </div>
+        <div class="meter-val" id="waterMeterVal">0/5</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label" style="color:var(--red)">💀 사망</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="deathMeter" style="width:0%;background:linear-gradient(90deg,#ff1a1a,#ff6600);"></div>
+        </div>
+        <div class="meter-val" id="deathMeterVal">0/2</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label" style="color:var(--orange)">🔥 콤보</div>
+        <div class="meter-track">
+          <div class="meter-fill" id="comboMeter" style="width:0%;background:linear-gradient(90deg,var(--yellow),var(--orange));"></div>
+        </div>
+        <div class="meter-val" id="comboMeterVal">x1.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────
+// BG CANVAS: Particle field
+// ──────────────────────────────────
+(function initBg(){
+  const c=document.getElementById('bgCanvas');
+  const ctx=c.getContext('2d');
+  let pts=[];
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;pts=[];
+    for(let i=0;i<80;i++) pts.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*1.5+0.5,hue:Math.random()*60+0});
+  }
+  resize();window.addEventListener('resize',resize);
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
+      if(p.y<0)p.y=c.height;if(p.y>c.height)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${p.hue},100%,70%,0.7)`;ctx.fill();
+    });
+    // Draw connections
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<100){
+          ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.strokeStyle=`rgba(255,80,0,${(1-d/100)*0.15})`;ctx.lineWidth=0.5;ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ──────────────────────────────────
+// TICKER
+// ──────────────────────────────────
+(function initTicker(){
+  const items=[
+    {t:'💀 DANGER LEVEL: EXTREME',cls:'hot'},
+    {t:'⚠ 평균 생존: 3.2회',cls:''},
+    {t:'🔥 오늘의 최고기록: ???',cls:'good'},
+    {t:'💣 폭탄 확률: 6%',cls:'hot'},
+    {t:'❓ 대박 확률: 1% · 꿈의 확률',cls:''},
+    {t:'⚡ 저주 발동 시 위험 2배',cls:'hot'},
+    {t:'🛡 보호막 = 유일한 희망',cls:'good'},
+    {t:'💧 물 4칸 = 살얼음판',cls:'hot'},
+    {t:'🔥 콤보 10연속 = 배율 10배',cls:'good'},
+    {t:'❄ 동결 = 기적의 1회',cls:'good'},
+  ];
+  const inner=document.getElementById('tickerInner');
+  const html=items.map(i=>`<span class="tick-item ${i.cls}">${i.t}</span>`).join('');
+  inner.innerHTML=html+html; // duplicate for seamless loop
+})();
+
+// ──────────────────────────────────
+// WHEEL
+// ──────────────────────────────────
+const SEG=[
+  {id:'water',   label:'💧 물',   emoji:'💧',color:'#0a1a4a',border:'#1166ff',prob:0.22},
+  {id:'bomb',    label:'💣 폭탄', emoji:'💣',color:'#3a1200',border:'#ff6600',prob:0.06},
+  {id:'survive', label:'✅ 생존', emoji:'✅',color:'#0a2a14',border:'#00ff88',prob:0.20},
+  {id:'bonus',   label:'⭐ 보너스',emoji:'⭐',color:'#2a1e00',border:'#ffe500',prob:0.10},
+  {id:'death',   label:'💀 사망', emoji:'💀',color:'#2a0000',border:'#ff1a1a',prob:0.15},
+  {id:'shield',  label:'🛡️ 보호막',emoji:'🛡️',color:'#0a2a0a',border:'#00ff88',prob:0.12},
+  {id:'curse',   label:'⚡ 저주', emoji:'⚡',color:'#1a0040',border:'#dd00ff',prob:0.05},
+  {id:'double',  label:'🔥 더블', emoji:'🔥',color:'#3a1a00',border:'#ff6600',prob:0.05},
+  {id:'freeze',  label:'❄️ 동결', emoji:'❄️',color:'#002a3a',border:'#00eeff',prob:0.04},
+  {id:'jackpot', label:'❓ ???',  emoji:'❓',color:'#1a001a',border:'#dd00ff',prob:0.01},
+];
+
+const cumProbs=(()=>{let a=0;return SEG.map(s=>{a+=s.prob;return a;})})();
+const canvas=document.getElementById('wheel');
+const ctx2=canvas.getContext('2d');
+const W=500,CX=250,CY=250,R=235;
+const ARC=(2*Math.PI)/SEG.length;
+let rot=0;
+
+function drawWheel(r2){
+  ctx2.clearRect(0,0,W,W);
+  for(let i=0;i<SEG.length;i++){
+    const s=SEG[i];
+    const st=r2+i*ARC,en=st+ARC;
+    ctx2.beginPath();ctx2.moveTo(CX,CY);ctx2.arc(CX,CY,R,st,en);ctx2.closePath();
+    ctx2.fillStyle=s.color;ctx2.fill();
+    // Border color accent
+    ctx2.save();
+    ctx2.beginPath();ctx2.moveTo(CX,CY);ctx2.arc(CX,CY,R,st,en);ctx2.closePath();
+    ctx2.strokeStyle=s.border;ctx2.lineWidth=3;ctx2.stroke();
+    ctx2.restore();
+    // Alt shine
+    if(i%2===0){
+      ctx2.beginPath();ctx2.moveTo(CX,CY);ctx2.arc(CX,CY,R,st,en);ctx2.closePath();
+      ctx2.fillStyle='rgba(255,255,255,0.04)';ctx2.fill();
+    }
+    // Divider
+    ctx2.beginPath();ctx2.moveTo(CX,CY);ctx2.arc(CX,CY,R,st,en);ctx2.closePath();
+    ctx2.strokeStyle='rgba(0,0,0,0.6)';ctx2.lineWidth=1.5;ctx2.stroke();
+
+    // Label
+    ctx2.save();
+    ctx2.translate(CX,CY);ctx2.rotate(st+ARC/2);ctx2.textAlign='right';
+    ctx2.font=`${W*0.052}px serif`;
+    ctx2.fillText(s.emoji,R-12,8);
+    ctx2.font=`900 ${W*0.036}px 'Noto Sans KR'`;
+    ctx2.fillStyle=s.border;
+    ctx2.shadowColor=s.border;ctx2.shadowBlur=6;
+    ctx2.fillText(s.label.split(' ')[1]||s.label,R-50,-4);
+    ctx2.restore();
+  }
+  // Outer glow rim
+  ctx2.beginPath();ctx2.arc(CX,CY,R,0,2*Math.PI);
+  ctx2.strokeStyle='rgba(255,80,0,0.4)';ctx2.lineWidth=8;ctx2.stroke();
+  ctx2.beginPath();ctx2.arc(CX,CY,R,0,2*Math.PI);
+  ctx2.strokeStyle='rgba(255,255,255,0.06)';ctx2.lineWidth=2;ctx2.stroke();
+  // Center hub
+  const grad=ctx2.createRadialGradient(CX,CY,0,CX,CY,50);
+  grad.addColorStop(0,'#2a2a2a');grad.addColorStop(1,'#0a0a0a');
+  ctx2.beginPath();ctx2.arc(CX,CY,50,0,2*Math.PI);
+  ctx2.fillStyle=grad;ctx2.fill();
+  ctx2.strokeStyle='rgba(255,80,0,0.3)';ctx2.lineWidth=2;ctx2.stroke();
+}
+
+// ──────────────────────────────────
+// GAME STATE
+// ──────────────────────────────────
+let playerName='';
+let score=0,spins=0,streak=0,waterLvl=0,deathCnt=0;
+let hasShield=false,hasCurse=false,curseTurns=0,hasDouble=false,hasFreeze=false;
+let combo=1.0;
+let gameActive=false,isSpinning=false;
+let doubleQueue=0;
+const LB_KEY='ultraDangerLB_v2';
+
+function startGame(){
+  const v=document.getElementById('nameInput').value.trim();
+  playerName=v||'용감한자';
+  document.getElementById('nameModal').style.display='none';
+  gameActive=true;
+  drawWheel(rot);
+  renderLB();
+  updateUI();
+}
+
+// ──────────────────────────────────
+// SPIN
+// ──────────────────────────────────
+async function spin(){
+  if(!gameActive||isSpinning) return;
+  isSpinning=true;
+  document.getElementById('spinBtn').disabled=true;
+
+  // Pick result
+  const rng=Math.random();
+  let idx=0;
+  // Apply curse: shift probabilities toward danger
+  let probs=[...cumProbs];
+  if(hasCurse){
+    // Re-roll if safe, try again once
+    if(Math.random()<0.5){
+      const dangerIds=['water','bomb','death','curse'];
+      const dangerSegs=SEG.map((s,i)=>dangerIds.includes(s.id)?i:-1).filter(i=>i>=0);
+      idx=dangerSegs[Math.floor(Math.random()*dangerSegs.length)];
+    } else {
+      for(let i=0;i<probs.length;i++){ if(rng<=probs[i]){idx=i;break;} }
+    }
+  } else {
+    for(let i=0;i<probs.length;i++){ if(rng<=probs[i]){idx=i;break;} }
+  }
+
+  // Spin animation
+  const extraSpins=5+Math.floor(Math.random()*5);
+  const targetAngle=2*Math.PI-(idx*ARC+ARC/2)+(3*Math.PI/2);
+  const totalRot=extraSpins*2*Math.PI+(targetAngle-(rot%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+  const duration=3000+Math.random()*1200;
+  const t0=performance.now(),r0=rot;
+  function ease(t){return 1-Math.pow(1-t,4);}
+  await new Promise(res=>{
+    function frame(now){
+      const t=Math.min((now-t0)/duration,1);
+      rot=r0+totalRot*ease(t);
+      drawWheel(rot);
+      if(t<1){requestAnimationFrame(frame);}else{rot=(r0+totalRot)%(2*Math.PI);drawWheel(rot);res();}
+    }
+    requestAnimationFrame(frame);
+  });
+
+  isSpinning=false;
+  // +1 per spin
+  spins++;
+  addScore(1);
+
+  // Curse countdown
+  if(hasCurse){curseTurns--;if(curseTurns<=0){hasCurse=false;}}
+
+  const seg=SEG[idx];
+  await applyResult(seg);
+
+  // Double chance: queue extra spins
+  if(doubleQueue>0){
+    doubleQueue--;
+    hasDouble=false;
+    document.getElementById('spinBtn').disabled=false;
+    await new Promise(r=>setTimeout(r,600));
+    await spin();
+    return;
+  }
+
+  updateUI();
+  document.getElementById('spinBtn').disabled=false;
+}
+
+// ──────────────────────────────────
+// APPLY RESULT
+// ──────────────────────────────────
+async function applyResult(seg){
+  showResultCard(seg);
+
+  if(seg.id==='freeze'){
+    // Freeze: this turn's effect nullified - show and return
+    showFreeze();
+    await delay(1200);
+    hideFreeze();
+    streak++;
+    updateCombo();
+    return;
+  }
+
+  if(seg.id==='survive'){
+    streak++;
+    updateCombo();
+    shakeScreen('light');
+    return;
+  }
+
+  if(seg.id==='bonus'){
+    const bonus=Math.floor(10*combo);
+    addScore(bonus);
+    streak++;
+    updateCombo();
+    showMultPopup(`+${bonus}점!`);
+    shakeScreen('light');
+    return;
+  }
+
+  if(seg.id==='shield'){
+    hasShield=true;
+    streak++;
+    updateCombo();
+    return;
+  }
+
+  if(seg.id==='double'){
+    hasDouble=true;
+    doubleQueue=2;
+    streak++;
+    updateCombo();
+    return;
+  }
+
+  if(seg.id==='jackpot'){
+    const jp=Math.floor(1000000*combo);
+    addScore(jp);
+    streak++;
+    updateCombo();
+    showJackpot(jp);
+    await delay(3000);
+    document.getElementById('jackpotOverlay').classList.remove('show');
+    return;
+  }
+
+  if(seg.id==='curse'){
+    if(useShield('⚡ 저주')) return;
+    hasCurse=true;
+    curseTurns=3;
+    shakeScreen('medium');
+    document.body.classList.add('curse-mode');
+    await delay(800);
+    document.body.classList.remove('curse-mode');
+    streak=0;combo=1.0;
+    return;
+  }
+
+  // DANGEROUS
+  if(seg.id==='water'){
+    if(useShield('💧 물')) return;
+    waterLvl++;
+    updateWater();
+    shakeScreen('medium');
+    showCrack();
+    await delay(400);
+    if(waterLvl>=5){await delay(400);endGame('water');return;}
+    streak=0;combo=1.0;
+    return;
+  }
+
+  if(seg.id==='bomb'){
+    if(useShield('💣 폭탄')) return;
+    streak=0;combo=1.0;
+    triggerExplosion();
+    await delay(2500);
+    endGame('bomb');
+    return;
+  }
+
+  if(seg.id==='death'){
+    if(useShield('💀 사망')) return;
+    deathCnt++;
+    shakeScreen('heavy');
+    showDeathWarning();
+    await delay(1500);
+    document.getElementById('deathOverlay').classList.remove('show');
+    if(deathCnt>=2){endGame('death');return;}
+    streak=0;combo=1.0;
+    return;
+  }
+}
+
+function useShield(label){
+  if(hasShield){
+    hasShield=false;
+    streak++;updateCombo();
+    showResultCard({emoji:'🛡️',label:`🛡️ 보호막이 [${label}] 차단!`,id:'shield'});
+    showMultPopup('🛡️ 차단!');
+    return true;
+  }
+  return false;
+}
+
+// ──────────────────────────────────
+// COMBO
+// ──────────────────────────────────
+function updateCombo(){
+  combo=Math.min(1+streak*0.5,20);
+  const el=document.getElementById('comboDisplay');
+  if(streak>0&&streak%3===0){
+    el.textContent=`x${combo.toFixed(1)}`;
+    el.style.color=streak>=10?'var(--purple)':streak>=5?'var(--orange)':'var(--yellow)';
+    el.classList.remove('hide');el.classList.add('show');
+    setTimeout(()=>{el.classList.remove('show');el.classList.add('hide');},600);
+  }
+}
+
+// ──────────────────────────────────
+// VISUALS
+// ──────────────────────────────────
+function updateWater(){
+  const pct=(waterLvl/5)*100;
+  document.getElementById('waterFill').style.height=pct+'%';
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('wd'+i);
+    if(i<waterLvl)el.classList.add('on');else el.classList.remove('on');
+  }
+  document.getElementById('waterMeter').style.width=pct+'%';
+  document.getElementById('waterMeterVal').textContent=waterLvl+'/5';
+}
+
+function showDeathWarning(){
+  const el=document.getElementById('deathOverlay');
+  document.getElementById('deathSubTxt').textContent=deathCnt>=2?'💀 즉사!':deathCnt===1?'한 번 더 → 즉사':'';
+  el.classList.add('show');
+}
+
+function triggerExplosion(){
+  const o=document.getElementById('explosionOverlay');
+  o.classList.add('show');
+  const c=document.getElementById('expParts');c.innerHTML='';
+  const cols=['#ff6600','#ffcc00','#ff2d2d','#ffffff','#ff8800'];
+  for(let i=0;i<80;i++){
+    const p=document.createElement('div');p.classList.add('exp-p');
+    const size=4+Math.random()*16;
+    p.style.cssText=`width:${size}px;height:${size}px;left:${20+Math.random()*60}%;top:${20+Math.random()*60}%;background:${cols[~~(Math.random()*cols.length)]};animation-delay:${Math.random()*0.4}s;animation-duration:${0.6+Math.random()*0.8}s;--t:translate(${(Math.random()-0.5)*600}px,${(Math.random()-0.5)*600}px);`;
+    c.appendChild(p);
+  }
+}
+
+function showCrack(){
+  const el=document.getElementById('crackOverlay');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),400);
+}
+
+function showFreeze(){
+  document.getElementById('freezeOverlay').classList.add('show');
+}
+function hideFreeze(){
+  document.getElementById('freezeOverlay').classList.remove('show');
+}
+
+function showJackpot(pts){
+  const o=document.getElementById('jackpotOverlay');
+  o.classList.add('show');
+  document.getElementById('jpScoreText').textContent=`+${pts.toLocaleString()}점!`;
+  const c=document.getElementById('jpParts');c.innerHTML='';
+  const emojis=['🎉','⭐','💥','🌟','✨','🎊','💎'];
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');p.classList.add('jp-p');
+    p.style.cssText=`font-size:${1+Math.random()*1.5}rem;left:${10+Math.random()*80}%;top:${10+Math.random()*80}%;animation-delay:${Math.random()*0.5}s;animation-duration:${0.8+Math.random()}s;--t:translate(${(Math.random()-0.5)*500}px,${(Math.random()-0.5)*500}px);`;
+    p.textContent=emojis[~~(Math.random()*emojis.length)];
+    c.appendChild(p);
+  }
+}
+
+function shakeScreen(level){
+  const app=document.getElementById('app');
+  app.classList.remove('shake');
+  void app.offsetWidth;
+  app.classList.add('shake');
+  setTimeout(()=>app.classList.remove('shake'),500);
+  if(level==='heavy'||level==='medium'){
+    document.getElementById('crackOverlay').classList.add('show');
+    setTimeout(()=>document.getElementById('crackOverlay').classList.remove('show'),300);
+  }
+}
+
+let rcTimer;
+function showResultCard(seg){
+  clearTimeout(rcTimer);
+  document.getElementById('rcEmoji').textContent=seg.emoji;
+  document.getElementById('rcName').textContent=seg.label;
+
+  const effMap={
+    water:`💧 수위 ${waterLvl+1}/5`,bomb:'💥 즉시 폭발!',survive:'✅ 콤보 +1',
+    bonus:`⭐ 점수 +${Math.floor(10*combo)}`,death:`💀 경고 ${deathCnt+1}/2`,
+    shield:'🛡️ 보호막 획득!',curse:'⚡ 저주 3턴 발동!',double:'🔥 더블 찬스!',
+    freeze:'❄️ 이번 턴 무효!',jackpot:`❓ +${Math.floor(1000000*combo).toLocaleString()}점!`,
+  };
+  document.getElementById('rcEffect').textContent=effMap[seg.id]||'';
+  document.getElementById('rcMult').textContent=combo>1?`배율 ×${combo.toFixed(1)}`:'';
+  document.getElementById('rcMult').style.color=combo>=5?'var(--purple)':combo>=3?'var(--orange)':'var(--yellow)';
+
+  const card=document.getElementById('resultCard');
+  card.classList.add('show');
+  rcTimer=setTimeout(()=>card.classList.remove('show'),2500);
+}
+
+function showMultPopup(txt){
+  const el=document.createElement('div');
+  el.classList.add('mult-popup');
+  el.textContent=txt;
+  el.style.left=(30+Math.random()*40)+'%';
+  el.style.top=(30+Math.random()*30)+'%';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1000);
+}
+
+// ──────────────────────────────────
+// SCORE & UI
+// ──────────────────────────────────
+function addScore(n){
+  score+=Math.round(n);
+  const el=document.getElementById('scoreVal');
+  el.textContent=score.toLocaleString();
+  el.classList.add('bump');
+  if(score>=1000000)el.classList.add('mega');else el.classList.remove('mega');
+  setTimeout(()=>el.classList.remove('bump'),200);
+  // Update best
+  const best=getBest();
+  if(score>best){saveBest(score);}
+  document.getElementById('bestVal').textContent=Math.max(score,best).toLocaleString();
+}
+
+function updateUI(){
+  document.getElementById('scoreVal').textContent=score.toLocaleString();
+  document.getElementById('spinVal').textContent=spins;
+  document.getElementById('comboVal').textContent='×'+combo.toFixed(1);
+  document.getElementById('comboVal').style.color=combo>=10?'var(--purple)':combo>=5?'var(--orange)':combo>=3?'var(--yellow)':'var(--white)';
+  document.getElementById('streakVal').textContent=streak;
+  document.getElementById('streakNum').textContent=streak;
+  document.getElementById('shieldSt').textContent=hasShield?'있음 🛡️':'없음';
+  document.getElementById('shieldSt').style.color=hasShield?'var(--green)':'var(--dim)';
+  document.getElementById('deathSt').textContent=deathCnt+'/2';
+  document.getElementById('waterSt').textContent=waterLvl+'/5';
+  document.getElementById('curseSt').textContent=hasCurse?`${curseTurns}턴`:'없음';
+  document.getElementById('curseSt').style.color=hasCurse?'var(--purple)':'var(--dim)';
+  document.getElementById('doubleSt').textContent=hasDouble?'활성화':'없음';
+  document.getElementById('doubleSt').style.color=hasDouble?'var(--orange)':'var(--dim)';
+  document.getElementById('freezeSt').textContent='없음';
+
+  document.getElementById('deathMeter').style.width=(deathCnt/2*100)+'%';
+  document.getElementById('deathMeterVal').textContent=deathCnt+'/2';
+  document.getElementById('comboMeter').style.width=Math.min(combo/20*100,100)+'%';
+  document.getElementById('comboMeterVal').textContent='×'+combo.toFixed(1);
+  document.getElementById('bestVal').textContent=Math.max(score,getBest()).toLocaleString();
+}
+
+// ──────────────────────────────────
+// GAME END
+// ──────────────────────────────────
+function endGame(reason){
+  gameActive=false;
+  saveScore(playerName,score,spins,streak);
+  renderLB();
+
+  const reasonMap={
+    water:'💧 물에 익사',
+    bomb:'💥 폭탄 폭발',
+    death:'💀 사망 경고 2회 초과',
+  };
+  const colorMap={water:'#1166ff',bomb:'var(--orange)',death:'var(--red)'};
+  const emojiMap={water:'💧',bomb:'💥',death:'💀'};
+
+  document.getElementById('goTitle').textContent=emojiMap[reason]+' GAME OVER';
+  document.getElementById('goTitle').style.color=colorMap[reason];
+  document.getElementById('goScore').textContent=`최종 스코어: ${score.toLocaleString()}점`;
+  document.getElementById('goStats').innerHTML=`스핀 ${spins}회 · 최대 연속 ${streak}연속 · 배율 ×${combo.toFixed(1)}<br>${reasonMap[reason]}`;
+
+  // Build LB inside GO
+  const lb=getLB();
+  const goLbEl=document.getElementById('goLb');
+  goLbEl.innerHTML=`<div class="go-lb-title">🏆 리더보드</div>`+
+    lb.slice(0,6).map((e,i)=>{
+      const medals=['🥇','🥈','🥉','4위','5위','6위'];
+      return `<div class="go-lb-entry">
+        <span style="color:${i<3?'var(--yellow)':'var(--dim)'}">${medals[i]}</span>
+        <span>${e.name}</span>
+        <span style="color:var(--yellow);margin-left:auto">${e.score.toLocaleString()}점</span>
+      </div>`;
+    }).join('');
+
+  setTimeout(()=>{
+    document.getElementById('explosionOverlay').classList.remove('show');
+    document.getElementById('gameOver').classList.add('show');
+  }, reason==='bomb'?2600:700);
+}
+
+function restartGame(){
+  score=0;spins=0;streak=0;waterLvl=0;deathCnt=0;combo=1;
+  hasShield=false;hasCurse=false;curseTurns=0;hasDouble=false;hasFreeze=false;doubleQueue=0;
+  rot=0;
+  document.getElementById('gameOver').classList.remove('show');
+  document.getElementById('explosionOverlay').classList.remove('show');
+  document.getElementById('deathOverlay').classList.remove('show');
+  document.getElementById('waterFill').style.height='0%';
+  for(let i=0;i<5;i++)document.getElementById('wd'+i).classList.remove('on');
+  document.getElementById('waterMeter').style.width='0%';
+  document.getElementById('waterMeterVal').textContent='0/5';
+  gameActive=true;
+  updateUI();
+  drawWheel(rot);
+  document.getElementById('spinBtn').disabled=false;
+}
+
+// ──────────────────────────────────
+// LEADERBOARD
+// ──────────────────────────────────
+function getLB(){try{return JSON.parse(localStorage.getItem(LB_KEY))||[];}catch{return [];}}
+function saveBest(s){localStorage.setItem('ultraDangerBest',s);}
+function getBest(){try{return parseInt(localStorage.getItem('ultraDangerBest'))||0;}catch{return 0;}}
+
+function saveScore(name,score,spins,streak){
+  let lb=getLB();
+  lb.push({name,score,spins,streak});
+  lb.sort((a,b)=>b.score-a.score);
+  lb=lb.slice(0,15);
+  localStorage.setItem(LB_KEY,JSON.stringify(lb));
+}
+
+function renderLB(){
+  const lb=getLB();
+  const strip=document.getElementById('lbStrip');
+  if(!lb.length){strip.innerHTML='<span style="color:var(--dim);font-size:0.78rem">아직 기록 없음</span>';return;}
+  const medals=[{c:'g',t:'🥇'},{c:'s',t:'🥈'},{c:'b',t:'🥉'}];
+  strip.innerHTML=lb.slice(0,6).map((e,i)=>{
+    const m=medals[i]||{c:'',t:`${i+1}`};
+    return `<div class="lb-chip">
+      <span class="rk ${m.c}">${m.t}</span>
+      <span class="nm">${e.name}</span>
+      <span class="sc">${e.score.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ── INIT ──
+drawWheel(rot);
+renderLB();
+document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
+</script>
+</body>
+</html>
